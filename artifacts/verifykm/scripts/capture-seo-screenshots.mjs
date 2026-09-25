@@ -1,5 +1,5 @@
 /**
- * Capture localized OG preview images for home + country landing pages.
+ * Capture localized OG preview images for all public frontend pages (not auth/admin).
  *
  * Usage (from repo root or artifacts/verifykm):
  *   pnpm --filter @workspace/verifykm run build
@@ -18,6 +18,7 @@ import {
   SEO_OG_HEIGHT,
   seoOgImageRelPath,
 } from "./seo-og-config.mjs";
+import { localizedPath } from "./localized-routes.mjs";
 import { compressOgWebp } from "./seo-og-compress.mjs";
 
 const dir = dirname(fileURLToPath(import.meta.url));
@@ -92,7 +93,7 @@ function startPreview() {
 }
 
 async function main() {
-  if (!existsSync(join(distDir, "index.html"))) {
+  if (!EXTERNAL_URL && !existsSync(join(distDir, "index.html"))) {
     console.error("Missing dist/public/index.html — run `pnpm run build` in artifacts/verifykm first.");
     process.exit(1);
   }
@@ -131,13 +132,28 @@ async function main() {
   try {
     for (const { pageKey, rest } of pages) {
       for (const lang of langs) {
-        const urlPath = rest ? `/${lang}${rest}` : `/${lang}`;
+        const urlPath = localizedPath(lang, rest);
         const url = `${baseUrl}${urlPath}`;
         process.stdout.write(`Capturing ${pageKey} (${lang})… `);
-        await page.goto(url, { waitUntil: "networkidle", timeout: 60_000 });
+        await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60_000 });
         await page.waitForSelector("h1", { timeout: 20_000 });
-        await page.evaluate(() => document.fonts?.ready);
-        await sleep(400);
+        await page.evaluate(async () => {
+          await document.fonts?.ready;
+          document.querySelector("[data-announcement-bar]")?.remove();
+          const imgs = [...document.images].filter((img) => {
+            const r = img.getBoundingClientRect();
+            return r.width > 0 && r.height > 0 && r.top < 630;
+          });
+          await Promise.all(imgs.map((img) => {
+            if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+            return new Promise((resolve) => {
+              img.addEventListener("load", () => resolve(), { once: true });
+              img.addEventListener("error", () => resolve(), { once: true });
+              setTimeout(resolve, 4000);
+            });
+          }));
+        });
+        await sleep(700);
         const png = await page.screenshot({
           type: "png",
           clip: { x: 0, y: 0, width: SEO_OG_WIDTH, height: SEO_OG_HEIGHT },

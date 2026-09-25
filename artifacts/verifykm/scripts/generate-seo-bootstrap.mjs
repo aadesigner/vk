@@ -13,6 +13,7 @@ import {
   b2bSeoData,
 } from "./seo-inject.mjs";
 import { LANG_PATH_ALT } from "./languages.mjs";
+import { SEO_OG_PAGES } from "./seo-og-config.mjs";
 import { vinSeoBootstrapSnippet } from "./vin-seo-templates.mjs";
 import {
   faviconAssetsForPageKey,
@@ -81,7 +82,7 @@ const js = `/* auto-generated — do not edit */
     if (!parts.length || parts[0] !== BLOG.indexSlug[lang]) return null;
     if (parts.length === 1) {
       var index = BLOG.index[lang] || BLOG.index.en;
-      return { title: index.title, description: index.description, image: "/blog/free-km.jpg", canonicalRest: "/blog" };
+      return { title: index.title, description: index.description, image: "/seo/og/blog-" + lang + ".webp", canonicalRest: "/blog" };
     }
     var id = BLOG.bySlug[parts[1]];
     var post = id && BLOG.posts[id];
@@ -91,7 +92,7 @@ const js = `/* auto-generated — do not edit */
       id: id,
       title: title + " | VerifyKM",
       description: post.description[lang] || post.description.en,
-      image: "/blog/" + id + ".jpg",
+      image: "/seo/og/blog_" + id + "-" + lang + ".webp",
       canonicalRest: "/blog/" + id
     };
   }
@@ -253,7 +254,7 @@ const js = `/* auto-generated — do not edit */
   }
 
   var OG_PAGE_KEYS = ${JSON.stringify(Object.fromEntries(
-    ["home", "country_usa", "country_korea", "country_canada", "country_china", "country_japan", "country_uae"].map((k) => [k, true]),
+    SEO_OG_PAGES.map((p) => [p.pageKey, true]),
   ))};
 
   function applyFavicons(pageKey) {

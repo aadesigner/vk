@@ -184,7 +184,7 @@ function resolveBlogPage(rest, lang) {
     return {
       title,
       description,
-      ogImage: "/blog/free-km.jpg",
+      ogImage: seoOgImagePath("blog", lang),
       ogType: "website",
       h1: title.replace(/\s+\|\s+VerifyKM$/, ""),
       lead: description,
@@ -220,7 +220,7 @@ function resolveBlogPage(rest, lang) {
   return {
     title,
     description,
-    ogImage: `/blog/${article.id}.jpg`,
+    ogImage: seoOgImagePath(`blog_${id}`, lang),
     ogType: "article",
     h1: headline,
     lead: description,

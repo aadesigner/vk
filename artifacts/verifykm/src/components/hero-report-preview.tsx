@@ -145,23 +145,28 @@ export function HeroReportPreview({
       <article className={cn("relative flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white text-slate-950 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.28)]")}>
         <div className={cn("relative h-48 overflow-hidden sm:h-56", fill && "lg:h-auto lg:min-h-56 lg:flex-1")}>
           {car ? (
-            cars.map((slide, slideIdx) => (
+            cars.map((slide, slideIdx) => {
+              const isActive = slideIdx === idx;
+              const isNext = slideIdx === (idx + 1) % cars.length;
+              if (!isActive && !isNext) return null;
+              return (
               <div
                 key={slide.vin}
                 className={cn(
                   "absolute inset-0 transition-opacity duration-500",
-                  slideIdx === idx ? "opacity-100" : "pointer-events-none opacity-0",
+                  isActive ? "opacity-100" : "pointer-events-none opacity-0",
                 )}
               >
                 <DemoCarPhoto
                   src={slide.photo}
                   alt=""
-                  eager={slideIdx === idx || slideIdx === (idx + 1) % cars.length}
+                  eager={isActive}
                   className="object-[center_42%]"
                   placeholderClassName="bg-slate-100"
                 />
               </div>
-            ))
+              );
+            })
           ) : null}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-slate-950/10" />
           <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 px-4 pt-4">

@@ -153,8 +153,8 @@ export function NavbarMobileMenu({
         speed="fast"
         overlayClassName="z-[110]"
         className={cn(
-          "z-[110] w-full max-w-none sm:max-w-none gap-0 p-0 flex flex-col overflow-hidden",
-          "h-[100dvh] max-h-[100dvh] border-l border-border/60 bg-background shadow-xl shadow-black/15",
+          "z-[110] inset-0 left-0 right-0 w-auto max-w-none sm:max-w-none gap-0 p-0 flex flex-col overflow-hidden",
+          "h-[100dvh] max-h-[100dvh] border-0 bg-background shadow-none",
         )}
         onOpenAutoFocus={(e) => e.preventDefault()}
       >

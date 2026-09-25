@@ -292,6 +292,7 @@ router.get("/auth/geo-country", async (req, res) => {
 
 // POST /auth/register
 router.post("/auth/register", registerLimiter, async (req, res) => {
+  try {
   const { email, password, name, countryCode: rawCountry, recaptchaToken } = req.body as {
     email?: string;
     password?: string;
@@ -404,6 +405,12 @@ router.post("/auth/register", registerLimiter, async (req, res) => {
     }
   } catch (err) {
     logger.warn({ err }, "Welcome email failed to send after registration");
+  }
+  } catch (err) {
+    logger.error({ err, msg: "auth_register_unhandled" }, "Register handler error");
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 

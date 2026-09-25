@@ -115,7 +115,7 @@ export function Footer() {
     });
   };
 
-  const shell = "mx-auto w-full max-w-[92rem] px-5 sm:px-8 lg:px-12 xl:px-16";
+  const shell = "mx-auto w-full max-w-[80rem] px-5 sm:px-8 lg:px-12 xl:px-16";
 
   return (
     <footer className="relative overflow-hidden border-t border-[#00a5fd]/25 bg-[#020617] text-white print:hidden">

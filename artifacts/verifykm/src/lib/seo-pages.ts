@@ -145,7 +145,7 @@ function blogRouteSeo(lang: SeoLang, canonicalRest: string, rest: string, basePa
   if (canonicalRest === "/blog") {
     const title = BLOG_INDEX_META.title[language];
     const description = BLOG_INDEX_META.description[language];
-    const ogImage = `${SITE_ORIGIN}${blogCover("free-km")}`;
+    const ogImage = `${SITE_ORIGIN}${resolvePageOgImage("blog", lang, basePath) ?? blogCover("free-km")}`;
     return {
       title,
       description,
@@ -177,7 +177,7 @@ function blogRouteSeo(lang: SeoLang, canonicalRest: string, rest: string, basePa
   if (!article) return null;
   const title = `${article.title[language]} | VerifyKM`;
   const description = article.description[language];
-  const ogImage = `${SITE_ORIGIN}${blogCover(article.id)}`;
+  const ogImage = `${SITE_ORIGIN}${resolvePageOgImage(`blog_${article.id}`, lang, basePath) ?? blogCover(article.id)}`;
   return {
     title,
     description,

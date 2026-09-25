@@ -20,7 +20,7 @@
     if (!parts.length || parts[0] !== BLOG.indexSlug[lang]) return null;
     if (parts.length === 1) {
       var index = BLOG.index[lang] || BLOG.index.en;
-      return { title: index.title, description: index.description, image: "/blog/free-km.jpg", canonicalRest: "/blog" };
+      return { title: index.title, description: index.description, image: "/seo/og/blog-" + lang + ".webp", canonicalRest: "/blog" };
     }
     var id = BLOG.bySlug[parts[1]];
     var post = id && BLOG.posts[id];
@@ -30,7 +30,7 @@
       id: id,
       title: title + " | VerifyKM",
       description: post.description[lang] || post.description.en,
-      image: "/blog/" + id + ".jpg",
+      image: "/seo/og/blog_" + id + "-" + lang + ".webp",
       canonicalRest: "/blog/" + id
     };
   }
@@ -229,7 +229,7 @@
     return base + "/seo/og/" + pageKey + "-" + lang + ".webp";
   }
 
-  var OG_PAGE_KEYS = {"home":true,"country_usa":true,"country_korea":true,"country_canada":true,"country_china":true,"country_japan":true,"country_uae":true};
+  var OG_PAGE_KEYS = {"home":true,"pricing":true,"free_decoder":true,"how_it_works":true,"faq":true,"country_usa":true,"country_korea":true,"country_canada":true,"country_china":true,"country_japan":true,"country_uae":true,"blog":true,"blog_free-km":true,"blog_read-vin":true,"blog_rollback":true,"blog_salvage":true,"blog_usa":true,"blog_korea":true,"blog_korea-sheet":true,"blog_odo-scam":true,"blog_import-scam":true,"blog_before-pay":true,"blog_accidents":true,"blog_stolen":true,"blog_cost":true};
 
   function applyFavicons(pageKey) {
     var favicons = resolveFavicons(pageKey);

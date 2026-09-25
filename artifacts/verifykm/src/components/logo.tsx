@@ -22,7 +22,7 @@ export function prefetchBrandAssets(): void {
     if (prefetchedBrand.has(src)) continue;
     prefetchedBrand.add(src);
     const img = new Image();
-    img.decoding = "sync";
+    img.decoding = "async";
     img.src = src;
   }
 }

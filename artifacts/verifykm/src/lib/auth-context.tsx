@@ -129,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ email, password, recaptchaToken }),
+      signal: AbortSignal.timeout(20_000),
     });
     const data = await res.json().catch(() => ({})) as { user?: AuthUser; error?: string; code?: string };
     if (!res.ok) throw new ApiRequestError(data.error ?? "Login failed", data.code);
@@ -153,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ email, password, name, countryCode, recaptchaToken, acquisition }),
+      signal: AbortSignal.timeout(20_000),
     });
     const data = await res.json().catch(() => ({})) as { user?: AuthUser; error?: string; code?: string };
     if (!res.ok) throw new ApiRequestError(data.error ?? "Registration failed", data.code);

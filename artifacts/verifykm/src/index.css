@@ -2131,6 +2131,14 @@ html.dark.admin-theme-active[data-admin-theme="orbit"] .admin-mood-gauge__amount
     overflow-x: clip;
     max-width: 100vw;
   }
+
+  /* Radix sheet scroll-lock adds scrollbar padding and shifts the fixed navbar. */
+  html body[data-scroll-locked],
+  body[data-scroll-locked] {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+    --removed-body-scroll-bar-size: 0px !important;
+  }
 }
 
 /* reCAPTCHA v3 — hide badge (protected by reCAPTCHA per Google ToS) */

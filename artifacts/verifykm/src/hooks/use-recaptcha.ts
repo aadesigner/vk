@@ -40,7 +40,7 @@ let _inflight: Promise<RcSettings> | null = null;
 export function fetchRecaptchaSettings(): Promise<RcSettings> {
   if (_cached) return Promise.resolve(_cached);
   if (_inflight) return _inflight;
-  _inflight = fetch(`${basePath}/api/payments/public-settings`)
+  _inflight = fetch(`${basePath}/api/payments/public-settings`, { signal: AbortSignal.timeout(8_000) })
     .then(r => r.json())
     .then((d: { recaptchaEnabled?: boolean; recaptchaSiteKey?: string | null }) => {
       const privateDev = isClientPrivateDevHost();
@@ -98,10 +98,15 @@ export function executeRecaptchaToken(siteKey: string, action: string): Promise<
   if (!siteKey || typeof window === "undefined") return Promise.resolve(null);
   if (typeof window.grecaptcha === "undefined") return Promise.resolve(null);
   return new Promise((resolve) => {
+    const timer = window.setTimeout(() => resolve(null), 4_000);
+    const finish = (token: string | null) => {
+      window.clearTimeout(timer);
+      resolve(token);
+    };
     window.grecaptcha.ready(() => {
       void window.grecaptcha.execute(siteKey, { action })
-        .then((token) => resolve(token))
-        .catch(() => resolve(null));
+        .then((token) => finish(token))
+        .catch(() => finish(null));
     });
   });
 }

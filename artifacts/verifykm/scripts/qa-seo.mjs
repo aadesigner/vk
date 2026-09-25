@@ -223,9 +223,13 @@ if (!bootstrap.includes("Fahrzeughistorienbericht")) {
 }
 
 const ogDir = join(root, "public", "seo", "og");
-const OG_MAX_BYTES = { home: 40_000, country: 52_000 };
+function ogMaxBytes(pageKey) {
+  if (pageKey === "home") return 55_000;
+  if (pageKey.startsWith("country_")) return 60_000;
+  return 80_000;
+}
 for (const { pageKey } of SEO_OG_PAGES) {
-  const max = pageKey === "home" ? OG_MAX_BYTES.home : OG_MAX_BYTES.country;
+  const max = ogMaxBytes(pageKey);
   for (const lang of langs) {
     const file = join(ogDir, `${pageKey}-${lang}.webp`);
     if (!existsSync(file)) {
