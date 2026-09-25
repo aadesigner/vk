@@ -168,321 +168,321 @@
     },
     "de": {
       "title": "VIN-Decode-API für Entwickler & Reseller | verifykm B2B",
-      "description": "VIN-Decode-API (Marke, Modell, Specs) für Partner, Teil von API und White-Label-Reseller."
+      "description": "VIN-Decode-API (Marke, Modell, Specs) für Partner — Teil von API und White-Label-Reseller."
     },
     "es": {
       "title": "API de decodificación VIN para developers | verifykm B2B",
-      "description": "API de decode VIN (marca, modelo, specs) para partners, incluida en API y white-label."
+      "description": "API de decode VIN (marca, modelo, specs) para partners — incluida en API y white-label."
     },
     "fr": {
       "title": "API décodage VIN pour développeurs | verifykm B2B",
-      "description": "API de décodage VIN (marque, modèle, specs) pour partenaires, incluse dans API et white-label."
+      "description": "API de décodage VIN (marque, modèle, specs) pour partenaires — incluse dans API et white-label."
     },
     "sq": {
       "title": "API dekodimi VIN për zhvillues | verifykm B2B",
-      "description": "API dekodimi VIN (markë, model, specs) për partnerë, e përfshirë në API dhe white-label."
+      "description": "API dekodimi VIN (markë, model, specs) për partnerë — e përfshirë në API dhe white-label."
     },
     "pl": {
       "title": "API dekodowania VIN dla deweloperów | verifykm B2B",
-      "description": "API dekodowania VIN (marka, model, specs) dla partnerów, w API i white-label."
+      "description": "API dekodowania VIN (marka, model, specs) dla partnerów — w API i white-label."
     },
     "ro": {
       "title": "API decodare VIN pentru developeri | verifykm B2B",
-      "description": "API decodare VIN (marcă, model, specs) pentru parteneri, inclus în API și white-label."
+      "description": "API decodare VIN (marcă, model, specs) pentru parteneri — inclus în API și white-label."
     },
     "bg": {
       "title": "VIN decode API за разработчици | verifykm B2B",
-      "description": "VIN decode API (марка, модел, specs) за партньори, в API и white-label."
+      "description": "VIN decode API (марка, модел, specs) за партньори — в API и white-label."
     },
     "ka": {
       "title": "VIN decode API დეველოპერებისთვის | verifykm B2B",
-      "description": "VIN decode API (მარკა, მოდელი, specs) პარტნიორებისთვის, API-სა და white-label-ში."
+      "description": "VIN decode API (მარკა, მოდელი, specs) პარტნიორებისთვის — API-სა და white-label-ში."
     },
     "ar": {
       "title": "واجهة فك VIN للمطوّرين | verifykm B2B",
-      "description": "واجهة فك VIN (الماركة والموديل والمواصفات) للشركاء, ضمن الواجهة وwhite-label."
+      "description": "واجهة فك VIN (الماركة والموديل والمواصفات) للشركاء — ضمن الواجهة وwhite-label."
     },
     "uk": {
       "title": "API декодування VIN для розробників | verifykm B2B",
-      "description": "API декодування VIN (марка, модель, specs) для партнерів, в API та white-label."
+      "description": "API декодування VIN (марка, модель, specs) для партнерів — в API та white-label."
     },
     "ru": {
       "title": "API декодирования VIN для разработчиков | verifykm B2B",
-      "description": "API декодирования VIN (марка, модель, specs) для партнёров, в API и white-label."
+      "description": "API декодирования VIN (марка, модель, specs) для партнёров — в API и white-label."
     },
     "zh": {
       "title": "面向开发者的 VIN 解码 API | verifykm B2B",
-      "description": "合作伙伴 VIN 解码 API（品牌、车型、规格）, 包含在 API 与白标方案中。"
+      "description": "合作伙伴 VIN 解码 API（品牌、车型、规格）— 包含在 API 与白标方案中。"
     }
   },
   "/api-b2b/usa-cars": {
     "en": {
       "title": "American Vehicle Data API for Resellers | verifykm B2B",
-      "description": "Reseller API access for American vehicle data under your brand, white-label site or developer integration with verifykm."
+      "description": "Reseller API access for American vehicle data under your brand — white-label site or developer integration with verifykm."
     },
     "de": {
       "title": "amerikanische Fahrzeugdaten-API für Reseller | verifykm B2B",
-      "description": "Reseller-API für amerikanische-Fahrzeugdaten unter Ihrer Marke, White-Label oder Entwickler-Integration."
+      "description": "Reseller-API für amerikanische-Fahrzeugdaten unter Ihrer Marke — White-Label oder Entwickler-Integration."
     },
     "es": {
       "title": "API de datos de vehículos estadounidenses para resellers | verifykm B2B",
-      "description": "API reseller para datos de vehículos estadounidenses bajo su marca, white-label o integración para developers."
+      "description": "API reseller para datos de vehículos estadounidenses bajo su marca — white-label o integración para developers."
     },
     "fr": {
       "title": "API données véhicules américaines pour revendeurs | verifykm B2B",
-      "description": "API revendeur pour données véhicules américaines sous votre marque, white-label ou intégration développeur."
+      "description": "API revendeur pour données véhicules américaines sous votre marque — white-label ou intégration développeur."
     },
     "sq": {
       "title": "API të dhënash automjetesh SHBA për rishitës | verifykm B2B",
-      "description": "API rishitësi për të dhëna automjetesh SHBA nën markën tuaj, white-label ose integrim zhvilluesi."
+      "description": "API rishitësi për të dhëna automjetesh SHBA nën markën tuaj — white-label ose integrim zhvilluesi."
     },
     "pl": {
       "title": "API danych pojazdów amerykańskich dla resellerów | verifykm B2B",
-      "description": "API resellera dla danych pojazdów amerykańskich pod Twoją marką, white-label lub integracja dla deweloperów."
+      "description": "API resellera dla danych pojazdów amerykańskich pod Twoją marką — white-label lub integracja dla deweloperów."
     },
     "ro": {
       "title": "API date vehicule americane pentru reselleri | verifykm B2B",
-      "description": "API reseller pentru date vehicule americane sub brandul dvs., white-label sau integrare developer."
+      "description": "API reseller pentru date vehicule americane sub brandul dvs. — white-label sau integrare developer."
     },
     "bg": {
       "title": "API за данни за американски автомобили за реселъри | verifykm B2B",
-      "description": "Reseller API за данни за американски автомобили под вашата марка, white-label или developer интеграция."
+      "description": "Reseller API за данни за американски автомобили под вашата марка — white-label или developer интеграция."
     },
     "ka": {
       "title": "ამერიკული მანქანების მონაცემების API რესელერებისთვის | verifykm B2B",
-      "description": "რესელერის API ამერიკული მანქანების მონაცემებისთვის თქვენი ბრენდით, white-label ან დეველოპერის ინტეგრაცია."
+      "description": "რესელერის API ამერიკული მანქანების მონაცემებისთვის თქვენი ბრენდით — white-label ან დეველოპერის ინტეგრაცია."
     },
     "ar": {
       "title": "واجهة بيانات مركبات الأمريكية للبائعين | verifykm B2B",
-      "description": "واجهة إعادة بيع لبيانات مركبات الأمريكية تحت علامتك, white-label أو تكامل للمطوّرين."
+      "description": "واجهة إعادة بيع لبيانات مركبات الأمريكية تحت علامتك — white-label أو تكامل للمطوّرين."
     },
     "uk": {
       "title": "API даних авто американських для реселерів | verifykm B2B",
-      "description": "Reseller API для даних авто американських під вашим брендом, white-label або інтеграція для розробників."
+      "description": "Reseller API для даних авто американських під вашим брендом — white-label або інтеграція для розробників."
     },
     "ru": {
       "title": "API данных авто американских для реселлеров | verifykm B2B",
-      "description": "Reseller API для данных авто американских под вашим брендом, white-label или интеграция для разработчиков."
+      "description": "Reseller API для данных авто американских под вашим брендом — white-label или интеграция для разработчиков."
     },
     "zh": {
       "title": "美国 车辆数据 API（分销商）| verifykm B2B",
-      "description": "以您的品牌提供 美国 车辆数据的分销 API, 白标站点或开发者集成。"
+      "description": "以您的品牌提供 美国 车辆数据的分销 API — 白标站点或开发者集成。"
     }
   },
   "/api-b2b/canada-cars": {
     "en": {
       "title": "Canadian Vehicle Data API for Resellers | verifykm B2B",
-      "description": "Reseller API access for Canadian vehicle data under your brand, white-label site or developer integration with verifykm."
+      "description": "Reseller API access for Canadian vehicle data under your brand — white-label site or developer integration with verifykm."
     },
     "de": {
       "title": "kanadische Fahrzeugdaten-API für Reseller | verifykm B2B",
-      "description": "Reseller-API für kanadische-Fahrzeugdaten unter Ihrer Marke, White-Label oder Entwickler-Integration."
+      "description": "Reseller-API für kanadische-Fahrzeugdaten unter Ihrer Marke — White-Label oder Entwickler-Integration."
     },
     "es": {
       "title": "API de datos de vehículos canadienses para resellers | verifykm B2B",
-      "description": "API reseller para datos de vehículos canadienses bajo su marca, white-label o integración para developers."
+      "description": "API reseller para datos de vehículos canadienses bajo su marca — white-label o integración para developers."
     },
     "fr": {
       "title": "API données véhicules canadiennes pour revendeurs | verifykm B2B",
-      "description": "API revendeur pour données véhicules canadiennes sous votre marque, white-label ou intégration développeur."
+      "description": "API revendeur pour données véhicules canadiennes sous votre marque — white-label ou intégration développeur."
     },
     "sq": {
       "title": "API të dhënash automjetesh Kanadaja për rishitës | verifykm B2B",
-      "description": "API rishitësi për të dhëna automjetesh Kanadaja nën markën tuaj, white-label ose integrim zhvilluesi."
+      "description": "API rishitësi për të dhëna automjetesh Kanadaja nën markën tuaj — white-label ose integrim zhvilluesi."
     },
     "pl": {
       "title": "API danych pojazdów kanadyjskich dla resellerów | verifykm B2B",
-      "description": "API resellera dla danych pojazdów kanadyjskich pod Twoją marką, white-label lub integracja dla deweloperów."
+      "description": "API resellera dla danych pojazdów kanadyjskich pod Twoją marką — white-label lub integracja dla deweloperów."
     },
     "ro": {
       "title": "API date vehicule canadiene pentru reselleri | verifykm B2B",
-      "description": "API reseller pentru date vehicule canadiene sub brandul dvs., white-label sau integrare developer."
+      "description": "API reseller pentru date vehicule canadiene sub brandul dvs. — white-label sau integrare developer."
     },
     "bg": {
       "title": "API за данни за канадски автомобили за реселъри | verifykm B2B",
-      "description": "Reseller API за данни за канадски автомобили под вашата марка, white-label или developer интеграция."
+      "description": "Reseller API за данни за канадски автомобили под вашата марка — white-label или developer интеграция."
     },
     "ka": {
       "title": "კანადური მანქანების მონაცემების API რესელერებისთვის | verifykm B2B",
-      "description": "რესელერის API კანადური მანქანების მონაცემებისთვის თქვენი ბრენდით, white-label ან დეველოპერის ინტეგრაცია."
+      "description": "რესელერის API კანადური მანქანების მონაცემებისთვის თქვენი ბრენდით — white-label ან დეველოპერის ინტეგრაცია."
     },
     "ar": {
       "title": "واجهة بيانات مركبات الكندية للبائعين | verifykm B2B",
-      "description": "واجهة إعادة بيع لبيانات مركبات الكندية تحت علامتك, white-label أو تكامل للمطوّرين."
+      "description": "واجهة إعادة بيع لبيانات مركبات الكندية تحت علامتك — white-label أو تكامل للمطوّرين."
     },
     "uk": {
       "title": "API даних авто канадських для реселерів | verifykm B2B",
-      "description": "Reseller API для даних авто канадських під вашим брендом, white-label або інтеграція для розробників."
+      "description": "Reseller API для даних авто канадських під вашим брендом — white-label або інтеграція для розробників."
     },
     "ru": {
       "title": "API данных авто канадских для реселлеров | verifykm B2B",
-      "description": "Reseller API для данных авто канадских под вашим брендом, white-label или интеграция для разработчиков."
+      "description": "Reseller API для данных авто канадских под вашим брендом — white-label или интеграция для разработчиков."
     },
     "zh": {
       "title": "加拿大 车辆数据 API（分销商）| verifykm B2B",
-      "description": "以您的品牌提供 加拿大 车辆数据的分销 API, 白标站点或开发者集成。"
+      "description": "以您的品牌提供 加拿大 车辆数据的分销 API — 白标站点或开发者集成。"
     }
   },
   "/api-b2b/korea-cars": {
     "en": {
       "title": "Korean Vehicle Data API for Resellers | verifykm B2B",
-      "description": "Reseller API access for Korean vehicle data under your brand, white-label site or developer integration with verifykm."
+      "description": "Reseller API access for Korean vehicle data under your brand — white-label site or developer integration with verifykm."
     },
     "de": {
       "title": "koreanische Fahrzeugdaten-API für Reseller | verifykm B2B",
-      "description": "Reseller-API für koreanische-Fahrzeugdaten unter Ihrer Marke, White-Label oder Entwickler-Integration."
+      "description": "Reseller-API für koreanische-Fahrzeugdaten unter Ihrer Marke — White-Label oder Entwickler-Integration."
     },
     "es": {
       "title": "API de datos de vehículos coreanos para resellers | verifykm B2B",
-      "description": "API reseller para datos de vehículos coreanos bajo su marca, white-label o integración para developers."
+      "description": "API reseller para datos de vehículos coreanos bajo su marca — white-label o integración para developers."
     },
     "fr": {
       "title": "API données véhicules coréennes pour revendeurs | verifykm B2B",
-      "description": "API revendeur pour données véhicules coréennes sous votre marque, white-label ou intégration développeur."
+      "description": "API revendeur pour données véhicules coréennes sous votre marque — white-label ou intégration développeur."
     },
     "sq": {
       "title": "API të dhënash automjetesh Koreja për rishitës | verifykm B2B",
-      "description": "API rishitësi për të dhëna automjetesh Koreja nën markën tuaj, white-label ose integrim zhvilluesi."
+      "description": "API rishitësi për të dhëna automjetesh Koreja nën markën tuaj — white-label ose integrim zhvilluesi."
     },
     "pl": {
       "title": "API danych pojazdów koreańskich dla resellerów | verifykm B2B",
-      "description": "API resellera dla danych pojazdów koreańskich pod Twoją marką, white-label lub integracja dla deweloperów."
+      "description": "API resellera dla danych pojazdów koreańskich pod Twoją marką — white-label lub integracja dla deweloperów."
     },
     "ro": {
       "title": "API date vehicule coreene pentru reselleri | verifykm B2B",
-      "description": "API reseller pentru date vehicule coreene sub brandul dvs., white-label sau integrare developer."
+      "description": "API reseller pentru date vehicule coreene sub brandul dvs. — white-label sau integrare developer."
     },
     "bg": {
       "title": "API за данни за корейски автомобили за реселъри | verifykm B2B",
-      "description": "Reseller API за данни за корейски автомобили под вашата марка, white-label или developer интеграция."
+      "description": "Reseller API за данни за корейски автомобили под вашата марка — white-label или developer интеграция."
     },
     "ka": {
       "title": "კორეული მანქანების მონაცემების API რესელერებისთვის | verifykm B2B",
-      "description": "რესელერის API კორეული მანქანების მონაცემებისთვის თქვენი ბრენდით, white-label ან დეველოპერის ინტეგრაცია."
+      "description": "რესელერის API კორეული მანქანების მონაცემებისთვის თქვენი ბრენდით — white-label ან დეველოპერის ინტეგრაცია."
     },
     "ar": {
       "title": "واجهة بيانات مركبات الكورية للبائعين | verifykm B2B",
-      "description": "واجهة إعادة بيع لبيانات مركبات الكورية تحت علامتك, white-label أو تكامل للمطوّرين."
+      "description": "واجهة إعادة بيع لبيانات مركبات الكورية تحت علامتك — white-label أو تكامل للمطوّرين."
     },
     "uk": {
       "title": "API даних авто корейських для реселерів | verifykm B2B",
-      "description": "Reseller API для даних авто корейських під вашим брендом, white-label або інтеграція для розробників."
+      "description": "Reseller API для даних авто корейських під вашим брендом — white-label або інтеграція для розробників."
     },
     "ru": {
       "title": "API данных авто корейских для реселлеров | verifykm B2B",
-      "description": "Reseller API для данных авто корейских под вашим брендом, white-label или интеграция для разработчиков."
+      "description": "Reseller API для данных авто корейских под вашим брендом — white-label или интеграция для разработчиков."
     },
     "zh": {
       "title": "韩国 车辆数据 API（分销商）| verifykm B2B",
-      "description": "以您的品牌提供 韩国 车辆数据的分销 API, 白标站点或开发者集成。"
+      "description": "以您的品牌提供 韩国 车辆数据的分销 API — 白标站点或开发者集成。"
     }
   },
   "/api-b2b/dubai-cars": {
     "en": {
       "title": "UAE Vehicle Data API for Resellers | verifykm B2B",
-      "description": "Reseller API access for UAE vehicle data under your brand, white-label site or developer integration with verifykm."
+      "description": "Reseller API access for UAE vehicle data under your brand — white-label site or developer integration with verifykm."
     },
     "de": {
       "title": "VAE- Fahrzeugdaten-API für Reseller | verifykm B2B",
-      "description": "Reseller-API für VAE--Fahrzeugdaten unter Ihrer Marke, White-Label oder Entwickler-Integration."
+      "description": "Reseller-API für VAE--Fahrzeugdaten unter Ihrer Marke — White-Label oder Entwickler-Integration."
     },
     "es": {
       "title": "API de datos de vehículos de los EAU para resellers | verifykm B2B",
-      "description": "API reseller para datos de vehículos de los EAU bajo su marca, white-label o integración para developers."
+      "description": "API reseller para datos de vehículos de los EAU bajo su marca — white-label o integración para developers."
     },
     "fr": {
       "title": "API données véhicules des EAU pour revendeurs | verifykm B2B",
-      "description": "API revendeur pour données véhicules des EAU sous votre marque, white-label ou intégration développeur."
+      "description": "API revendeur pour données véhicules des EAU sous votre marque — white-label ou intégration développeur."
     },
     "sq": {
       "title": "API të dhënash automjetesh Dubai / Emiratet për rishitës | verifykm B2B",
-      "description": "API rishitësi për të dhëna automjetesh Dubai / Emiratet nën markën tuaj, white-label ose integrim zhvilluesi."
+      "description": "API rishitësi për të dhëna automjetesh Dubai / Emiratet nën markën tuaj — white-label ose integrim zhvilluesi."
     },
     "pl": {
       "title": "API danych pojazdów ze ZEA dla resellerów | verifykm B2B",
-      "description": "API resellera dla danych pojazdów ze ZEA pod Twoją marką, white-label lub integracja dla deweloperów."
+      "description": "API resellera dla danych pojazdów ze ZEA pod Twoją marką — white-label lub integracja dla deweloperów."
     },
     "ro": {
       "title": "API date vehicule din EAU pentru reselleri | verifykm B2B",
-      "description": "API reseller pentru date vehicule din EAU sub brandul dvs., white-label sau integrare developer."
+      "description": "API reseller pentru date vehicule din EAU sub brandul dvs. — white-label sau integrare developer."
     },
     "bg": {
       "title": "API за данни за от ОАЕ автомобили за реселъри | verifykm B2B",
-      "description": "Reseller API за данни за от ОАЕ автомобили под вашата марка, white-label или developer интеграция."
+      "description": "Reseller API за данни за от ОАЕ автомобили под вашата марка — white-label или developer интеграция."
     },
     "ka": {
       "title": "არეს მანქანების მონაცემების API რესელერებისთვის | verifykm B2B",
-      "description": "რესელერის API არეს მანქანების მონაცემებისთვის თქვენი ბრენდით, white-label ან დეველოპერის ინტეგრაცია."
+      "description": "რესელერის API არეს მანქანების მონაცემებისთვის თქვენი ბრენდით — white-label ან დეველოპერის ინტეგრაცია."
     },
     "ar": {
       "title": "واجهة بيانات مركبات الإماراتية للبائعين | verifykm B2B",
-      "description": "واجهة إعادة بيع لبيانات مركبات الإماراتية تحت علامتك, white-label أو تكامل للمطوّرين."
+      "description": "واجهة إعادة بيع لبيانات مركبات الإماراتية تحت علامتك — white-label أو تكامل للمطوّرين."
     },
     "uk": {
       "title": "API даних авто ОАЕ для реселерів | verifykm B2B",
-      "description": "Reseller API для даних авто ОАЕ під вашим брендом, white-label або інтеграція для розробників."
+      "description": "Reseller API для даних авто ОАЕ під вашим брендом — white-label або інтеграція для розробників."
     },
     "ru": {
       "title": "API данных авто ОАЭ для реселлеров | verifykm B2B",
-      "description": "Reseller API для данных авто ОАЭ под вашим брендом, white-label или интеграция для разработчиков."
+      "description": "Reseller API для данных авто ОАЭ под вашим брендом — white-label или интеграция для разработчиков."
     },
     "zh": {
       "title": "阿联酋 车辆数据 API（分销商）| verifykm B2B",
-      "description": "以您的品牌提供 阿联酋 车辆数据的分销 API, 白标站点或开发者集成。"
+      "description": "以您的品牌提供 阿联酋 车辆数据的分销 API — 白标站点或开发者集成。"
     }
   },
   "/api-b2b/china-cars": {
     "en": {
       "title": "Chinese Vehicle Data API for Resellers | verifykm B2B",
-      "description": "Reseller API access for Chinese vehicle data under your brand, white-label site or developer integration with verifykm."
+      "description": "Reseller API access for Chinese vehicle data under your brand — white-label site or developer integration with verifykm."
     },
     "de": {
       "title": "chinesische Fahrzeugdaten-API für Reseller | verifykm B2B",
-      "description": "Reseller-API für chinesische-Fahrzeugdaten unter Ihrer Marke, White-Label oder Entwickler-Integration."
+      "description": "Reseller-API für chinesische-Fahrzeugdaten unter Ihrer Marke — White-Label oder Entwickler-Integration."
     },
     "es": {
       "title": "API de datos de vehículos chinos para resellers | verifykm B2B",
-      "description": "API reseller para datos de vehículos chinos bajo su marca, white-label o integración para developers."
+      "description": "API reseller para datos de vehículos chinos bajo su marca — white-label o integración para developers."
     },
     "fr": {
       "title": "API données véhicules chinoises pour revendeurs | verifykm B2B",
-      "description": "API revendeur pour données véhicules chinoises sous votre marque, white-label ou intégration développeur."
+      "description": "API revendeur pour données véhicules chinoises sous votre marque — white-label ou intégration développeur."
     },
     "sq": {
       "title": "API të dhënash automjetesh Kina për rishitës | verifykm B2B",
-      "description": "API rishitësi për të dhëna automjetesh Kina nën markën tuaj, white-label ose integrim zhvilluesi."
+      "description": "API rishitësi për të dhëna automjetesh Kina nën markën tuaj — white-label ose integrim zhvilluesi."
     },
     "pl": {
       "title": "API danych pojazdów chińskich dla resellerów | verifykm B2B",
-      "description": "API resellera dla danych pojazdów chińskich pod Twoją marką, white-label lub integracja dla deweloperów."
+      "description": "API resellera dla danych pojazdów chińskich pod Twoją marką — white-label lub integracja dla deweloperów."
     },
     "ro": {
       "title": "API date vehicule chineze pentru reselleri | verifykm B2B",
-      "description": "API reseller pentru date vehicule chineze sub brandul dvs., white-label sau integrare developer."
+      "description": "API reseller pentru date vehicule chineze sub brandul dvs. — white-label sau integrare developer."
     },
     "bg": {
       "title": "API за данни за китайски автомобили за реселъри | verifykm B2B",
-      "description": "Reseller API за данни за китайски автомобили под вашата марка, white-label или developer интеграция."
+      "description": "Reseller API за данни за китайски автомобили под вашата марка — white-label или developer интеграция."
     },
     "ka": {
       "title": "ჩინური მანქანების მონაცემების API რესელერებისთვის | verifykm B2B",
-      "description": "რესელერის API ჩინური მანქანების მონაცემებისთვის თქვენი ბრენდით, white-label ან დეველოპერის ინტეგრაცია."
+      "description": "რესელერის API ჩინური მანქანების მონაცემებისთვის თქვენი ბრენდით — white-label ან დეველოპერის ინტეგრაცია."
     },
     "ar": {
       "title": "واجهة بيانات مركبات الصينية للبائعين | verifykm B2B",
-      "description": "واجهة إعادة بيع لبيانات مركبات الصينية تحت علامتك, white-label أو تكامل للمطوّرين."
+      "description": "واجهة إعادة بيع لبيانات مركبات الصينية تحت علامتك — white-label أو تكامل للمطوّرين."
     },
     "uk": {
       "title": "API даних авто китайських для реселерів | verifykm B2B",
-      "description": "Reseller API для даних авто китайських під вашим брендом, white-label або інтеграція для розробників."
+      "description": "Reseller API для даних авто китайських під вашим брендом — white-label або інтеграція для розробників."
     },
     "ru": {
       "title": "API данных авто китайских для реселлеров | verifykm B2B",
-      "description": "Reseller API для данных авто китайских под вашим брендом, white-label или интеграция для разработчиков."
+      "description": "Reseller API для данных авто китайских под вашим брендом — white-label или интеграция для разработчиков."
     },
     "zh": {
       "title": "中国 车辆数据 API（分销商）| verifykm B2B",
-      "description": "以您的品牌提供 中国 车辆数据的分销 API, 白标站点或开发者集成。"
+      "description": "以您的品牌提供 中国 车辆数据的分销 API — 白标站点或开发者集成。"
     }
   }
 }

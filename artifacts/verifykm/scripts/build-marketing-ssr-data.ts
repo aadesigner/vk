@@ -2,14 +2,12 @@
  * Snapshot marketing SSR body copy for prerender + server inject.
  * Run: pnpm exec tsx scripts/build-marketing-ssr-data.ts
  */
-import { readFileSync, writeFileSync, copyFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { MarketingSsrContent, MarketingSsrData } from "@workspace/marketing-page-seo";
 import { SUPPORTED_LANGS, type Language } from "../src/lib/languages";
 import { pathFor, pathForCountry } from "../src/lib/localized-routes";
-import { getB2bCopy, getRegionHeadlineLabel } from "../src/pages/api-b2b/copy";
-import { API_B2B_REGIONS } from "../src/pages/api-b2b/regions";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const i18nDir = join(__dir, "../src/i18n");
@@ -221,32 +219,6 @@ function countryContent(t: Dict, lang: Language, prefix: string): MarketingSsrCo
   });
 }
 
-function b2bContent(lang: Language, rest: string): MarketingSsrContent {
-  const c = getB2bCopy(lang);
-  let title = c.seoHomeTitle;
-  let description = c.seoHomeDesc;
-  const tail = rest.replace(/^\/api-b2b/, "") || "";
-  if (tail === "/plans") {
-    title = c.seoPlansTitle;
-    description = c.seoPlansDesc;
-  } else if (tail === "/contact") {
-    title = c.seoContactTitle;
-    description = c.seoContactDesc;
-  } else if (tail === "/vin-decoder") {
-    title = c.seoDecoderTitle;
-    description = c.seoDecoderDesc;
-  } else if (tail.startsWith("/")) {
-    const slug = tail.slice(1);
-    const region = API_B2B_REGIONS.find((r) => r.slug === slug);
-    if (region) {
-      const label = getRegionHeadlineLabel(c, region.slug, lang);
-      title = c.seoRegionTitle.replace(/\{region\}/g, label);
-      description = c.seoRegionDesc.replace(/\{region\}/g, label);
-    }
-  }
-  return { h1: title, lead: description };
-}
-
 const PAGE_BUILDERS: Record<string, (t: Dict, lang: Language) => MarketingSsrContent> = {
   home: homeContent,
   pricing: pricingContent,
@@ -275,24 +247,6 @@ for (const pageKey of Object.keys(PAGE_BUILDERS)) {
   }
 }
 
-const b2bPaths = [
-  "/api-b2b",
-  "/api-b2b/plans",
-  "/api-b2b/contact",
-  "/api-b2b/vin-decoder",
-  ...API_B2B_REGIONS.map((r) => `/api-b2b/${r.slug}`),
-] as const;
-
-for (const rest of b2bPaths) {
-  const key = rest === "/api-b2b" ? "api_b2b" : `api_b2b${rest.replace(/\//g, "_")}`;
-  const bucket: Record<string, MarketingSsrContent> = {};
-  for (const lang of SUPPORTED_LANGS) {
-    const content = b2bContent(lang, rest);
-    if (content.h1 && content.lead) bucket[lang] = content;
-  }
-  (data as Record<string, Record<string, MarketingSsrContent>>)[key] = bucket;
-}
-
 const json = `${JSON.stringify(data, null, 2)}\n`;
 writeFileSync(outPath, json, "utf8");
 writeFileSync(libOutPath, json, "utf8");
@@ -303,6 +257,8 @@ const b2bSeoSrc = join(__dir, "b2b-seo-data.json");
 const workspaceSeoOut = join(__dir, "../../../lib/marketing-page-seo/marketing-seo-data.json");
 const workspaceB2bOut = join(__dir, "../../../lib/marketing-page-seo/marketing-b2b-seo-data.json");
 copyFileSync(seoDataSrc, workspaceSeoOut);
-copyFileSync(b2bSeoSrc, workspaceB2bOut);
+if (existsSync(b2bSeoSrc)) {
+  copyFileSync(b2bSeoSrc, workspaceB2bOut);
+}
 
 console.log(`Wrote marketing SSR data → ${outPath}`);
