@@ -1,0 +1,2860 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: verifykm.com VIN Lookup API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: vin
+    description: VIN lookup operations
+  - name: payments
+    description: Payment operations
+  - name: user
+    description: User operations
+  - name: admin
+    description: Admin operations
+  - name: providers
+    description: API provider management
+  - name: pricing
+    description: Pricing management
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ── VIN ──────────────────────────────────────────────────────────────────────
+  /vin/lookup:
+    post:
+      operationId: lookupVin
+      tags: [vin]
+      summary: Submit a VIN lookup request
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VinLookupInput"
+      responses:
+        "200":
+          description: VIN lookup created or returned from cache
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinLookup"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vin/{id}:
+    get:
+      operationId: getVinLookup
+      tags: [vin]
+      summary: Get a VIN lookup result
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: VIN lookup result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinLookup"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vin/resolve/{id}:
+    get:
+      operationId: resolveVinId
+      tags: [vin]
+      summary: Resolve a numeric lookup ID to its VIN string (public, no auth)
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: VIN resolved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [vin]
+                properties:
+                  vin:
+                    type: string
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vin/public/{vin}:
+    get:
+      operationId: getVinPublicReport
+      tags: [vin]
+      summary: Get a shareable public VIN report (paywall-gated sensitive fields)
+      security: []
+      parameters:
+        - name: vin
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 17
+            maxLength: 17
+      responses:
+        "200":
+          description: Public VIN report (sensitive fields only present when isUnlocked=true)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinPublicReport"
+        "400":
+          description: Invalid VIN format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: VIN not found in database
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vin/preview/{vin}:
+    get:
+      operationId: getVinPreview
+      tags: [vin]
+      summary: Get a shareable public preview of a VIN (SEO page)
+      parameters:
+        - name: vin
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Public VIN preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinPreview"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── USER ─────────────────────────────────────────────────────────────────────
+  /user/profile:
+    get:
+      operationId: getUserProfile
+      tags: [user]
+      summary: Get the current user's profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: patchUserProfile
+      tags: [user]
+      summary: Update profile fields (country and/or phone)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                countryCode:
+                  type: ["string", "null"]
+                  description: ISO 3166-1 alpha-2 (Albania = AL, Kosovo = XK)
+                phonePrefix:
+                  type: ["string", "null"]
+                  description: Dialing prefix including +, e.g. +355
+                phoneNational:
+                  type: ["string", "null"]
+                  description: National number digits only
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Invalid country or phone
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Daily country or phone change limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /user/history:
+    get:
+      operationId: getUserHistory
+      tags: [user]
+      summary: Get the current user's VIN check history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: view
+          in: query
+          description: Use `summary` for dashboard list cards (trimmed report fields only).
+          schema:
+            type: string
+            enum: [summary]
+      responses:
+        "200":
+          description: Paginated VIN history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinHistoryPage"
+
+  /user/payments:
+    get:
+      operationId: getUserPayments
+      tags: [user]
+      summary: Get the current user's payment history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated payment history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentHistoryPage"
+
+  /user/credit-purchases:
+    get:
+      operationId: getUserCreditPurchases
+      tags: [user]
+      summary: Get the current user's credit pack purchases
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated credit pack purchases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditPurchasePage"
+
+  /user/stats:
+    get:
+      operationId: getUserStats
+      tags: [user]
+      summary: Get the current user's usage statistics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+
+  /user/vin/{id}:
+    delete:
+      operationId: deleteUserVinLookup
+      tags: [user]
+      summary: Delete a failed VIN lookup (user's own only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "400":
+          description: Only failed lookups can be deleted
+        "403":
+          description: Forbidden
+        "404":
+          description: Not found
+
+  # ── PAYMENTS ─────────────────────────────────────────────────────────────────
+  /payments/create-checkout:
+    post:
+      operationId: createCheckout
+      tags: [payments]
+      summary: Create a Stripe checkout session for a VIN check
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "200":
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSession"
+
+  /payments/webhook/stripe:
+    post:
+      operationId: stripeWebhook
+      tags: [payments]
+      summary: Stripe webhook handler
+      responses:
+        "200":
+          description: Webhook received
+
+  /payments/current-pricing:
+    get:
+      operationId: getCurrentPricing
+      tags: [payments]
+      summary: Get the current pricing configuration
+      responses:
+        "200":
+          description: Current pricing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingConfig"
+
+  /payments/create-credit-pack-order:
+    post:
+      operationId: createCreditPackOrder
+      tags: [payments]
+      summary: Create a PayPal order for a prepaid credit pack
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCreditPackOrderInput"
+      responses:
+        "200":
+          description: PayPal order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateCreditPackOrderResult"
+        "400":
+          description: Invalid pack
+        "401":
+          description: Unauthorized
+        "403":
+          description: Account suspended
+
+  /payments/capture-credit-pack-order:
+    post:
+      operationId: captureCreditPackOrder
+      tags: [payments]
+      summary: Capture a credit pack PayPal order and grant credits
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptureCreditPackOrderInput"
+      responses:
+        "200":
+          description: Credits granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaptureCreditPackOrderResult"
+        "402":
+          description: Payment not completed
+        "404":
+          description: Payment not found
+
+  /payments/redeem-credit:
+    post:
+      operationId: redeemCredit
+      tags: [payments]
+      summary: Spend one credit to unlock a VIN report
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RedeemCreditInput"
+      responses:
+        "200":
+          description: Credit redeemed; call POST /vin/lookup with paymentId
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedeemCreditResult"
+        "402":
+          description: Insufficient credits
+        "409":
+          description: Already unlocked
+        "422":
+          description: No VIN data
+
+  # ── ADMIN: USERS ─────────────────────────────────────────────────────────────
+  /admin/users:
+    get:
+      operationId: adminGetUsers
+      tags: [admin]
+      summary: List all users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, banned]
+        - name: checks
+          in: query
+          schema:
+            type: string
+            enum: [checked, unchecked]
+            description: Filter by whether the user has any VIN lookups
+        - name: country
+          in: query
+          schema:
+            type: string
+          description: >
+            ISO 3166-1 alpha-2 profile country (Albania = AL, Kosovo = XK),
+            or unset/none for users with no country. Combines with status and checks (AND).
+        - name: hasPhone
+          in: query
+          schema:
+            type: string
+            enum: [yes, no]
+          description: >
+            Filter by whether the user has a complete phone number
+            (both phone_prefix and phone_national). Combines with other filters (AND).
+        - name: emailDomain
+          in: query
+          schema:
+            type: string
+          description: >
+            Filter by email domain (e.g. gmail.com, yahoo.com). Case-insensitive.
+            Combines with other filters (AND).
+      responses:
+        "200":
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserPage"
+
+  /admin/users/email-domains:
+    get:
+      operationId: adminGetUserEmailDomains
+      tags: [admin]
+      summary: List distinct email domains among users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Domains with user counts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [domains]
+                properties:
+                  domains:
+                    type: array
+                    items:
+                      type: object
+                      required: [domain, count]
+                      properties:
+                        domain:
+                          type: string
+                        count:
+                          type: integer
+
+  /admin/users/export:
+    get:
+      operationId: adminExportUsers
+      tags: [admin]
+      summary: Download all users as a CSV file
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, banned]
+        - name: checks
+          in: query
+          schema:
+            type: string
+            enum: [checked, unchecked]
+        - name: country
+          in: query
+          schema:
+            type: string
+          description: >
+            ISO 3166-1 alpha-2 profile country (Albania = AL, Kosovo = XK),
+            or unset/none for users with no country. Combines with other filters (AND).
+        - name: hasPhone
+          in: query
+          schema:
+            type: string
+            enum: [yes, no]
+          description: >
+            Filter by whether the user has a complete phone number
+            (both phone_prefix and phone_national). Combines with other filters (AND).
+        - name: emailDomain
+          in: query
+          schema:
+            type: string
+          description: >
+            Filter by email domain (e.g. gmail.com, yahoo.com). Case-insensitive.
+            Combines with other filters (AND).
+      responses:
+        "200":
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /admin/users/import:
+    post:
+      operationId: adminImportUsers
+      tags: [admin]
+      summary: Create or update users from a CSV file
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Import result summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserImportResult"
+
+  /admin/users/{userId}/ban:
+    post:
+      operationId: adminBanUser
+      tags: [admin]
+      summary: Ban a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BanUserInput"
+      responses:
+        "200":
+          description: User banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+
+  /admin/users/{userId}/unban:
+    post:
+      operationId: adminUnbanUser
+      tags: [admin]
+      summary: Unban a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User unbanned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+
+  /admin/users/{userId}:
+    get:
+      operationId: adminGetUser
+      tags: [admin]
+      summary: Get a single user with stats
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "404":
+          description: User not found
+    delete:
+      operationId: adminDeleteUser
+      tags: [admin]
+      summary: Permanently delete a user and all account data
+      description: >
+        Deletes the user account, payments, and VIN lookups tied to this user.
+        Shared VIN catalog entries are not removed.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteUserInput"
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteUserResult"
+        "400":
+          description: Invalid request (self-delete, admin account, email mismatch)
+        "404":
+          description: User not found
+
+  /admin/users/{userId}/history:
+    get:
+      operationId: adminGetUserHistory
+      tags: [admin]
+      summary: Get a specific user's VIN check history
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User's VIN check history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinHistoryPage"
+
+  /admin/users/{userId}/credits:
+    post:
+      operationId: adminAdjustUserCredits
+      tags: [admin]
+      summary: Set or adjust prepaid credits for a user (clamped at 0)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminAdjustCreditsInput"
+      responses:
+        "200":
+          description: Updated user with credit balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "400":
+          description: Invalid delta
+        "404":
+          description: User not found
+
+  /admin/users/{userId}/credit-purchases:
+    get:
+      operationId: adminGetUserCreditPurchases
+      tags: [admin]
+      summary: List credit pack purchases for a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated credit pack purchases
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditPurchasePage"
+
+  # ── ADMIN: VIN ───────────────────────────────────────────────────────────────
+  /admin/vin:
+    get:
+      operationId: adminGetVinLookups
+      tags: [admin]
+      summary: List all VIN lookups
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: vin
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [complete, error, pending]
+        - name: fromCache
+          in: query
+          schema:
+            type: boolean
+        - name: provider
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated VIN lookup list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminVinPage"
+
+  /admin/vin/export:
+    post:
+      operationId: adminExportVinCsv
+      tags: [admin]
+      summary: Export filtered VIN lookups as CSV
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VinExportFilter"
+      responses:
+        "200":
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+
+  /admin/vin/bulk-delete:
+    post:
+      operationId: adminBulkDeleteVin
+      tags: [admin]
+      summary: Bulk delete VIN lookups by filter
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkDeleteVinInput"
+      responses:
+        "200":
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
+  /admin/vin/{id}/refresh:
+    post:
+      operationId: adminRefreshVin
+      tags: [admin]
+      summary: Force refresh a cached VIN result from the API
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: VIN refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinLookup"
+
+  # ── ADMIN: TRANSACTIONS ───────────────────────────────────────────────────────
+  /admin/transactions:
+    get:
+      operationId: adminGetTransactions
+      tags: [admin]
+      summary: List all payments across all users with optional filters
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, completed, failed, refunded, revoked]
+        - name: search
+          in: query
+          schema:
+            type: string
+            description: Search by user email, VIN, or PayPal order ID
+      responses:
+        "200":
+          description: Paginated transaction list with summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTransactionPage"
+
+  # ── ADMIN: VIN CATALOG ───────────────────────────────────────────────────────
+  /admin/vin-catalog:
+    post:
+      operationId: adminCreateVinCatalog
+      tags: [admin]
+      summary: Manually create a new VIN catalog entry (does not call any provider)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/VinDataPatch"
+                - type: object
+                  required: [vin]
+                  properties:
+                    vin:
+                      type: string
+                      minLength: 17
+                      maxLength: 17
+                    providerName:
+                      type: string
+                      nullable: true
+      responses:
+        "201":
+          description: Created catalog entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinCatalogItem"
+        "400":
+          description: Invalid VIN
+        "409":
+          description: VIN already exists in catalog
+
+    get:
+      operationId: adminGetVinCatalog
+      tags: [admin]
+      summary: List all VIN catalog entries (one per unique VIN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: vin
+          in: query
+          schema:
+            type: string
+        - name: provider
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated VIN catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminVinCatalogPage"
+
+  /admin/vin-catalog/import:
+    post:
+      operationId: adminImportVinCatalog
+      tags: [admin]
+      summary: Import VIN catalog entries from a CSV file (smart merge)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Import result summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinImportResult"
+        "400":
+          description: Invalid file or no valid VINs
+
+  /admin/vin-catalog/import-json:
+    post:
+      operationId: adminImportVinCatalogJson
+      tags: [admin]
+      summary: Import VIN catalog entries from a full-data JSON export (smart merge, preserves all fields)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Import result summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinImportResult"
+        "400":
+          description: Invalid JSON file or no valid VINs
+
+  /admin/vin-catalog/by-vin/{vin}:
+    get:
+      operationId: adminGetVinCatalogByVin
+      tags: [admin]
+      summary: Get a single VIN catalog entry with lookup stats and assigned users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vin
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: assignedPage
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: assignedLimit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: VIN catalog detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinCatalogDetail"
+        "404":
+          description: VIN not found
+
+    patch:
+      operationId: adminUpdateVinCatalogByVin
+      tags: [admin]
+      summary: Update VIN catalog data and propagate to all lookup records
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vin
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VinDataPatch"
+      responses:
+        "200":
+          description: Updated catalog entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VinCatalogDetail"
+        "404":
+          description: VIN not found
+
+  /admin/vin-catalog/by-vin/{vin}/assign:
+    post:
+      operationId: adminAssignVinCatalogToUser
+      tags: [admin]
+      summary: Assign a VIN report to a user without payment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vin
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignVinInput"
+      responses:
+        "201":
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  lookupId:
+                    type: integer
+        "409":
+          description: User already has access to this VIN
+
+  /admin/vin-catalog/by-vin/{vin}/refresh:
+    post:
+      operationId: adminRefreshVinCatalog
+      tags: [admin]
+      summary: Re-fetch fresh data from the active provider for a VIN, updating catalog and all lookup records
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vin
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 17
+            maxLength: 17
+      responses:
+        "200":
+          description: Refresh successful
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, vin]
+                properties:
+                  ok:
+                    type: boolean
+                  vin:
+                    type: string
+        "400":
+          description: Invalid VIN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: No active provider configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Provider fetch failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ── ADMIN: PROVIDERS ─────────────────────────────────────────────────────────
+  /admin/providers:
+    get:
+      operationId: adminGetProviders
+      tags: [admin]
+      summary: List all API providers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+
+    post:
+      operationId: adminCreateProvider
+      tags: [admin]
+      summary: Create a new API provider
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderInput"
+      responses:
+        "201":
+          description: Provider created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+
+  /admin/providers/{id}:
+    patch:
+      operationId: adminUpdateProvider
+      tags: [admin]
+      summary: Update an API provider
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderUpdate"
+      responses:
+        "200":
+          description: Provider updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+
+    delete:
+      operationId: adminDeleteProvider
+      tags: [admin]
+      summary: Delete an API provider
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Provider deleted
+
+  # ── ADMIN: PRICING ────────────────────────────────────────────────────────────
+  /admin/pricing:
+    get:
+      operationId: adminGetPricing
+      tags: [admin]
+      summary: Get pricing configuration
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Pricing configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingConfig"
+
+    patch:
+      operationId: adminUpdatePricing
+      tags: [admin]
+      summary: Update pricing configuration
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PricingUpdate"
+      responses:
+        "200":
+          description: Pricing updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingConfig"
+
+  # ── ADMIN: STATS & SYSTEM ─────────────────────────────────────────────────────
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin]
+      summary: Get system-wide statistics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: System statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/pending-vin-checks/count:
+    get:
+      operationId: adminGetPendingVinChecksCount
+      tags: [admin]
+      summary: Lightweight open pending VIN check count (admin nav badge)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Open pending count
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [open]
+                properties:
+                  open:
+                    type: integer
+                    minimum: 0
+
+  /admin/logs:
+    get:
+      operationId: adminGetLogs
+      tags: [admin]
+      summary: Get system error logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [error, warn, info]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: message
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Paginated logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogPage"
+
+  /admin/settings:
+    get:
+      operationId: adminGetSettings
+      tags: [admin]
+      summary: Get system settings
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: System settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+
+    patch:
+      operationId: adminUpdateSettings
+      tags: [admin]
+      summary: Update system settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SystemSettingsUpdate"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemSettings"
+
+  # ── COUNTRIES ─────────────────────────────────────────────────────────────────
+  /countries:
+    get:
+      operationId: getCountries
+      tags: [providers]
+      summary: List supported countries with their active providers
+      responses:
+        "200":
+          description: List of countries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Country"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+      required:
+        - error
+
+    # ── VIN ────────────────────────────────────────────────────────────────────
+    VinLookupInput:
+      type: object
+      required: [vin]
+      properties:
+        vin:
+          type: string
+          minLength: 17
+          maxLength: 17
+        paymentIntentId:
+          type: ["string", "null"]
+
+    VinLookup:
+      type: object
+      required: [id, vin, status, createdAt]
+      properties:
+        id:
+          type: integer
+        vin:
+          type: string
+        status:
+          type: string
+          enum: [pending, complete, error]
+        userId:
+          type: ["string", "null"]
+        data:
+          $ref: "#/components/schemas/VinData"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        fromCache:
+          type: boolean
+        providerName:
+          type: ["string", "null"]
+
+    VinPublicReport:
+      type: object
+      required: [vin, inCatalog, isUnlocked]
+      properties:
+        vin:
+          type: string
+        make:
+          type: ["string", "null"]
+        model:
+          type: ["string", "null"]
+        year:
+          type: ["integer", "null"]
+        engine:
+          type: ["string", "null"]
+        transmission:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        thumbnailUrl:
+          type: ["string", "null"]
+        providerName:
+          type: ["string", "null"]
+        inCatalog:
+          type: boolean
+        isUnlocked:
+          type: boolean
+        price:
+          type: ["number", "null"]
+        currency:
+          type: ["string", "null"]
+        odometer:
+          type: ["integer", "null"]
+        accidents:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: ["string", "null"]
+              severity:
+                type: ["string", "null"]
+              description:
+                type: ["string", "null"]
+        accidentCount:
+          type: ["integer", "null"]
+        ownerCount:
+          type: ["integer", "null"]
+        salvage:
+          type: ["boolean", "null"]
+        stolen:
+          type: ["boolean", "null"]
+        taxi:
+          type: ["boolean", "null"]
+        titleStatus:
+          type: ["string", "null"]
+        photos:
+          type: array
+          items:
+            type: string
+
+    VinPreview:
+      type: object
+      required: [vin]
+      properties:
+        vin:
+          type: string
+        make:
+          type: ["string", "null"]
+        model:
+          type: ["string", "null"]
+        year:
+          type: ["integer", "null"]
+        country:
+          type: ["string", "null"]
+        thumbnailUrl:
+          type: ["string", "null"]
+
+    VinData:
+      type: object
+      properties:
+        make:
+          type: ["string", "null"]
+        model:
+          type: ["string", "null"]
+        year:
+          type: ["integer", "null"]
+        trim:
+          type: ["string", "null"]
+        engine:
+          type: ["string", "null"]
+        transmission:
+          type: ["string", "null"]
+        fuelType:
+          type: ["string", "null"]
+        bodyType:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        odometer:
+          type: ["integer", "null"]
+        accidentCount:
+          type: ["integer", "null"]
+        ownerCount:
+          type: ["integer", "null"]
+        hp:
+          type: ["integer", "null"]
+        cylinders:
+          type: ["integer", "null"]
+        isSalvage:
+          type: ["boolean", "null"]
+        isStolen:
+          type: ["boolean", "null"]
+        isTaxi:
+          type: ["boolean", "null"]
+        photos:
+          type: array
+          items:
+            type: string
+        accidents:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccidentRecord"
+        mileageHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/MileageRecord"
+        ownerHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerRecord"
+        marketData:
+          $ref: "#/components/schemas/MarketData"
+
+    AccidentRecord:
+      type: object
+      properties:
+        date:
+          type: ["string", "null"]
+        severity:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        type:
+          type: ["string", "null"]
+        primaryDamage:
+          type: ["string", "null"]
+        secondaryDamage:
+          type: ["string", "null"]
+        airbagDeployed:
+          type: ["boolean", "null"]
+        odometerAtLoss:
+          type: ["integer", "null"]
+        lossAmount:
+          type: ["number", "null"]
+
+    MileageRecord:
+      type: object
+      properties:
+        date:
+          type: ["string", "null"]
+        odometer:
+          type: ["integer", "null"]
+        unit:
+          type: ["string", "null"]
+        condition:
+          type: ["string", "null"]
+        damage:
+          type: ["string", "null"]
+        auctionPrice:
+          type: ["number", "null"]
+        lotStatus:
+          type: ["string", "null"]
+
+    OwnerRecord:
+      type: object
+      properties:
+        date:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        mileage:
+          type: ["integer", "null"]
+        auctionPrice:
+          type: ["number", "null"]
+        lotStatus:
+          type: ["string", "null"]
+        condition:
+          type: ["string", "null"]
+
+    MarketData:
+      type: object
+      properties:
+        estimatedValue:
+          type: ["number", "null"]
+        currency:
+          type: ["string", "null"]
+        lastAuctionPrice:
+          type: ["number", "null"]
+        lastAuctionDate:
+          type: ["string", "null"]
+
+    VinHistoryPage:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/VinLookup"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    # ── USER ──────────────────────────────────────────────────────────────────
+    UserProfile:
+      type: object
+      required: [id, email, createdAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        isBanned:
+          type: boolean
+        isAdmin:
+          type: boolean
+        countryCode:
+          type: ["string", "null"]
+          description: ISO 3166-1 alpha-2 profile country (Albania = AL, Kosovo = XK)
+        countryChangesRemaining:
+          type: integer
+          description: Remaining country/nationality changes allowed today (UTC)
+        countryChangesLimit:
+          type: integer
+          description: Max country/nationality changes per UTC day
+        phonePrefix:
+          type: ["string", "null"]
+        phoneNational:
+          type: ["string", "null"]
+        phoneChangesRemaining:
+          type: integer
+        phoneChangesLimit:
+          type: integer
+        totalChecks:
+          type: integer
+        totalSpent:
+          type: number
+        creditBalance:
+          type: integer
+          description: Prepaid report credits remaining
+        createdAt:
+          type: string
+          format: date-time
+
+    UserStats:
+      type: object
+      required: [totalChecks, totalSpent, checksThisMonth, recentChecks]
+      properties:
+        totalChecks:
+          type: integer
+        totalSpent:
+          type: number
+        checksThisMonth:
+          type: integer
+        recentChecks:
+          type: array
+          items:
+            $ref: "#/components/schemas/VinLookup"
+
+    # ── PAYMENTS ──────────────────────────────────────────────────────────────
+    CheckoutInput:
+      type: object
+      required: [vin]
+      properties:
+        vin:
+          type: string
+        successUrl:
+          type: string
+        cancelUrl:
+          type: string
+
+    CheckoutSession:
+      type: object
+      required: [sessionId, url]
+      properties:
+        sessionId:
+          type: string
+        url:
+          type: string
+
+    Payment:
+      type: object
+      required: [id, amount, currency, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        vin:
+          type: ["string", "null"]
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded, revoked]
+        kind:
+          type: string
+          enum: [vin_report, credit_pack, credit_redemption]
+        credits:
+          type: ["integer", "null"]
+        paypalOrderId:
+          type: ["string", "null"]
+        couponCode:
+          type: ["string", "null"]
+        discountAmount:
+          type: ["number", "null"]
+        vinLookupId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateCreditPackOrderInput:
+      type: object
+      required: [packId]
+      properties:
+        packId:
+          type: string
+          enum: [pack3, pack5]
+
+    CreateCreditPackOrderResult:
+      type: object
+      required: [orderId, paymentId, packId, credits, finalPrice, currency]
+      properties:
+        orderId:
+          type: string
+        paymentId:
+          type: integer
+        packId:
+          type: string
+          enum: [pack3, pack5]
+        credits:
+          type: integer
+        finalPrice:
+          type: number
+        currency:
+          type: string
+
+    CaptureCreditPackOrderInput:
+      type: object
+      required: [orderId]
+      properties:
+        orderId:
+          type: string
+
+    CaptureCreditPackOrderResult:
+      type: object
+      required: [success, paymentId, creditsAdded, creditBalance]
+      properties:
+        success:
+          type: boolean
+        paymentId:
+          type: integer
+        creditsAdded:
+          type: integer
+        creditBalance:
+          type: integer
+
+    RedeemCreditInput:
+      type: object
+      required: [vin]
+      properties:
+        vin:
+          type: string
+
+    RedeemCreditResult:
+      type: object
+      required: [paymentId, creditBalance, vin]
+      properties:
+        paymentId:
+          type: integer
+        creditBalance:
+          type: integer
+        vin:
+          type: string
+
+    CreditPurchase:
+      type: object
+      required: [id, amount, currency, status, createdAt]
+      properties:
+        id:
+          type: integer
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+        credits:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    CreditPurchasePage:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreditPurchase"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    AdminAdjustCreditsInput:
+      type: object
+      properties:
+        creditBalance:
+          type: integer
+          minimum: 0
+          description: Absolute credit balance to set
+        delta:
+          type: integer
+          description: Optional relative change when creditBalance is omitted
+
+    PaymentHistoryPage:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    AdminTransaction:
+      type: object
+      required: [id, amount, currency, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        userEmail:
+          type: ["string", "null"]
+        vin:
+          type: ["string", "null"]
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded, revoked]
+        paypalOrderId:
+          type: ["string", "null"]
+        couponCode:
+          type: ["string", "null"]
+        discountAmount:
+          type: ["number", "null"]
+        vinLookupId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    AdminTransactionSummary:
+      type: object
+      required: [totalRevenue, counts]
+      properties:
+        totalRevenue:
+          type: number
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
+
+    AdminTransactionPage:
+      type: object
+      required: [items, total, page, limit, summary]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminTransaction"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        summary:
+          $ref: "#/components/schemas/AdminTransactionSummary"
+
+    PricingConfig:
+      type: object
+      required: [basePrice, discountPrice, currency, discountEnabled]
+      properties:
+        basePrice:
+          type: number
+        discountPrice:
+          type: number
+        currency:
+          type: string
+        discountEnabled:
+          type: boolean
+
+    PricingUpdate:
+      type: object
+      properties:
+        basePrice:
+          type: number
+        discountPrice:
+          type: number
+        discountEnabled:
+          type: boolean
+        currency:
+          type: string
+
+    # ── PROVIDERS ─────────────────────────────────────────────────────────────
+    Provider:
+      type: object
+      required: [id, name, countryCode, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        countryCode:
+          type: string
+        baseUrl:
+          type: string
+        isActive:
+          type: boolean
+        rateLimit:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ProviderInput:
+      type: object
+      required: [name, countryCode, baseUrl]
+      properties:
+        name:
+          type: string
+        countryCode:
+          type: string
+        baseUrl:
+          type: string
+        apiKey:
+          type: string
+        rateLimit:
+          type: integer
+        isActive:
+          type: boolean
+
+    ProviderUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        baseUrl:
+          type: string
+        apiKey:
+          type: string
+        rateLimit:
+          type: integer
+        isActive:
+          type: boolean
+
+    Country:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        hasProvider:
+          type: boolean
+          description: Whether an upstream data source is configured for this country (vendor identity is never exposed)
+
+    VinExportFilter:
+      type: object
+      properties:
+        vin:
+          type: string
+        status:
+          type: string
+          enum: [complete, error, pending]
+        fromCache:
+          type: boolean
+        provider:
+          type: string
+
+    BulkDeleteVinInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [complete, error, pending]
+        fromCache:
+          type: boolean
+        provider:
+          type: string
+        all:
+          type: boolean
+        ids:
+          type: array
+          items:
+            type: integer
+
+    # ── ADMIN ─────────────────────────────────────────────────────────────────
+    AdminUser:
+      type: object
+      required: [id, email, createdAt, isBanned, isAdmin, totalChecks]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: ["string", "null"]
+        isBanned:
+          type: boolean
+        isAdmin:
+          type: boolean
+        banReason:
+          type: ["string", "null"]
+        countryCode:
+          type: ["string", "null"]
+          description: ISO 3166-1 alpha-2 profile country (Albania = AL, Kosovo = XK)
+        phonePrefix:
+          type: ["string", "null"]
+        phoneNational:
+          type: ["string", "null"]
+        creditBalance:
+          type: integer
+          description: Prepaid report credits remaining
+        totalChecks:
+          type: integer
+        totalSpent:
+          type: number
+        lastLoginAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        appliedDelta:
+          type: integer
+          description: Present on credit adjust responses — credits actually applied
+
+    AdminUserPage:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUser"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    BanUserInput:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    DeleteUserInput:
+      type: object
+      required: [confirmEmail]
+      properties:
+        confirmEmail:
+          type: string
+          description: Must exactly match the user's email address
+
+    DeleteUserResult:
+      type: object
+      required: [ok, payments, lookups, resetTokens]
+      properties:
+        ok:
+          type: boolean
+        payments:
+          type: integer
+        lookups:
+          type: integer
+        resetTokens:
+          type: integer
+
+    AdminVinPage:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/VinLookup"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    VinCatalogItem:
+      type: object
+      required: [id, vin, data, importedAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        vin:
+          type: string
+        providerName:
+          type: string
+          nullable: true
+        data:
+          type: object
+          additionalProperties: true
+        importedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AdminVinCatalogPage:
+      type: object
+      required: [items, total, page, limit, providerStats]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/VinCatalogItem"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        providerStats:
+          type: array
+          items:
+            type: object
+            properties:
+              provider:
+                type: string
+                nullable: true
+              cnt:
+                type: integer
+
+    AdminStats:
+      type: object
+      required: [totalUsers, totalVinChecks, totalRevenue, checksToday, cacheHitRate, activeProviders]
+      properties:
+        totalUsers:
+          type: integer
+        totalVinChecks:
+          type: integer
+        totalRevenue:
+          type: number
+        checksToday:
+          type: integer
+        cacheHitRate:
+          type: number
+        activeProviders:
+          type: integer
+        checksByDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyCount"
+        revenueByDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyRevenue"
+
+    DailyCount:
+      type: object
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+
+    DailyRevenue:
+      type: object
+      properties:
+        date:
+          type: string
+        revenue:
+          type: number
+
+    LogEntry:
+      type: object
+      required: [id, level, message, createdAt]
+      properties:
+        id:
+          type: integer
+        level:
+          type: string
+          enum: [error, warn, info]
+        message:
+          type: string
+        context:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    LogPage:
+      type: object
+      required: [items, total, page, limit]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogEntry"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    UserImportRowResult:
+      type: object
+      required: [row, email, status]
+      properties:
+        row:
+          type: integer
+        email:
+          type: string
+        status:
+          type: string
+          enum: [inserted, updated, skipped, error]
+        reason:
+          type: ["string", "null"]
+
+    UserImportResult:
+      type: object
+      required: [total, inserted, updated, skipped, errors, rows]
+      properties:
+        total:
+          type: integer
+        inserted:
+          type: integer
+        updated:
+          type: integer
+        skipped:
+          type: integer
+        errors:
+          type: integer
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserImportRowResult"
+
+    VinImportResult:
+      type: object
+      required: [inserted, updated, skipped, total, conflicts]
+      properties:
+        inserted:
+          type: integer
+        updated:
+          type: integer
+        skipped:
+          type: integer
+        total:
+          type: integer
+        conflicts:
+          type: array
+          items:
+            type: object
+            properties:
+              vin:
+                type: string
+              existing:
+                type: string
+              incoming:
+                type: string
+
+    VinCatalogDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        vin:
+          type: string
+        providerName:
+          type: string
+          nullable: true
+        data:
+          type: object
+          nullable: true
+        importedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lookupCount:
+          type: integer
+        assignedTotal:
+          type: integer
+        assignedPage:
+          type: integer
+        assignedLimit:
+          type: integer
+        assignedUsers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              user_id:
+                type: string
+              created_at:
+                type: string
+              email:
+                type: string
+                nullable: true
+              name:
+                type: string
+                nullable: true
+
+    VinDataPatch:
+      type: object
+      description: Partial VIN data fields to merge into the existing catalog record
+      properties:
+        make:
+          type: string
+          nullable: true
+        model:
+          type: string
+          nullable: true
+        year:
+          type: integer
+          nullable: true
+        trim:
+          type: string
+          nullable: true
+        engine:
+          type: string
+          nullable: true
+        transmission:
+          type: string
+          nullable: true
+        fuelType:
+          type: string
+          nullable: true
+        bodyType:
+          type: string
+          nullable: true
+        color:
+          type: string
+          nullable: true
+        odometer:
+          type: number
+          nullable: true
+        ownerCount:
+          type: integer
+          nullable: true
+        accidentCount:
+          type: integer
+          nullable: true
+        hp:
+          type: number
+          nullable: true
+        cylinders:
+          type: integer
+          nullable: true
+        titleStatus:
+          type: string
+          nullable: true
+        isSalvage:
+          type: boolean
+        isStolen:
+          type: boolean
+        isTaxi:
+          type: boolean
+        country:
+          type: string
+          nullable: true
+        photos:
+          type: array
+          nullable: true
+          items:
+            type: string
+        accidents:
+          nullable: true
+        insuranceClaims:
+          nullable: true
+        mileageHistory:
+          nullable: true
+        ownerHistory:
+          nullable: true
+        auctionHistory:
+          nullable: true
+        registryHistory:
+          nullable: true
+        marketData:
+          nullable: true
+
+    AssignVinInput:
+      type: object
+      required: [userId]
+      properties:
+        userId:
+          type: string
+
+    SystemSettings:
+      type: object
+      required: [rateLimit, rateLimitWindow, maxVinsPerDay, abuseDetectionEnabled]
+      properties:
+        rateLimit:
+          type: integer
+        rateLimitWindow:
+          type: integer
+        maxVinsPerDay:
+          type: integer
+        abuseDetectionEnabled:
+          type: boolean
+        recaptchaEnabled:
+          type: boolean
+        maintenanceMode:
+          type: boolean
+        smtpEnabled:
+          type: boolean
+        smtpHost:
+          type: string
+          nullable: true
+        smtpPort:
+          type: integer
+          nullable: true
+        smtpUser:
+          type: string
+          nullable: true
+        smtpPass:
+          type: string
+          nullable: true
+        smtpFromEmail:
+          type: string
+          nullable: true
+        smtpFromName:
+          type: string
+          nullable: true
+        paypalClientId:
+          type: string
+          nullable: true
+        paypalClientSecret:
+          type: string
+          nullable: true
+        paypalSandbox:
+          type: boolean
+        paypalEnableCards:
+          type: boolean
+        freeVinDecoderEnabled:
+          type: boolean
+        freeVinDecoderDailyLimit:
+          type: integer
+        freeVinDecoderRequireSignIn:
+          type: boolean
+        siteUrl:
+          type: string
+          nullable: true
+        emailSendWelcome:
+          type: boolean
+        emailSendReportConfirm:
+          type: boolean
+          description: Deprecated — merged into emailSendVinReady
+        emailSendVinReady:
+          type: boolean
+          description: Combined report-ready + payment confirmation email
+        emailSendPasswordReset:
+          type: boolean
+        emailSendAbandonedCart:
+          type: boolean
+        emailSendNoinfo:
+          type: boolean
+          description: Customer email when admin closes a pending VIN with no data and grants 1 credit
+        emailSendAdminPendingVin:
+          type: boolean
+          description: Admin alert when a customer pays for a manual-pending VIN (off by default)
+        emailLogRetentionEnabled:
+          type: boolean
+          description: Auto-delete email logs older than 7 days
+        krwPerUsd:
+          type: number
+          description: Korean won per 1 USD for insurance claim display on Korean VIN reports
+        analyticsGtmEnabled:
+          type: boolean
+        analyticsGtmContainerId:
+          type: string
+          nullable: true
+        analyticsGaEnabled:
+          type: boolean
+        analyticsGaMeasurementId:
+          type: string
+          nullable: true
+        analyticsClarityEnabled:
+          type: boolean
+        analyticsClarityProjectId:
+          type: string
+          nullable: true
+        analyticsMetaPixelEnabled:
+          type: boolean
+        analyticsMetaPixelId:
+          type: string
+          nullable: true
+
+    SystemSettingsUpdate:
+      type: object
+      properties:
+        rateLimit:
+          type: integer
+        rateLimitWindow:
+          type: integer
+        maxVinsPerDay:
+          type: integer
+        abuseDetectionEnabled:
+          type: boolean
+        recaptchaEnabled:
+          type: boolean
+        maintenanceMode:
+          type: boolean
+        smtpEnabled:
+          type: boolean
+        smtpHost:
+          type: string
+          nullable: true
+        smtpPort:
+          type: integer
+          nullable: true
+        smtpUser:
+          type: string
+          nullable: true
+        smtpPass:
+          type: string
+          nullable: true
+        smtpFromEmail:
+          type: string
+          nullable: true
+        smtpFromName:
+          type: string
+          nullable: true
+        paypalClientId:
+          type: string
+          nullable: true
+        paypalClientSecret:
+          type: string
+          nullable: true
+        paypalSandbox:
+          type: boolean
+        paypalEnableCards:
+          type: boolean
+        freeVinDecoderEnabled:
+          type: boolean
+        freeVinDecoderDailyLimit:
+          type: integer
+        freeVinDecoderRequireSignIn:
+          type: boolean
+        siteUrl:
+          type: string
+          nullable: true
+        emailSendWelcome:
+          type: boolean
+        emailSendReportConfirm:
+          type: boolean
+          description: Deprecated — merged into emailSendVinReady
+        emailSendVinReady:
+          type: boolean
+          description: Combined report-ready + payment confirmation email
+        emailSendPasswordReset:
+          type: boolean
+        emailSendAbandonedCart:
+          type: boolean
+        emailSendNoinfo:
+          type: boolean
+          description: Customer email when admin closes a pending VIN with no data and grants 1 credit
+        emailSendAdminPendingVin:
+          type: boolean
+          description: Admin alert when a customer pays for a manual-pending VIN (off by default)
+        emailLogRetentionEnabled:
+          type: boolean
+          description: Auto-delete email logs older than 7 days
+        maxFailedLogins:
+          type: integer
+        lockoutMinutes:
+          type: integer
+        adminMaxFailedLogins:
+          type: integer
+        adminLockoutMinutes:
+          type: integer
+        registerMaxPerHour:
+          type: integer
+        vinRatePerMinute:
+          type: integer
+        sessionDays:
+          type: integer
+        requireHttps:
+          type: boolean
+        recaptchaSiteKey:
+          type: string
+          nullable: true
+        recaptchaSecretKey:
+          type: string
+          nullable: true
+        recaptchaMinScore:
+          type: number
+        googleClientId:
+          type: string
+          nullable: true
+        googleClientSecret:
+          type: string
+          nullable: true
+        logRetentionDays:
+          type: integer
+        failedTxnRetentionDays:
+          type: integer
+        krwPerUsd:
+          type: number
+        analyticsGtmEnabled:
+          type: boolean
+        analyticsGtmContainerId:
+          type: string
+          nullable: true
+        analyticsGaEnabled:
+          type: boolean
+        analyticsGaMeasurementId:
+          type: string
+          nullable: true
+        analyticsClarityEnabled:
+          type: boolean
+        analyticsClarityProjectId:
+          type: string
+          nullable: true
+        analyticsMetaPixelEnabled:
+          type: boolean
+        analyticsMetaPixelId:
+          type: string
+          nullable: true

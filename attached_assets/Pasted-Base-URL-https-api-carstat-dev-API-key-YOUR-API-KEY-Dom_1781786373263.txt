@@ -1,0 +1,30 @@
+Base URL: https://api.carstat.dev
+API key: YOUR_API_KEY
+Domain IDs enabled for this key: verify the key first to fill the enabled domain IDs
+Support: @import_motor_support
+
+Authorization rules:
+- Every API request passes api_key as a GET query parameter.
+- If IP whitelist is enabled for the key, requests must come from an allowed IP.
+- For /listing/{domain_id}/{listing_id}, domain_id must be one of the domain IDs enabled for this key.
+- Car and listing objects expose options as option_ids. Fetch option names, translations, sections and descriptions from /car-options and /car-option-sections. If the API key has languages configured, option translations include only those languages; if languages is not configured, all available translations are returned.
+
+Endpoints:
+- GET /cars: download all active cars available under the subscription. Uses scroll pagination. The first request without scroll_id returns scroll_id and next_url. Next requests use scroll_id. The scroll context is temporary, so the number of continuation requests for scroll pagination cannot be technically unlimited. Default limit is 1000, max 2000. Default scroll_time is 10 minutes, max 15.
+- GET /search: search cars with filters and normal pagination. It does not have the technical scroll limit, but the pagination window must satisfy page * perPage <= 10000. perPage max is 50. Supports query, sort, price/year/odometer/engine/power ranges, brands, countries, body_types, colors, fuels, seller_type, steering_wheel_position, transmission, airbags, damages, keys_available, conditions, availabilities, emissions, drive_wheels.
+- GET /cars/{car_id}: fetch one car by internal car_id. Returns only listings from domains enabled for the key.
+- GET /listing/{domain_id}/{listing_id}: find a listing by domain_id and listing_id. domain_id must be enabled for the current key.
+- GET /brands: list brands.
+- GET /models/{brand_id}: list models for a brand. Optional query can filter models.
+- GET /car-option-sections: list car option sections with localized name and statistics.
+- GET /car-options: approved car option taxonomy. Without query it returns popular options grouped by section, and limit controls options per section. With query/page/per_page it searches and paginates options. section_id and ids=3,45,120 are supported.
+
+Errors to handle:
+- 403 missing api_key: please add your api_key in get param
+- 403 invalid key: wrong api key or valid=false/status=invalid
+- 403 inactive subscription: your api subscription is not active
+- 403 IP whitelist: ip address is not in whitelist
+- 422 validation errors for /search, including offset when page * perPage > 10000
+- 404 car/listing not found.
+
+When generating code, do not hardcode unrelated domain IDs. Use only the domain IDs listed above.

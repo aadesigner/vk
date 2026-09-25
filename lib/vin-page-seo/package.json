@@ -1,0 +1,12 @@
+{
+  "name": "@workspace/vin-page-seo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./locked-preview": "./locked-preview.ts"
+  }
+}

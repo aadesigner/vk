@@ -1,0 +1,1190 @@
+{
+  "home": {
+    "en": {
+      "title": "VIN Check, Mileage, Accidents & Title History | VerifyKM",
+      "description": "Check a VIN with VerifyKM. See mileage, auction records, total-loss status and theft data for cars from the USA, Korea, Canada, China, Japan and Dubai."
+    },
+    "ar": {
+      "title": "تحقيق ملف VIN, الكيلومترات والحوادث ومخاطر العنوان | VerifyKM",
+      "description": "افتح ملف VIN من VerifyKM. مسارات العداد والمزادات وعلامات الإتلاف وإشارات السرقة لسيارات من الولايات المتحدة وكوريا وكندا والصين واليابان ودبي."
+    },
+    "uk": {
+      "title": "VIN-досьє, пробіг, ДТП і ризик титулу | VerifyKM",
+      "description": "Відкрийте VIN-досьє VerifyKM. Пробіг, аукціони, salvage-мітки та сигнали крадіжки для авто зі США, Кореї, Канади, Китаю, Японії та Дубая."
+    },
+    "ru": {
+      "title": "VIN-досье, пробег, ДТП и риск титула | VerifyKM",
+      "description": "Откройте VIN-досье VerifyKM. Пробег, аукционы, salvage-метки и сигналы угона для авто из США, Кореи, Канады, Китая, Японии и Дубая."
+    },
+    "sq": {
+      "title": "Kontroll VIN, kilometra, aksidente dhe historia e titullit | VerifyKM",
+      "description": "Kontrolloni një VIN me VerifyKM. Kilometrat, ankandet, dëmtimi total dhe vjedhjet për makina nga SHBA, Koreja, Kanada, Kina, Japonia dhe Dubai."
+    },
+    "es": {
+      "title": "Investigación de dossier VIN, Kilometraje, accidentes y riesgo de título | VerifyKM",
+      "description": "Abra un dossier VIN de VerifyKM. Trayectorias de odómetro, subastas, marcas de salvage y señales de robo para coches de EE. UU., Corea, Canadá, China, Japón y Dubái."
+    },
+    "ro": {
+      "title": "Investigație dosar VIN, kilometraj, accidente și risc de titlu | VerifyKM",
+      "description": "Deschideți un dosar VIN VerifyKM. Trasee de kilometraj, licitații, mărci salvage și semnale de furt pentru mașini din SUA, Coreea, Canada, China, Japonia și Dubai."
+    },
+    "pl": {
+      "title": "Dochodzenie dossier VIN, przebieg, wypadki i ryzyko tytułu | VerifyKM",
+      "description": "Otwórz dossier VIN VerifyKM. Przebiegi, aukcje, oznaczenia salvage i sygnały kradzieży dla aut z USA, Korei, Kanady, Chin, Japonii i Dubaju."
+    },
+    "ka": {
+      "title": "VIN დოსიეს გამოძიება, გარბენი, ავარიები და ტიტულის რისკი | VerifyKM",
+      "description": "გახსენით VerifyKM VIN დოსიე. გარბენის კვალი, აუქციონები, salvage ნიშნები და ქურდობის სიგნალები აშშ, კორეა, კანადა, ჩინეთი, იაპონია და დუბაის მანქანებისთვის."
+    },
+    "de": {
+      "title": "VIN-Dossier-Prüfung, Kilometer, Unfälle & Titelrisiko | VerifyKM",
+      "description": "Öffnen Sie ein VerifyKM VIN-Dossier. Kilometerverläufe, Auktionstreffer, Salvage-Markierungen und Diebstahlsignale für Autos aus den USA, Korea, Kanada, China, Japan und Dubai."
+    },
+    "fr": {
+      "title": "Dossier VIN, Kilométrage, accidents & risque de titre | VerifyKM",
+      "description": "Ouvrez un dossier VIN VerifyKM. Kilométrage, enchères, marques épave et signaux de vol pour voitures des USA, Corée, Canada, Chine, Japon et Dubaï."
+    },
+    "bg": {
+      "title": "VIN досие, пробег, катастрофи и риск за титул | VerifyKM",
+      "description": "Отворете VerifyKM VIN досие. Пробег, търгове, salvage марки и сигнали за кражба за коли от САЩ, Корея, Канада, Китай, Япония и Дубай."
+    },
+    "zh": {
+      "title": "VIN 档案调查, 里程、事故与标题风险 | VerifyKM",
+      "description": "打开 VerifyKM VIN 档案。查看美国、韩国、加拿大、中国、日本与迪拜车辆的里程轨迹、拍卖、报废标记与盗抢信号。"
+    }
+  },
+  "pricing": {
+    "en": {
+      "title": "Dossier Pricing, €19.99 VIN File | VerifyKM",
+      "description": "One payment unlocks a full VIN dossier at €19.99 (standard €29.99). Multi-report packs from €12.99 per file. Instant delivery. No subscription."
+    },
+    "ar": {
+      "title": "أسعار الملف, ملف VIN بـ 19.99€ | VerifyKM",
+      "description": "دفعة واحدة تفتح ملف VIN كاملاً بـ 19.99€ (القياسي 29.99€). باقات متعددة من 12.99€ للملف. تسليم فوري. بلا اشتراك."
+    },
+    "uk": {
+      "title": "Ціни на досьє, VIN-файл €19,99 | VerifyKM",
+      "description": "Одна оплата відкриває повне VIN-досьє за €19,99 (стандарт €29,99). Пакети з кількома звітами від €12,99 за файл. Миттєва доставка. Без підписки."
+    },
+    "ru": {
+      "title": "Цены на досье, VIN-файл €19,99 | VerifyKM",
+      "description": "Одна оплата открывает полное VIN-досье за €19,99 (стандарт €29,99). Пакеты с несколькими отчётами от €12,99 за файл. Мгновенная доставка. Без подписки."
+    },
+    "sq": {
+      "title": "Çmimet e dosjes, skedar VIN €19.99 | VerifyKM",
+      "description": "Një pagesë hap dosje të plotë VIN për €19.99 (standarde €29.99). Paketa shumë-raporte nga €12.99 për skedar. Dorëzim i menjëhershëm. Pa abonim."
+    },
+    "es": {
+      "title": "Precios del dossier, archivo VIN 19,99 € | VerifyKM",
+      "description": "Un pago desbloquea un dossier VIN completo por 19,99 € (estándar 29,99 €). Packs multi-informe desde 12,99 € por archivo. Entrega instantánea. Sin suscripción."
+    },
+    "ro": {
+      "title": "Prețuri dosar, fișier VIN 19,99 € | VerifyKM",
+      "description": "O plată deblochează un dosar VIN complet la 19,99 € (standard 29,99 €). Pachete multi-raport de la 12,99 € per fișier. Livrare instantanee. Fără abonament."
+    },
+    "pl": {
+      "title": "Cennik dossier, plik VIN 19,99 € | VerifyKM",
+      "description": "Jedna płatność odblokowuje pełne dossier VIN za 19,99 € (standard 29,99 €). Pakiety wieloraportowe od 12,99 € za plik. Natychmiastowa dostawa. Bez subskrypcji."
+    },
+    "ka": {
+      "title": "დოსიეს ფასები, VIN ფაილი €19.99 | VerifyKM",
+      "description": "ერთი გადახდა ხსნის სრულ VIN დოსიეს €19.99-ად (სტანდარტი €29.99). მრავალრეპორტიანი პაკეტები €12.99-დან ფაილზე. მყისიერი მიწოდება. გამოწერის გარეშე."
+    },
+    "de": {
+      "title": "Dossier-Preise, €19,99 VIN-Akte | VerifyKM",
+      "description": "Eine Zahlung schaltet ein volles VIN-Dossier für €19,99 frei (Standard €29,99). Mehrfach-Pakete ab €12,99 pro Akte. Sofortlieferung. Kein Abo."
+    },
+    "fr": {
+      "title": "Tarifs dossier, fichier VIN 19,99 € | VerifyKM",
+      "description": "Un paiement débloque un dossier VIN complet à 19,99 € (standard 29,99 €). Packs multi-rapports dès 12,99 € par fichier. Livraison instantanée. Sans abonnement."
+    },
+    "bg": {
+      "title": "Цени на досието, VIN файл €19,99 | VerifyKM",
+      "description": "Едно плащане отключва пълно VIN досие за €19,99 (стандарт €29,99). Пакети от €12,99 на файл. Мигновена доставка. Без абонамент."
+    },
+    "zh": {
+      "title": "档案价格, €19.99 VIN 文件 | VerifyKM",
+      "description": "一次付款以 €19.99 解锁完整 VIN 档案（标准价 €29.99）。多份套餐低至每份 €12.99。即时交付。无订阅。"
+    }
+  },
+  "auth": {
+    "en": {
+      "title": "Sign In, verifykm.com",
+      "description": "Sign in or create a free account to run instant VIN checks and access your vehicle history reports."
+    },
+    "ar": {
+      "title": "تسجيل الدخول, verifykm.com",
+      "description": "سجّل الدخول أو أنشئ حساباً مجانياً لإجراء فحوصات VIN الفورية والوصول إلى تقارير سياراتك."
+    },
+    "uk": {
+      "title": "Вхід, verifykm.com",
+      "description": "Увійдіть або створіть безкоштовний обліковий запис для миттєвих перевірок VIN."
+    },
+    "ru": {
+      "title": "Вход, verifykm.com",
+      "description": "Войдите или создайте бесплатный аккаунт для мгновенных проверок VIN."
+    },
+    "sq": {
+      "title": "Hyrja, verifykm.com",
+      "description": "Hyni ose krijoni llogari falas per kontrolle VIN dhe raporte historiku."
+    },
+    "es": {
+      "title": "Iniciar sesión, verifykm.com",
+      "description": "Inicie sesión o cree una cuenta gratuita para comprobar VIN al instante y acceder a sus informes de historial vehicular."
+    },
+    "ro": {
+      "title": "Autentificare, verifykm.com",
+      "description": "Autentificați-vă sau creați un cont gratuit pentru verificări VIN instantanee și acces la rapoartele dvs. de istoric vehicul."
+    },
+    "pl": {
+      "title": "Logowanie, verifykm.com",
+      "description": "Zaloguj się lub utwórz darmowe konto, aby wykonywać natychmiastowe sprawdzenia VIN i uzyskać dostęp do raportów historii pojazdu."
+    },
+    "ka": {
+      "title": "შესვლა, verifykm.com",
+      "description": "შედით ან შექმენით უფასო ანგარიში VIN-ის მყისიერი შემოწმების გასატარებლად და თქვენი მანქანის ისტორიის ანგარიშებზე წვდომისთვის."
+    },
+    "de": {
+      "title": "Anmelden, verifykm.com",
+      "description": "Melden Sie sich an oder erstellen Sie ein kostenloses Konto für sofortige VIN-Checks und Zugriff auf Fahrzeughistorien."
+    },
+    "fr": {
+      "title": "Connexion, verifykm.com",
+      "description": "Connectez-vous ou créez un compte gratuit pour des contrôles VIN instantanés et l'accès aux rapports d'historique."
+    },
+    "bg": {
+      "title": "Вход, verifykm.com",
+      "description": "Влезте или създайте безплатен акаунт за мигновени VIN проверки и достъп до отчети за история."
+    },
+    "zh": {
+      "title": "登录, verifykm.com",
+      "description": "登录或创建免费账户，进行即时VIN查询并访问您的车辆历史报告。"
+    }
+  },
+  "dashboard": {
+    "en": {
+      "title": "My Reports, VIN History | verifykm.com",
+      "description": "View your vehicle history reports and run new VIN checks."
+    },
+    "ar": {
+      "title": "تقاريري, verifykm.com",
+      "description": "اعرض تقارير مركباتك وأجرِ فحوصات VIN جديدة."
+    },
+    "uk": {
+      "title": "Мої звіти, verifykm.com",
+      "description": "Переглядайте звіти та виконуйте нові перевірки VIN."
+    },
+    "ru": {
+      "title": "Мои отчёты, verifykm.com",
+      "description": "Просматривайте отчёты и выполняйте новые проверки VIN."
+    },
+    "sq": {
+      "title": "Raportet e mia, verifykm.com",
+      "description": "Shikoni raportet dhe kryeni kontrolle te reja VIN."
+    },
+    "es": {
+      "title": "Mis informes, Historial VIN | verifykm.com",
+      "description": "Vea sus informes de historial vehicular y haga nuevas comprobaciones VIN."
+    },
+    "ro": {
+      "title": "Rapoartele mele, Istoric VIN | verifykm.com",
+      "description": "Vizualizați rapoartele de istoric vehicul și rulați noi verificări VIN."
+    },
+    "pl": {
+      "title": "Moje raporty, historia VIN | verifykm.com",
+      "description": "Przeglądaj raporty historii pojazdów i wykonuj nowe sprawdzenia VIN."
+    },
+    "ka": {
+      "title": "ჩემი ანგარიშები, VIN ისტორია | verifykm.com",
+      "description": "იხილეთ თქვენი მანქანის ისტორიის ანგარიშები და გაუშვით ახალი VIN შემოწმებები."
+    },
+    "de": {
+      "title": "Meine Berichte, VIN-Historie | verifykm.com",
+      "description": "Ihre Fahrzeughistorienberichte ansehen und neue VIN-Checks durchführen."
+    },
+    "fr": {
+      "title": "Mes rapports, historique VIN | verifykm.com",
+      "description": "Consultez vos rapports d'historique véhicule et lancez de nouveaux contrôles VIN."
+    },
+    "bg": {
+      "title": "Моите отчети, история VIN | verifykm.com",
+      "description": "Прегледайте отчетите за история на автомобили и направете нови VIN проверки."
+    },
+    "zh": {
+      "title": "我的报告, VIN历史 | verifykm.com",
+      "description": "查看您的车辆历史报告并进行新的VIN查询。"
+    }
+  },
+  "vin_result": {
+    "en": {
+      "title": "VIN Report | verifykm.com",
+      "description": "Check mileage, accidents and full vehicle history. Instant report at verifykm.com."
+    },
+    "ar": {
+      "title": "تقرير VIN | verifykm.com",
+      "description": "تحقق من الكيلومترات والحوادث والتاريخ الكامل للمركبة. تقرير فوري على verifykm.com."
+    },
+    "uk": {
+      "title": "Звіт VIN | verifykm.com",
+      "description": "Перевірте пробіг, ДТП та повну історію авто. Миттєвий звіт на verifykm.com."
+    },
+    "ru": {
+      "title": "Отчёт VIN | verifykm.com",
+      "description": "Проверьте пробег, ДТП и полную историю авто. Мгновенный отчёт на verifykm.com."
+    },
+    "sq": {
+      "title": "Raporti VIN | verifykm.com",
+      "description": "Verifikoni km, aksidentet dhe historikun e plotë të mjetit. Raport i plotë me shasi në verifykm.com."
+    },
+    "es": {
+      "title": "Informe VIN | verifykm.com",
+      "description": "Verifique kilometraje, accidentes e historial completo del vehículo. Informe al instante en verifykm.com."
+    },
+    "ro": {
+      "title": "Raport VIN | verifykm.com",
+      "description": "Verificați kilometrajul, accidentele și istoricul complet al vehiculului. Raport instant pe verifykm.com."
+    },
+    "pl": {
+      "title": "Raport historii VIN, verifykm.com",
+      "description": "Pełny raport historii pojazdu: przebieg, wypadki, właściciele, ubezpieczenie i aukcje. Natychmiastowy dostęp po zakupie."
+    },
+    "ka": {
+      "title": "VIN ანგარიში | verifykm.com",
+      "description": "შეამოწმეთ გარბენი, ავარიები და მანქანის სრული ისტორია. მყისიერი ანგარიში verifykm.com-ზე."
+    },
+    "de": {
+      "title": "VIN-Historienbericht, verifykm.com",
+      "description": "Vollständiger Fahrzeughistorienbericht: Kilometerstand, Unfälle, Halter, Versicherung und Auktionen. Sofortiger Zugriff nach Kauf."
+    },
+    "fr": {
+      "title": "Rapport historique VIN, verifykm.com",
+      "description": "Rapport complet : kilométrage, accidents, propriétaires, assurance et enchères. Accès instantané après achat."
+    },
+    "bg": {
+      "title": "Отчет за история на VIN, verifykm.com",
+      "description": "Пълен отчет: пробег, катастрофи, собственици, застраховка и търгове. Мигновен достъп след покупка."
+    },
+    "zh": {
+      "title": "VIN报告 | verifykm.com",
+      "description": "查询里程、事故和完整车辆历史。verifykm.com即时报告。"
+    }
+  },
+  "country_usa": {
+    "en": {
+      "title": "US Car History: Mileage, Titles and Theft | verifykm.com",
+      "description": "Check mileage, wrecks, salvage titles and theft on any US car, already here or still in the States. Ford, Toyota, BMW, Honda and Chevrolet."
+    },
+    "ar": {
+      "title": "تاريخ سيارة أمريكية: الكيلومترات والملكية والسرقة | verifykm.com",
+      "description": "اطلع على الكيلومترات والحوادث وسجل الشطب والسرقة لسيارة من الولايات المتحدة، وصلت إليك أو ما زالت هناك. فورد، تويوتا، بي إم دبليو، هوندا، شيفروليه."
+    },
+    "uk": {
+      "title": "Історія авто зі США: пробіг, титул, викрадення | verifykm.com",
+      "description": "Подивіться пробіг, ДТП, тотал і викрадення в авто зі США, вже у вас або ще в Штатах. Ford, Toyota, BMW, Honda і Chevrolet."
+    },
+    "ru": {
+      "title": "История авто из США: пробег, титул, угон | verifykm.com",
+      "description": "Посмотрите пробег, аварии, тотал и угон у машины из США, уже у вас или ещё в Штатах. Ford, Toyota, BMW, Honda и Chevrolet."
+    },
+    "sq": {
+      "title": "Historia e makinës nga SHBA | verifykm.com",
+      "description": "Shikoni kilometrat, aksidentet, dëmin total dhe vjedhjet te një makinë nga SHBA, qoftë tashmë këtu apo ende atje. Ford, Toyota, BMW, Honda, Chevrolet."
+    },
+    "es": {
+      "title": "Historial de coches USA: km, títulos y robo | verifykm.com",
+      "description": "Vea el kilometraje, los accidentes, el siniestro y el robo de un coche de USA, ya aquí o todavía en los Estados. Ford, Toyota, BMW, Honda y Chevrolet."
+    },
+    "ro": {
+      "title": "Istoric auto SUA: kilometraj, titlu, furt | verifykm.com",
+      "description": "Vezi kilometrajul, accidentele, dauna totală și furtul la o mașină din SUA, deja aici sau încă acolo. Ford, Toyota, BMW, Honda și Chevrolet."
+    },
+    "pl": {
+      "title": "Historia auta z USA: przebieg, tytuł, kradzież | verifykm.com",
+      "description": "Sprawdź przebieg, wypadki, szkodę całkowitą i kradzież auta z USA, już u Ciebie albo nadal w Stanach. Ford, Toyota, BMW, Honda i Chevrolet."
+    },
+    "ka": {
+      "title": "აშშ მანქანის ისტორია: გარბენი, ტიტული, ქურდობა | verifykm.com",
+      "description": "ნახეთ აშშ-ის მანქანის გარბენი, ავარია, სალვაჟი და ქურდობა, უკვე აქაა თუ ჯერ კიდევ შტატებშია. Ford, Toyota, BMW, Honda, Chevrolet."
+    },
+    "de": {
+      "title": "US-Fahrzeughistorie: km, Titel, Diebstahl | verifykm.com",
+      "description": "Laufleistung, Unfälle, Totalschaden und Diebstahl eines US-Autos prüfen, schon hier oder noch in den USA. Ford, Toyota, BMW, Honda, Chevrolet."
+    },
+    "fr": {
+      "title": "Historique auto USA: km, titres et vol | verifykm.com",
+      "description": "Lisez le kilométrage, les accidents, l'épave et le vol d'une voiture des USA, déjà ici ou encore aux États-Unis. Ford, Toyota, BMW, Honda et Chevrolet."
+    },
+    "bg": {
+      "title": "История на кола от САЩ: пробег, титул, кражба | verifykm.com",
+      "description": "Вижте пробега, катастрофите, тоталната щета и кражбата при кола от САЩ, вече тук или още там. Ford, Toyota, BMW, Honda и Chevrolet."
+    },
+    "zh": {
+      "title": "美国车历史: 里程、产权与盗抢 | verifykm.com",
+      "description": "查美国车的里程、事故、报废产权和盗抢，车已经在你手里或还在美国。福特、丰田、宝马、本田、雪佛兰。"
+    }
+  },
+  "country_korea": {
+    "en": {
+      "title": "Korean Car Km History, Crashes and Repairs | verifykm.com",
+      "description": "Check kilometres, crash repairs and the Korean record on any car from South Korea, already here or still listed there. Hyundai, Kia, Genesis, BMW, Mercedes and Toyota."
+    },
+    "ar": {
+      "title": "كيلومترات السيارة الكورية والإصلاح والتاريخ | verifykm.com",
+      "description": "اطلع على الكيلومترات والإصلاحات والملف لسيارة من كوريا الجنوبية، وصلت إليك أو ما زالت معروضة هناك. هيونداي، كيا، جينيسيس، بي إم دبليو، مرسيدس، تويوتا."
+    },
+    "uk": {
+      "title": "Пробіг авто з Кореї, ремонти й історія | verifykm.com",
+      "description": "Подивіться кілометри, ремонти й справу авто з Південної Кореї, вже тут або ще в оголошенні там. Hyundai, Kia, Genesis, BMW, Mercedes і Toyota."
+    },
+    "ru": {
+      "title": "Пробег авто из Кореи, ремонты и история | verifykm.com",
+      "description": "Посмотрите километры, ремонты и карточку машины из Южной Кореи, уже здесь или ещё в объявлении там. Hyundai, Kia, Genesis, BMW, Mercedes и Toyota."
+    },
+    "sq": {
+      "title": "Kilometrat e makinës koreane | verifykm.com",
+      "description": "Shikoni kilometrat, riparimet dhe regjistrin korean te një makinë nga Koreja e Jugut, qoftë tashmë këtu apo ende atje. Hyundai, Kia, Genesis, BMW, Mercedes, Toyota."
+    },
+    "es": {
+      "title": "Km de un coche coreano, reparaciones e historial | verifykm.com",
+      "description": "Vea los kilómetros, las reparaciones y el expediente de un coche de Corea del Sur, ya aquí o todavía anunciado allí. Hyundai, Kia, Genesis, BMW, Mercedes y Toyota."
+    },
+    "ro": {
+      "title": "Km pentru o mașină coreeană, reparații și istoric | verifykm.com",
+      "description": "Vezi kilometrii, reparațiile și dosarul unei mașini din Coreea de Sud, deja aici sau încă listată acolo. Hyundai, Kia, Genesis, BMW, Mercedes și Toyota."
+    },
+    "pl": {
+      "title": "Km auta z Korei, naprawy i historia | verifykm.com",
+      "description": "Zobacz przebieg, naprawy i teczkę auta z Korei Południowej, już tutaj albo nadal wystawionego tam. Hyundai, Kia, Genesis, BMW, Mercedes i Toyota."
+    },
+    "ka": {
+      "title": "კორეული მანქანის კილომეტრაჟი, რემონტი და ისტორია | verifykm.com",
+      "description": "ნახეთ სამხრეთ კორეის მანქანის კილომეტრები, რემონტი და ჩანაწერი, უკვე აქაა თუ ჯერ კიდევ იქაა გამოცხადებული. Hyundai, Kia, Genesis, BMW, Mercedes, Toyota."
+    },
+    "de": {
+      "title": "Korea-Auto: Kilometer, Reparaturen, Historie | verifykm.com",
+      "description": "Kilometer, Unfallreparaturen und die koreanische Akte eines Autos aus Südkorea prüfen, schon hier oder noch dort. Hyundai, Kia, Genesis, BMW, Mercedes, Toyota."
+    },
+    "fr": {
+      "title": "Km d'une voiture coréenne, réparations et historique | verifykm.com",
+      "description": "Voyez les kilomètres, les réparations et l'historique d'une voiture de Corée du Sud, déjà ici ou encore annoncée là-bas. Hyundai, Kia, Genesis, BMW, Mercedes et Toyota."
+    },
+    "bg": {
+      "title": "Километри на кола от Корея, ремонти и история | verifykm.com",
+      "description": "Вижте километрите, ремонтите и записа на кола от Южна Корея, вече тук или още обявена там. Hyundai, Kia, Genesis, BMW, Mercedes и Toyota."
+    },
+    "zh": {
+      "title": "韩国车公里、事故与维修记录 | verifykm.com",
+      "description": "查韩国车的公里、事故维修和档案，车已经在你这边或还在韩国挂牌。现代、起亚、捷尼赛思、宝马、奔驰、丰田。"
+    }
+  },
+  "country_canada": {
+    "en": {
+      "title": "Canadian Car History: Km, Titles and Theft | verifykm.com",
+      "description": "Check kilometres, branded titles, accidents and theft on any car from Canada, already here or still in Canada. Honda, Toyota, Ford, BMW and Mercedes."
+    },
+    "ar": {
+      "title": "تاريخ سيارة كندية: الكيلومترات والملكية | verifykm.com",
+      "description": "تحقق من الكيلومترات وسجل الملكية الموسوم والحوادث والسرقة لسيارة من كندا، وصلت إليك أو ما زالت في كندا. هوندا، تويوتا، فورد، بي إم دبليو، مرسيدس."
+    },
+    "uk": {
+      "title": "Історія авто з Канади: пробіг і титул | verifykm.com",
+      "description": "Перевірте кілометри, таврований титул, ДТП і викрадення в авто з Канади, вже тут або ще в Канаді. Honda, Toyota, Ford, BMW і Mercedes."
+    },
+    "ru": {
+      "title": "История авто из Канады: пробег и титул | verifykm.com",
+      "description": "Проверьте километры, клеймёный титул, аварии и угон у машины из Канады, уже здесь или ещё в Канаде. Honda, Toyota, Ford, BMW и Mercedes."
+    },
+    "sq": {
+      "title": "Historia e makinës kanadeze | verifykm.com",
+      "description": "Shikoni kilometrat, titujt e shënuar, aksidentet dhe vjedhjet te një makinë nga Kanadaja, qoftë tashmë këtu apo ende atje. Honda, Toyota, Ford, BMW, Mercedes."
+    },
+    "es": {
+      "title": "Historial de un coche canadiense: km y títulos | verifykm.com",
+      "description": "Vea kilómetros, títulos marcados, accidentes y robo de un coche de Canadá, ya aquí o todavía en Canadá. Honda, Toyota, Ford, BMW y Mercedes."
+    },
+    "ro": {
+      "title": "Istoric auto Canada: kilometraj și titluri | verifykm.com",
+      "description": "Verifică kilometrajul, titlurile marcate, accidentele și furtul la o mașină din Canada, deja aici sau încă acolo. Honda, Toyota, Ford, BMW și Mercedes."
+    },
+    "pl": {
+      "title": "Historia auta z Kanady: przebieg i tytuł | verifykm.com",
+      "description": "Sprawdź przebieg, oznaczone tytuły, wypadki i kradzież auta z Kanady, już tutaj albo nadal w Kanadzie. Honda, Toyota, Ford, BMW i Mercedes."
+    },
+    "ka": {
+      "title": "კანადური მანქანის ისტორია: გარბენი და ტიტული | verifykm.com",
+      "description": "შეამოწმეთ კანადის მანქანის კილომეტრები, ტიტული, ავარია და ქურდობა, უკვე აქაა თუ ჯერ კიდევ კანადაშია. Honda, Toyota, Ford, BMW, Mercedes."
+    },
+    "de": {
+      "title": "Kanada-Auto: Kilometer, Titel, Diebstahl | verifykm.com",
+      "description": "Kilometer, markierte Titel, Unfälle und Diebstahl eines Autos aus Kanada prüfen, schon hier oder noch in Kanada. Honda, Toyota, Ford, BMW, Mercedes."
+    },
+    "fr": {
+      "title": "Historique d'une voiture canadienne: km et titres | verifykm.com",
+      "description": "Vérifiez les kilomètres, les titres marqués, les accidents et le vol d'une voiture du Canada, déjà ici ou encore au Canada. Honda, Toyota, Ford, BMW et Mercedes."
+    },
+    "bg": {
+      "title": "История на кола от Канада: километри и титул | verifykm.com",
+      "description": "Проверете километри, брандиран титул, катастрофи и кражба при кола от Канада, вече тук или още в Канада. Honda, Toyota, Ford, BMW и Mercedes."
+    },
+    "zh": {
+      "title": "加拿大车历史: 里程、产权与盗抢 | verifykm.com",
+      "description": "查加拿大车的公里、产权标记、事故和盗抢，车已经在你这边或还在加拿大。本田、丰田、福特、宝马、奔驰。"
+    }
+  },
+  "free_decoder": {
+    "en": {
+      "title": "Free Chassis Decoder, Year, Make, Model | VerifyKM",
+      "description": "Decode any 17-character VIN for factory specs free. Unlock a VerifyKM dossier for verified mileage, accidents and salvage status."
+    },
+    "ar": {
+      "title": "فك هيكل مجاني, السنة والماركة والطراز | VerifyKM",
+      "description": "افكك أي VIN من 17 حرفاً لبيانات المصنع مجاناً. افتح ملف VerifyKM للكيلومترات والحوادث وحالة الإتلاف."
+    },
+    "uk": {
+      "title": "Безкоштовний декодер шасі, рік, марка, модель | VerifyKM",
+      "description": "Декодуйте будь-який 17-символьний VIN для заводських даних безкоштовно. Відкрийте VerifyKM-досьє для пробігу, ДТП і статусу salvage."
+    },
+    "ru": {
+      "title": "Бесплатный декодер шасси, год, марка, модель | VerifyKM",
+      "description": "Декодируйте любой 17-символьный VIN для заводских данных бесплатно. Откройте VerifyKM-досье для пробега, ДТП и статуса salvage."
+    },
+    "sq": {
+      "title": "Dekodues falas i shasisë, vit, markë, model | VerifyKM",
+      "description": "Dekodoni çdo VIN 17-karakterësh për të dhëna fabrike falas. Hapni një dosje VerifyKM për kilometrazh, aksidente dhe status salvage."
+    },
+    "es": {
+      "title": "Decodificador de chasis gratis, año, marca, modelo | VerifyKM",
+      "description": "Decodifique cualquier VIN de 17 caracteres para datos de fábrica gratis. Desbloquee un dossier VerifyKM para kilometraje, accidentes y estado salvage."
+    },
+    "ro": {
+      "title": "Decodor gratuit de șasiu, an, marcă, model | VerifyKM",
+      "description": "Decodați orice VIN de 17 caractere pentru date de fabrică gratuit. Deblocați un dosar VerifyKM pentru kilometraj, accidente și status salvage."
+    },
+    "pl": {
+      "title": "Darmowy dekoder nadwozia, rok, marka, model | VerifyKM",
+      "description": "Dekoduj dowolny 17-znakowy VIN dla danych fabrycznych za darmo. Odblokuj dossier VerifyKM dla przebiegu, wypadków i statusu salvage."
+    },
+    "ka": {
+      "title": "უფასო შასის დეკოდერი, წელი, მარკა, მოდელი | VerifyKM",
+      "description": "გაშიფრეთ ნებისმიერი 17-სიმბოლოიანი VIN ქარხნული მონაცემებისთვის უფასოდ. გახსენით VerifyKM დოსიე გარბენის, ავარიებისა და salvage სტატუსისთვის."
+    },
+    "de": {
+      "title": "Kostenloser Chassis-Decoder, Jahr, Marke, Modell | VerifyKM",
+      "description": "Dekodieren Sie jede 17-stellige VIN für Werksdaten kostenlos. Schalten Sie ein VerifyKM-Dossier für verifizierte Kilometer, Unfälle und Salvage-Status frei."
+    },
+    "fr": {
+      "title": "Décodeur de châssis gratuit, année, marque, modèle | VerifyKM",
+      "description": "Décodez tout VIN à 17 caractères pour les specs usine gratuitement. Débloquez un dossier VerifyKM pour kilométrage, accidents et statut épave."
+    },
+    "bg": {
+      "title": "Безплатен декодер на шаси, година, марка, модел | VerifyKM",
+      "description": "Декодирайте всеки 17-символен VIN за заводски данни безплатно. Отключете VerifyKM досие за пробег, катастрофи и salvage статус."
+    },
+    "zh": {
+      "title": "免费车架号解码, 年份、品牌、车型 | VerifyKM",
+      "description": "免费解码任意 17 位 VIN 获取出厂数据。解锁 VerifyKM 档案以查看已核实里程、事故与报废状态。"
+    }
+  },
+  "how_it_works": {
+    "en": {
+      "title": "How VerifyKM Works, A VIN Check in Three Steps",
+      "description": "Enter a VIN, open the report, and read mileage, accidents and title history. Built for importers and careful buyers."
+    },
+    "ar": {
+      "title": "مسار VerifyKM, ملف VIN في ثلاث خطوات",
+      "description": "أدخل الهيكل، افتح ملف الأدلة، اقرأ الكيلومترات والحوادث وأعلام العنوان. للمستوردين والمشترين الحذرين."
+    },
+    "uk": {
+      "title": "Процес VerifyKM, VIN-досьє за три кроки",
+      "description": "Введіть шасі, відкрийте файл доказів, прочитайте пробіг, ДТП і прапорці титулу. Для імпортерів і обережних покупців."
+    },
+    "ru": {
+      "title": "Процесс VerifyKM, VIN-досье за три шага",
+      "description": "Введите шасси, откройте файл доказательств, прочитайте пробег, ДТП и флаги титула. Для импортёров и осторожных покупателей."
+    },
+    "sq": {
+      "title": "Si funksionon VerifyKM, kontrolli i shasisë në tre hapa",
+      "description": "Shkruani numrin e shasisë, hapni raportin dhe shikoni kilometrat, aksidentet dhe historinë e titullit. Për importues dhe blerës."
+    },
+    "es": {
+      "title": "Flujo VerifyKM, dossier VIN en tres pasos",
+      "description": "Introduzca el chasis, desbloquee el archivo de evidencia, lea kilometraje, accidentes y banderas de título. Para importadores y compradores cuidadosos."
+    },
+    "ro": {
+      "title": "Fluxul VerifyKM, dosar VIN în trei pași",
+      "description": "Introduceți șasiul, deblocați fișierul de dovezi, citiți kilometrajul, accidentele și steagurile de titlu. Pentru importatori și cumpărători atenți."
+    },
+    "pl": {
+      "title": "Proces VerifyKM, dossier VIN w trzech krokach",
+      "description": "Wpisz numer nadwozia, odblokuj teczkę dowodów, przeczytaj przebieg, wypadki i flagi tytułu. Dla importerów i ostrożnych kupujących."
+    },
+    "ka": {
+      "title": "VerifyKM პროცესი, VIN დოსიე სამ ნაბიჯში",
+      "description": "შეიყვანეთ შასი, გახსენით მტკიცებულების ფაილი, წაიკითხეთ გარბენი, ავარიები და ტიტულის ალმები. იმპორტიორებისა და ფრთხილი მყიდველებისთვის."
+    },
+    "de": {
+      "title": "VerifyKM-Ablauf, VIN-Dossier in drei Schritten",
+      "description": "Fahrgestellnummer eingeben, Beweisakte freischalten, Kilometer, Unfälle und Titelflags lesen. Für Importeure und sorgfältige Käufer."
+    },
+    "fr": {
+      "title": "Parcours VerifyKM, dossier VIN en trois étapes",
+      "description": "Saisissez le châssis, débloquez le fichier de preuves, lisez kilométrage, accidents et drapeaux de titre. Pour importateurs et acheteurs exigeants."
+    },
+    "bg": {
+      "title": "Процесът VerifyKM, VIN досие в три стъпки",
+      "description": "Въведете шасито, отключете доказателствения файл, прочетете пробег, катастрофи и флагове за титул. За вносители и внимателни купувачи."
+    },
+    "zh": {
+      "title": "VerifyKM 流程, 三步打开 VIN 档案",
+      "description": "输入车架号，解锁证据文件，阅读里程、事故与标题标记。面向进口商与谨慎买家。"
+    }
+  },
+  "faq": {
+    "en": {
+      "title": "VerifyKM FAQ, VIN Dossiers, Coverage & Delivery",
+      "description": "Answers on markets, report speed, refunds and what appears inside a VerifyKM VIN dossier."
+    },
+    "ar": {
+      "title": "أسئلة VerifyKM, ملفات VIN والتغطية والتسليم",
+      "description": "إجابات عن الأسواق وسرعة التقرير والاسترداد وما يحتويه ملف VIN من VerifyKM."
+    },
+    "uk": {
+      "title": "FAQ VerifyKM, VIN-досьє, покриття та доставка",
+      "description": "Відповіді про ринки, швидкість звіту, повернення коштів і вміст VIN-досьє VerifyKM."
+    },
+    "ru": {
+      "title": "FAQ VerifyKM, VIN-досье, покрытие и доставка",
+      "description": "Ответы о рынках, скорости отчёта, возвратах и содержимом VIN-досье VerifyKM."
+    },
+    "sq": {
+      "title": "FAQ VerifyKM, dosje VIN, mbulim & dorëzim",
+      "description": "Përgjigje për tregjet, shpejtësinë e raportit, rimbursimet dhe çfarë përmban një dosje VIN VerifyKM."
+    },
+    "es": {
+      "title": "FAQ VerifyKM, dossiers VIN, cobertura y entrega",
+      "description": "Respuestas sobre mercados, velocidad del informe, reembolsos y qué incluye un dossier VIN de VerifyKM."
+    },
+    "ro": {
+      "title": "FAQ VerifyKM, dosare VIN, acoperire și livrare",
+      "description": "Răspunsuri despre piețe, viteza raportului, rambursări și ce conține un dosar VIN VerifyKM."
+    },
+    "pl": {
+      "title": "FAQ VerifyKM, dossier VIN, zasięg i dostawa",
+      "description": "Odpowiedzi o rynkach, szybkości raportu, zwrotach i zawartości dossier VIN VerifyKM."
+    },
+    "ka": {
+      "title": "VerifyKM FAQ, VIN დოსიეები, დაფარვა და მიწოდება",
+      "description": "პასუხები ბაზრებზე, ანგარიშის სიჩქარეზე, დაბრუნებაზე და VerifyKM VIN დოსიეს შიგთავსზე."
+    },
+    "de": {
+      "title": "VerifyKM FAQ, VIN-Dossiers, Abdeckung & Lieferung",
+      "description": "Antworten zu Märkten, Berichtgeschwindigkeit, Rückerstattungen und dem Inhalt eines VerifyKM VIN-Dossiers."
+    },
+    "fr": {
+      "title": "FAQ VerifyKM, dossiers VIN, couverture et livraison",
+      "description": "Réponses sur les marchés, la vitesse du rapport, les remboursements et le contenu d'un dossier VIN VerifyKM."
+    },
+    "bg": {
+      "title": "ЧЗВ VerifyKM, VIN досиета, покритие и доставка",
+      "description": "Отговори за пазари, скорост на отчета, възстановявания и какво съдържа VerifyKM VIN досие."
+    },
+    "zh": {
+      "title": "VerifyKM 常见问题, VIN 档案、覆盖与交付",
+      "description": "关于市场、报告速度、退款以及 VerifyKM VIN 档案内容的解答。"
+    }
+  },
+  "terms": {
+    "en": {
+      "title": "Terms of Service | verifykm.com",
+      "description": "Terms of Service for verifykm.com VIN history reports, payments, refunds and data availability."
+    },
+    "ar": {
+      "title": "شروط الخدمة | verifykm.com",
+      "description": "شروط الخدمة لتقارير verifykm.com, المدفوعات والاسترداد وتوفر البيانات."
+    },
+    "uk": {
+      "title": "Умови надання послуг | verifykm.com",
+      "description": "Умови verifykm.com, оплата, повернення коштів і доступність даних."
+    },
+    "ru": {
+      "title": "Условия предоставления услуг | verifykm.com",
+      "description": "Условия verifykm.com, оплата, возврат и доступность данных."
+    },
+    "sq": {
+      "title": "Kushtet e Sherbimit | verifykm.com",
+      "description": "Kushtet e verifykm.com per raporte VIN, pagesat, rimbursimet dhe disponueshmerine e te dhenave."
+    },
+    "es": {
+      "title": "Términos del servicio | verifykm.com",
+      "description": "Términos del servicio de verifykm.com para informes de historial VIN, pagos, reembolsos y disponibilidad de datos."
+    },
+    "ro": {
+      "title": "Termeni și condiții | verifykm.com",
+      "description": "Termenii și condițiile de utilizare a serviciilor verifykm."
+    },
+    "pl": {
+      "title": "Regulamin, verifykm.com",
+      "description": "Regulamin korzystania z verifykm.com i usług raportów historii VIN."
+    },
+    "ka": {
+      "title": "მომსახურების პირობები | verifykm.com",
+      "description": "მომსახურების პირობები verifykm.com VIN ისტორიის ანგარიშების, გადახდების, თანხის დაბრუნებისა და მონაცემთა ხელმისაწვდომობისთვის."
+    },
+    "de": {
+      "title": "Nutzungsbedingungen, verifykm.com",
+      "description": "Nutzungsbedingungen für verifykm.com und VIN-Historienberichte."
+    },
+    "fr": {
+      "title": "Conditions d'utilisation, verifykm.com",
+      "description": "Conditions d'utilisation de verifykm.com et des rapports historique VIN."
+    },
+    "bg": {
+      "title": "Общи условия, verifykm.com",
+      "description": "Общи условия за verifykm.com и услугите за VIN отчети."
+    },
+    "zh": {
+      "title": "服务条款 | verifykm.com",
+      "description": "verifykm.com VIN历史报告、付款、退款和数据可用性的服务条款。"
+    }
+  },
+  "privacy": {
+    "en": {
+      "title": "Privacy Policy & Cookie Policy | verifykm.com",
+      "description": "How verifykm.com collects, uses and protects your data. Includes cookie policy."
+    },
+    "ar": {
+      "title": "سياسة الخصوصية وملفات تعريف الارتباط | verifykm.com",
+      "description": "كيف تجمع verifykm.com بياناتك وتستخدمها. تتضمن سياسة Cookies."
+    },
+    "uk": {
+      "title": "Політика конфіденційності та Cookies | verifykm.com",
+      "description": "Як verifykm.com обробляє ваші дані. Політика файлів cookie."
+    },
+    "ru": {
+      "title": "Политика конфиденциальности и Cookies | verifykm.com",
+      "description": "Как verifykm.com обрабатывает ваши данные. Политика cookie."
+    },
+    "sq": {
+      "title": "Politika e Privatesise dhe Cookies | verifykm.com",
+      "description": "Si verifykm.com mbledh, perdor dhe mbrojte te dhenat tuaja. Perfshin politiken e cookies."
+    },
+    "es": {
+      "title": "Política de privacidad y cookies | verifykm.com",
+      "description": "Cómo verifykm.com recopila, utiliza y protege sus datos. Incluye política de cookies."
+    },
+    "ro": {
+      "title": "Politica de confidențialitate | verifykm.com",
+      "description": "Cum verifykm colectează, utilizează și protejează datele dumneavoastră."
+    },
+    "pl": {
+      "title": "Polityka prywatności, verifykm.com",
+      "description": "Jak verifykm.com zbiera, wykorzystuje i chroni Twoje dane osobowe."
+    },
+    "ka": {
+      "title": "კონფიდენციალურობის პოლიტიკა და ქუქიების პოლიტიკა | verifykm.com",
+      "description": "როგორ აგროვებს, იყენებს და იცავს verifykm.com თქვენს მონაცემებს. მოიცავს ქუქიების პოლიტიკას."
+    },
+    "de": {
+      "title": "Datenschutz, verifykm.com",
+      "description": "Wie verifykm.com Ihre personenbezogenen Daten erhebt, nutzt und schützt."
+    },
+    "fr": {
+      "title": "Confidentialité, verifykm.com",
+      "description": "Comment verifykm.com collecte, utilise et protège vos données personnelles."
+    },
+    "bg": {
+      "title": "Поверителност, verifykm.com",
+      "description": "Как verifykm.com събира, използва и защитава вашите лични данни."
+    },
+    "zh": {
+      "title": "隐私政策与Cookie政策 | verifykm.com",
+      "description": "verifykm.com如何收集、使用和保护您的数据。包含Cookie政策。"
+    }
+  },
+  "not_found": {
+    "en": {
+      "title": "Page Not Found | verifykm.com",
+      "description": "The page you are looking for does not exist or may have been moved."
+    },
+    "ar": {
+      "title": "الصفحة غير موجودة | verifykm.com",
+      "description": "الصفحة التي تبحث عنها غير موجودة أو ربما تم نقلها."
+    },
+    "uk": {
+      "title": "Сторінку не знайдено | verifykm.com",
+      "description": "Сторінка, яку ви шукаєте, не існує або була переміщена."
+    },
+    "ru": {
+      "title": "Страница не найдена | verifykm.com",
+      "description": "Страница, которую вы ищете, не существует или была перемещена."
+    },
+    "sq": {
+      "title": "Faqja nuk u gjet | verifykm.com",
+      "description": "Faqja qe kerkoni nuk ekziston ose eshte zhvendosur."
+    },
+    "es": {
+      "title": "Página no encontrada | verifykm.com",
+      "description": "La página que busca no existe o puede haber sido movida."
+    },
+    "ro": {
+      "title": "Pagină negăsită | verifykm.com",
+      "description": "Pagina solicitată nu a fost găsită pe verifykm.com."
+    },
+    "pl": {
+      "title": "Strona nie znaleziona, verifykm.com",
+      "description": "Żądana strona nie istnieje. Wróć na verifykm.com, aby sprawdzić VIN."
+    },
+    "ka": {
+      "title": "გვერდი ვერ მოიძებნა | verifykm.com",
+      "description": "გვერდი, რომელსაც ეძებთ, არ არსებობს ან შესაძლოა გადატანილი იყოს."
+    },
+    "de": {
+      "title": "Seite nicht gefunden, verifykm.com",
+      "description": "Die angeforderte Seite existiert nicht. Zurück zu verifykm.com für Ihren VIN-Check."
+    },
+    "fr": {
+      "title": "Page introuvable, verifykm.com",
+      "description": "La page demandée n'existe pas. Retournez sur verifykm.com pour votre contrôle VIN."
+    },
+    "bg": {
+      "title": "Страницата не е намерена, verifykm.com",
+      "description": "Заявената страница не съществува. Върнете се на verifykm.com за VIN проверка."
+    },
+    "zh": {
+      "title": "页面未找到 | verifykm.com",
+      "description": "您查找的页面不存在或可能已被移动。"
+    }
+  },
+  "sign_up": {
+    "en": {
+      "title": "Create Account, verifykm.com",
+      "description": "Create a free verifykm account to run instant VIN checks and access your vehicle history reports."
+    },
+    "ar": {
+      "title": "إنشاء حساب, verifykm.com",
+      "description": "أنشئ حساباً مجانياً لإجراء فحوصات VIN الفورية والوصول إلى تقارير سياراتك."
+    },
+    "uk": {
+      "title": "Створити обліковий запис, verifykm.com",
+      "description": "Створіть безкоштовний обліковий запис для миттєвих перевірок VIN."
+    },
+    "ru": {
+      "title": "Создать аккаунт, verifykm.com",
+      "description": "Создайте бесплатный аккаунт для мгновенных проверок VIN."
+    },
+    "sq": {
+      "title": "Krijo llogari, verifykm.com",
+      "description": "Krijoni llogari falas per kontrolle VIN te menjehershme dhe raporte historiku."
+    },
+    "es": {
+      "title": "Crear cuenta, verifykm.com",
+      "description": "Cree una cuenta gratuita en verifykm para comprobar VIN al instante y acceder a sus informes de historial vehicular."
+    },
+    "ro": {
+      "title": "Înregistrare, verifykm.com",
+      "description": "Creați un cont gratuit verifykm pentru verificări VIN instantanee și acces la rapoartele dvs. de istoric vehicul."
+    },
+    "pl": {
+      "title": "Rejestracja, verifykm.com",
+      "description": "Utwórz darmowe konto verifykm, aby zapisywać raporty VIN i szybciej sprawdzać historię pojazdów."
+    },
+    "ka": {
+      "title": "შექმენით ანგარიში - verifykm.com",
+      "description": "შექმენით უფასო verifykm ანგარიში, რომ ჩაატაროთ მყისიერი VIN შემოწმებები და მიიღოთ თქვენი მანქანის ისტორიის ანგარიშები."
+    },
+    "de": {
+      "title": "Registrieren, verifykm.com",
+      "description": "Kostenloses verifykm-Konto erstellen, um VIN-Berichte zu speichern und schneller Fahrzeughistorien zu prüfen."
+    },
+    "fr": {
+      "title": "Inscription, verifykm.com",
+      "description": "Créez un compte verifykm gratuit pour enregistrer vos rapports VIN et vérifier l'historique plus rapidement."
+    },
+    "bg": {
+      "title": "Регистрация, verifykm.com",
+      "description": "Създайте безплатен verifykm акаунт, за да запазвате VIN отчети и по-бързо да проверявате история."
+    },
+    "zh": {
+      "title": "创建账户, verifykm.com",
+      "description": "创建免费verifykm账户，进行即时VIN查询并访问您的车辆历史报告。"
+    }
+  },
+  "checkout": {
+    "en": {
+      "title": "Checkout, verifykm.com",
+      "description": "Complete your VIN history report purchase securely."
+    },
+    "ar": {
+      "title": "الدفع, verifykm.com",
+      "description": "أكمل شراء تقرير تاريخ VIN بأمان."
+    },
+    "uk": {
+      "title": "Оплата, verifykm.com",
+      "description": "Безпечно завершіть покупку звіту VIN."
+    },
+    "ru": {
+      "title": "Оплата, verifykm.com",
+      "description": "Безопасно завершите покупку отчёта VIN."
+    },
+    "sq": {
+      "title": "Pagesa, verifykm.com",
+      "description": "Perfundoni blerjen e raportit VIN ne menyre te sigurt."
+    },
+    "es": {
+      "title": "Pago, verifykm.com",
+      "description": "Complete la compra de su informe de historial VIN de forma segura."
+    },
+    "ro": {
+      "title": "Finalizare comandă, verifykm.com",
+      "description": "Finalizați achiziția raportului VIN în siguranță pe verifykm.com."
+    },
+    "pl": {
+      "title": "Płatność, raport VIN | verifykm.com",
+      "description": "Bezpieczna płatność za raport historii VIN. Natychmiastowy dostęp po potwierdzeniu."
+    },
+    "ka": {
+      "title": "შეკვეთა, verifykm.com",
+      "description": "უსაფრთხოდ შეასრულეთ თქვენი VIN ისტორიის ანგარიში შესყიდვის შესახებ."
+    },
+    "de": {
+      "title": "Kasse, VIN-Bericht | verifykm.com",
+      "description": "Sichere Zahlung für Ihren VIN-Historienbericht. Sofortiger Zugriff nach Bestätigung."
+    },
+    "fr": {
+      "title": "Paiement, rapport VIN | verifykm.com",
+      "description": "Paiement sécurisé pour votre rapport historique VIN. Accès instantané après confirmation."
+    },
+    "bg": {
+      "title": "Плащане, VIN отчет | verifykm.com",
+      "description": "Сигурно плащане за VIN отчет. Мигновен достъп след потвърждение."
+    },
+    "zh": {
+      "title": "结账, verifykm.com",
+      "description": "安全完成您的VIN历史报告购买。"
+    }
+  },
+  "purchases": {
+    "en": {
+      "title": "Purchase History, verifykm.com",
+      "description": "View your VIN report purchases and receipts."
+    },
+    "ar": {
+      "title": "سجل المشتريات, verifykm.com",
+      "description": "اعرض مشتريات تقارير VIN والإيصالات."
+    },
+    "uk": {
+      "title": "Історія покупок, verifykm.com",
+      "description": "Переглядайте покупки звітів VIN та квитанції."
+    },
+    "ru": {
+      "title": "История покупок, verifykm.com",
+      "description": "Просматривайте покупки отчётов VIN и квитанции."
+    },
+    "sq": {
+      "title": "Historiku i blerjeve, verifykm.com",
+      "description": "Shikoni blerjet e raporteve VIN dhe faturat."
+    },
+    "es": {
+      "title": "Historial de compras, verifykm.com",
+      "description": "Vea sus compras de informes VIN y recibos."
+    },
+    "ro": {
+      "title": "Istoric achiziții, verifykm.com",
+      "description": "Vizualizați achizițiile de rapoarte VIN și chitanțele."
+    },
+    "pl": {
+      "title": "Zakupy, verifykm.com",
+      "description": "Historia zakupów raportów VIN i dostęp do wcześniej wygenerowanych raportów."
+    },
+    "ka": {
+      "title": "შესყიდვების ისტორია, verifykm.com",
+      "description": "ნახეთ თქვენი VIN ანგარიშის შესყიდვები და ქვითრები."
+    },
+    "de": {
+      "title": "Käufe, verifykm.com",
+      "description": "Übersicht Ihrer VIN-Berichtkäufe und Zugriff auf frühere Berichte."
+    },
+    "fr": {
+      "title": "Achats, verifykm.com",
+      "description": "Historique de vos achats de rapports VIN et accès aux rapports précédents."
+    },
+    "bg": {
+      "title": "Покупки, verifykm.com",
+      "description": "История на покупките на VIN отчети и достъп до предишни отчети."
+    },
+    "zh": {
+      "title": "购买历史, verifykm.com",
+      "description": "查看您的VIN报告购买记录和收据。"
+    }
+  },
+  "forgot_password": {
+    "en": {
+      "title": "Forgot Password, verifykm.com",
+      "description": "Reset your verifykm account password."
+    },
+    "ar": {
+      "title": "نسيت كلمة المرور, verifykm.com",
+      "description": "أعد تعيين كلمة مرور حساب verifykm."
+    },
+    "uk": {
+      "title": "Забули пароль, verifykm.com",
+      "description": "Скиньте пароль облікового запису verifykm."
+    },
+    "ru": {
+      "title": "Забыли пароль, verifykm.com",
+      "description": "Сбросьте пароль аккаунта verifykm."
+    },
+    "sq": {
+      "title": "Harruat fjalekalimin, verifykm.com",
+      "description": "Rivendosni fjalekalimin e llogarise verifykm."
+    },
+    "es": {
+      "title": "Olvidé mi contraseña, verifykm.com",
+      "description": "Restablezca la contraseña de su cuenta de verifykm."
+    },
+    "ro": {
+      "title": "Parolă uitată, verifykm.com",
+      "description": "Resetați parola contului verifykm."
+    },
+    "pl": {
+      "title": "Przypomnienie hasła, verifykm.com",
+      "description": "Zresetuj hasło do konta verifykm, aby odzyskać dostęp do raportów VIN."
+    },
+    "ka": {
+      "title": "დაგავიწყდათ პაროლი, verifykm.com",
+      "description": "გადააყენეთ თქვენი verifykm ანგარიშის პაროლი."
+    },
+    "de": {
+      "title": "Passwort vergessen, verifykm.com",
+      "description": "Passwort für Ihr verifykm-Konto zurücksetzen und wieder Zugriff auf VIN-Berichte erhalten."
+    },
+    "fr": {
+      "title": "Mot de passe oublié, verifykm.com",
+      "description": "Réinitialisez le mot de passe de votre compte verifykm pour retrouver l'accès aux rapports VIN."
+    },
+    "bg": {
+      "title": "Забравена парола, verifykm.com",
+      "description": "Нулирайте паролата на verifykm акаунта си, за да възстановите достъп до VIN отчети."
+    },
+    "zh": {
+      "title": "忘记密码, verifykm.com",
+      "description": "重置您的verifykm账户密码。"
+    }
+  },
+  "reset_password": {
+    "en": {
+      "title": "Reset Password, verifykm.com",
+      "description": "Choose a new password for your verifykm account."
+    },
+    "ar": {
+      "title": "إعادة تعيين كلمة المرور, verifykm.com",
+      "description": "اختر كلمة مرور جديدة لحساب verifykm."
+    },
+    "uk": {
+      "title": "Скидання пароля, verifykm.com",
+      "description": "Оберіть новий пароль для облікового запису verifykm."
+    },
+    "ru": {
+      "title": "Сброс пароля, verifykm.com",
+      "description": "Выберите новый пароль для аккаунта verifykm."
+    },
+    "sq": {
+      "title": "Rivendos fjalekalimin, verifykm.com",
+      "description": "Zgjidhni nje fjalekalim te ri per llogarine verifykm."
+    },
+    "es": {
+      "title": "Restablecer contraseña, verifykm.com",
+      "description": "Elija una nueva contraseña para su cuenta de verifykm."
+    },
+    "ro": {
+      "title": "Resetare parolă, verifykm.com",
+      "description": "Setați o parolă nouă pentru contul verifykm."
+    },
+    "pl": {
+      "title": "Reset hasła, verifykm.com",
+      "description": "Ustaw nowe hasło do konta verifykm."
+    },
+    "ka": {
+      "title": "პაროლის აღდგენა, verifykm.com",
+      "description": "აირჩიეთ ახალი პაროლი თქვენი verifykm ანგარიშისთვის."
+    },
+    "de": {
+      "title": "Passwort zurücksetzen, verifykm.com",
+      "description": "Neues Passwort für Ihr verifykm-Konto festlegen."
+    },
+    "fr": {
+      "title": "Réinitialiser le mot de passe, verifykm.com",
+      "description": "Définissez un nouveau mot de passe pour votre compte verifykm."
+    },
+    "bg": {
+      "title": "Нова парола, verifykm.com",
+      "description": "Задайте нова парола за verifykm акаунта си."
+    },
+    "zh": {
+      "title": "重置密码, verifykm.com",
+      "description": "为您的verifykm账户选择新密码。"
+    }
+  },
+  "country_china": {
+    "en": {
+      "title": "Chinese Car History: Km, Accidents and Repairs | verifykm.com",
+      "description": "Check kilometres, crash repairs and salvage flags on any car from China, already here or still in China. BYD, Geely, NIO, BMW, Mercedes, Tesla and Toyota."
+    },
+    "de": {
+      "title": "China-Auto: Kilometer, Unfälle, Reparaturen | verifykm.com",
+      "description": "Kilometer, Unfallreparaturen und Totalschaden eines Autos aus China prüfen, schon hier oder noch in China. BYD, Geely, NIO, BMW, Mercedes, Tesla, Toyota."
+    },
+    "es": {
+      "title": "Historial de un coche chino: km y accidentes | verifykm.com",
+      "description": "Vea kilómetros, reparaciones y marcas de siniestro de un coche de China, ya aquí o todavía en China. BYD, Geely, NIO, BMW, Mercedes, Tesla y Toyota."
+    },
+    "fr": {
+      "title": "Historique d'une voiture chinoise: km et accidents | verifykm.com",
+      "description": "Vérifiez les kilomètres, les réparations et les traces de salvage d'une voiture de Chine, déjà ici ou encore en Chine. BYD, Geely, NIO, BMW, Mercedes, Tesla et Toyota."
+    },
+    "sq": {
+      "title": "Historia e makinës nga Kina | verifykm.com",
+      "description": "Shikoni kilometrat, riparimet dhe dëmtimin total te një makinë nga Kina, qoftë tashmë këtu apo ende atje. BYD, Geely, NIO, BMW, Mercedes, Tesla, Toyota."
+    },
+    "pl": {
+      "title": "Historia auta z Chin: przebieg i wypadki | verifykm.com",
+      "description": "Sprawdź przebieg, naprawy i szkodę całkowitą auta z Chin, już tutaj albo nadal w Chinach. BYD, Geely, NIO, BMW, Mercedes, Tesla i Toyota."
+    },
+    "ka": {
+      "title": "ჩინური მანქანის ისტორია: კილომეტრები და ავარია | verifykm.com",
+      "description": "შეამოწმეთ ჩინეთის მანქანის კილომეტრები, რემონტი და სალვაჟი, უკვე აქაა თუ ჯერ კიდევ ჩინეთშია. BYD, Geely, NIO, BMW, Mercedes, Tesla, Toyota."
+    },
+    "ro": {
+      "title": "Istoric auto China: kilometraj și accidente | verifykm.com",
+      "description": "Verifică kilometrii, reparațiile și dauna totală la o mașină din China, deja aici sau încă în China. BYD, Geely, NIO, BMW, Mercedes, Tesla și Toyota."
+    },
+    "bg": {
+      "title": "История на кола от Китай: километри и катастрофи | verifykm.com",
+      "description": "Проверете километри, ремонти и тотална щета при кола от Китай, вече тук или още в Китай. BYD, Geely, NIO, BMW, Mercedes, Tesla и Toyota."
+    },
+    "ar": {
+      "title": "تاريخ سيارة صينية: الكيلومترات والحوادث | verifykm.com",
+      "description": "تحقق من الكيلومترات والإصلاحات وعلامات الشطب لسيارة من الصين، وصلت إليك أو ما زالت في الصين. BYD، جيلي، نيو، بي إم دبليو، مرسيدس، تسلا، تويوتا."
+    },
+    "uk": {
+      "title": "Історія авто з Китаю: пробіг і ДТП | verifykm.com",
+      "description": "Перевірте кілометри, ремонти і тотал в авто з Китаю, вже тут або ще в Китаї. BYD, Geely, NIO, BMW, Mercedes, Tesla і Toyota."
+    },
+    "ru": {
+      "title": "История авто из Китая: пробег и аварии | verifykm.com",
+      "description": "Проверьте километры, ремонты и тотал у машины из Китая, уже здесь или ещё в Китае. BYD, Geely, NIO, BMW, Mercedes, Tesla и Toyota."
+    },
+    "zh": {
+      "title": "中国车历史: 公里、事故与维修 | verifykm.com",
+      "description": "查中国车的公里、事故维修和报废标记，车已经在你这边或还在中国。比亚迪、吉利、蔚来、宝马、奔驰、特斯拉、丰田。"
+    }
+  },
+  "country_uae": {
+    "en": {
+      "title": "UAE Car History: Km, Flood and Registration | verifykm.com",
+      "description": "Check kilometres, flood damage and GCC registration on any car from the UAE, already here or still in Dubai. Toyota, Nissan, Mercedes, BMW and Lexus."
+    },
+    "de": {
+      "title": "VAE-Auto: Kilometer, Wasser, Zulassung | verifykm.com",
+      "description": "Kilometer, Wasserschaden und Zulassung eines Autos aus den VAE prüfen, schon hier oder noch in Dubai. Toyota, Nissan, Mercedes, BMW, Lexus."
+    },
+    "es": {
+      "title": "Historial de un coche de EAU: km e inundación | verifykm.com",
+      "description": "Vea kilómetros, daños por agua y el registro de un coche de EAU, ya aquí o todavía en Dubái. Toyota, Nissan, Mercedes, BMW y Lexus."
+    },
+    "fr": {
+      "title": "Historique d'une voiture des EAU: km et inondation | verifykm.com",
+      "description": "Vérifiez les kilomètres, les dégâts des eaux et l'immatriculation d'une voiture des EAU, déjà ici ou encore à Dubaï. Toyota, Nissan, Mercedes, BMW et Lexus."
+    },
+    "sq": {
+      "title": "Historia e makinës nga Emiratet | verifykm.com",
+      "description": "Shikoni kilometrat, dëmet nga uji dhe boshllëqet në regjistrim te një makinë nga Emiratet, qoftë tashmë këtu apo ende në Dubai. Toyota, Nissan, Mercedes, BMW, Lexus."
+    },
+    "pl": {
+      "title": "Historia auta z ZEA: przebieg i zalanie | verifykm.com",
+      "description": "Sprawdź przebieg, zalanie i rejestrację auta z ZEA, już tutaj albo nadal w Dubaju. Toyota, Nissan, Mercedes, BMW i Lexus."
+    },
+    "ka": {
+      "title": "საამიროების მანქანის ისტორია: გარბენი და წყალი | verifykm.com",
+      "description": "შეამოწმეთ საამიროების მანქანის კილომეტრები, წყლის ზიანი და რეგისტრაცია, უკვე აქაა თუ ჯერ კიდევ დუბაიშია. Toyota, Nissan, Mercedes, BMW, Lexus."
+    },
+    "ro": {
+      "title": "Istoric auto EAU: kilometraj și inundație | verifykm.com",
+      "description": "Verifică kilometrii, daunele de la apă și înmatricularea unei mașini din EAU, deja aici sau încă în Dubai. Toyota, Nissan, Mercedes, BMW și Lexus."
+    },
+    "bg": {
+      "title": "История на кола от ОАЕ: километри и наводнение | verifykm.com",
+      "description": "Проверете километри, щети от наводнение и регистрация при кола от ОАЕ, вече тук или още в Дубай. Toyota, Nissan, Mercedes, BMW и Lexus."
+    },
+    "ar": {
+      "title": "تاريخ سيارة إماراتية: الكيلومترات والفيضان | verifykm.com",
+      "description": "اطلع على الكيلومترات وأضرار المياه والتسجيل لسيارة من الإمارات، وصلت إليك أو ما زالت في دبي. تويوتا، نيسان، مرسيدس، بي إم دبليو، لكزس."
+    },
+    "uk": {
+      "title": "Історія авто з ОАЕ: пробіг і затоплення | verifykm.com",
+      "description": "Перевірте кілометри, шкоду від води і реєстрацію авто з ОАЕ, вже тут або ще в Дубаї. Toyota, Nissan, Mercedes, BMW і Lexus."
+    },
+    "ru": {
+      "title": "История авто из ОАЭ: пробег и затопление | verifykm.com",
+      "description": "Проверьте километры, ущерб от воды и регистрацию машины из ОАЭ, уже здесь или ещё в Дубае. Toyota, Nissan, Mercedes, BMW и Lexus."
+    },
+    "zh": {
+      "title": "阿联酋车历史: 公里、水损与登记 | verifykm.com",
+      "description": "查阿联酋车的公里、水损和登记，车已经在你这边或还在迪拜。丰田、日产、奔驰、宝马、雷克萨斯。"
+    }
+  },
+  "country_japan": {
+    "en": {
+      "title": "Japan Car History: Auctions, Km and Accidents | verifykm.com",
+      "description": "Read auction grades, kilometres and accident history on any car from Japan, already here or still in Japan. Toyota, Honda, Nissan, Mazda, Subaru and Lexus."
+    },
+    "de": {
+      "title": "Japan-Auto: Auktion, Kilometer, Unfälle | verifykm.com",
+      "description": "Auktionsnoten, Kilometer und Unfälle eines Autos aus Japan prüfen, schon hier oder noch in Japan. Toyota, Honda, Nissan, Mazda, Subaru, Lexus."
+    },
+    "es": {
+      "title": "Historial de un coche japonés: subasta y km | verifykm.com",
+      "description": "Lea la nota de subasta, los kilómetros y los accidentes de un coche de Japón, ya aquí o todavía en Japón. Toyota, Honda, Nissan, Mazda, Subaru y Lexus."
+    },
+    "fr": {
+      "title": "Historique d'une voiture japonaise: enchères et km | verifykm.com",
+      "description": "Lisez la note d'enchère, les kilomètres et les accidents d'une voiture du Japon, déjà ici ou encore au Japon. Toyota, Honda, Nissan, Mazda, Subaru et Lexus."
+    },
+    "sq": {
+      "title": "Historia e makinës nga Japonia | verifykm.com",
+      "description": "Shikoni notën e ankandit, kilometrat dhe aksidentet te një makinë nga Japonia, qoftë tashmë këtu apo ende atje. Toyota, Honda, Nissan, Mazda, Subaru, Lexus."
+    },
+    "pl": {
+      "title": "Historia auta z Japonii: aukcja i przebieg | verifykm.com",
+      "description": "Sprawdź ocenę aukcyjną, przebieg i wypadki auta z Japonii, już tutaj albo nadal w Japonii. Toyota, Honda, Nissan, Mazda, Subaru i Lexus."
+    },
+    "ka": {
+      "title": "იაპონური მანქანის ისტორია: აუქციონი და კილომეტრები | verifykm.com",
+      "description": "ნახეთ იაპონიის მანქანის აუქციონის ფურცელი, კილომეტრები და ავარია, უკვე აქაა თუ ჯერ კიდევ იაპონიაშია. Toyota, Honda, Nissan, Mazda, Subaru, Lexus."
+    },
+    "ro": {
+      "title": "Istoric auto Japonia: licitație și kilometraj | verifykm.com",
+      "description": "Citește nota de licitație, kilometrii și accidentele unei mașini din Japonia, deja aici sau încă în Japonia. Toyota, Honda, Nissan, Mazda, Subaru și Lexus."
+    },
+    "bg": {
+      "title": "История на кола от Япония: търг и километри | verifykm.com",
+      "description": "Вижте оценката от търга, километрите и катастрофите при кола от Япония, вече тук или още в Япония. Toyota, Honda, Nissan, Mazda, Subaru и Lexus."
+    },
+    "ar": {
+      "title": "تاريخ سيارة يابانية: المزاد والكيلومترات | verifykm.com",
+      "description": "اطلع على ورقة المزاد والكيلومترات والحوادث لسيارة من اليابان، وصلت إليك أو ما زالت في اليابان. تويوتا، هوندا، نيسان، مازدا، سوبارو، لكزس."
+    },
+    "uk": {
+      "title": "Історія авто з Японії: аукціон і пробіг | verifykm.com",
+      "description": "Подивіться аукціонний лист, кілометри і ДТП в авто з Японії, вже тут або ще в Японії. Toyota, Honda, Nissan, Mazda, Subaru і Lexus."
+    },
+    "ru": {
+      "title": "История авто из Японии: аукцион и пробег | verifykm.com",
+      "description": "Посмотрите аукционный лист, километры и аварии у машины из Японии, уже здесь или ещё в Японии. Toyota, Honda, Nissan, Mazda, Subaru и Lexus."
+    },
+    "zh": {
+      "title": "日本车历史: 拍卖、公里与事故 | verifykm.com",
+      "description": "查日本车的拍卖表、公里和事故，车已经在你这边或还在日本。丰田、本田、日产、马自达、斯巴鲁、雷克萨斯。"
+    }
+  }
+}

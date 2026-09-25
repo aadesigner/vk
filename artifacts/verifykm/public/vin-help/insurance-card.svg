@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="960" y2="540" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="header" x1="0" y1="0" x2="960" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0f766e"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="540" fill="url(#bg)"/>
+  <rect x="48" y="48" width="864" height="444" rx="24" fill="#ffffff" stroke="#cbd5e1" stroke-width="3"/>
+  <rect x="48" y="48" width="864" height="92" rx="24" fill="url(#header)"/>
+  <rect x="48" y="116" width="864" height="24" fill="url(#header)"/>
+  <circle cx="108" cy="94" r="28" fill="#ffffff" fill-opacity="0.18"/>
+  <path d="M96 94h24M108 82v24" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <text x="156" y="88" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">AUTO INSURANCE ID CARD</text>
+  <text x="156" y="118" fill="#d1fae5" font-family="Arial, Helvetica, sans-serif" font-size="18">Proof of insurance - keep in vehicle</text>
+  <text x="88" y="188" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" letter-spacing="1.2">INSURED</text>
+  <text x="88" y="218" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">JOHN SMITH</text>
+  <text x="88" y="268" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" letter-spacing="1.2">VEHICLE</text>
+  <text x="88" y="298" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">2022 TOYOTA RAV4</text>
+  <text x="88" y="332" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="20">Plate: ABC-1234 - Policy: P-8849201</text>
+  <rect x="88" y="362" width="784" height="96" rx="14" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="2"/>
+  <text x="112" y="392" fill="#047857" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" letter-spacing="1.1">VEHICLE IDENTIFICATION NUMBER (VIN)</text>
+  <text x="112" y="432" fill="#065f46" font-family="Consolas, Monaco, monospace" font-size="34" font-weight="700">1HGBH41JXMN109186</text>
+  <text x="88" y="492" fill="#64748b" font-family="Arial, Helvetica, sans-serif" font-size="16">Effective 01/15/2026 - 01/15/2027 - Insurer: Sample Mutual Insurance Co.</text>
+</svg>

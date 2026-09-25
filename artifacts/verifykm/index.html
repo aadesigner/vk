@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>verifykm.com</title>
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script src="/seo-bootstrap.js" defer></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <style>
+      #root{position:relative;min-height:100vh}
+      #root:empty,.app-boot-shell{min-height:100vh;background:#fff;color:#0f172a}
+      #root .app-boot-shell{position:relative;z-index:1}
+      .dark #root:empty,.dark .app-boot-shell{background:#0b1220;color:#f8fafc}
+      .app-boot-bar{height:4rem;border-bottom:1px solid rgba(15,23,42,.08);display:flex;align-items:center;justify-content:space-between;padding:0 1rem;max-width:80rem;margin:0 auto}
+      .dark .app-boot-bar{border-bottom-color:rgba(255,255,255,.08)}
+      .app-boot-logo,.app-boot-pill,.app-boot-line,.app-boot-card{background:rgba(15,23,42,.08);border-radius:.75rem;animation:boot-pulse 1.4s ease-in-out infinite}
+      .dark .app-boot-logo,.dark .app-boot-pill,.dark .app-boot-line,.dark .app-boot-card{background:rgba(255,255,255,.08)}
+      .app-boot-logo{height:2rem;width:7rem}
+      .app-boot-pill{height:2.25rem;width:5.5rem;border-radius:999px}
+      .app-boot-body{max-width:80rem;margin:0 auto;padding:2.5rem 1rem}
+      .app-boot-line{height:2.5rem;width:min(66%,32rem);margin-bottom:1rem}
+      .app-boot-line.short{height:1.25rem;width:min(50%,24rem);opacity:.7}
+      .app-boot-card{height:10rem;width:100%;margin-top:1rem;border-radius:1rem}
+      @keyframes boot-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+    </style>
+    <script>
+      (function () {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+        document.documentElement.style.colorScheme = "light";
+        try { localStorage.setItem("verifykm-theme", "light"); } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <div class="app-boot-shell" aria-hidden="true">
+        <div class="app-boot-bar">
+          <div class="app-boot-logo"></div>
+          <div class="app-boot-pill"></div>
+        </div>
+        <div class="app-boot-body">
+          <div class="app-boot-line"></div>
+          <div class="app-boot-line short"></div>
+          <div class="app-boot-card"></div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

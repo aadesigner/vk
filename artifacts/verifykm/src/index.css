@@ -1,0 +1,2402 @@
+/* VerifyKM uses Sora Variable (see fonts/sora-latin.css) — not Inter. */
+
+/* Safari/iOS password autofill does not fire React onChange — detect via animation. */
+@keyframes native-autofill-start {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+
+.auth-field-input:-webkit-autofill {
+  animation-name: native-autofill-start;
+  animation-duration: 0.01s;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 14mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    box-sizing: border-box;
+  }
+
+  /*
+   * Always print light theme — even when the live UI is dark mode.
+   * Otherwise .dark tokens keep white text / near-black cards in the PDF.
+   */
+  html {
+    color-scheme: light !important;
+  }
+
+  html.dark,
+  .dark {
+    --background: 0 0% 98%;
+    --foreground: 220 13% 9%;
+    --border: 220 13% 90%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 9%;
+    --card-border: 220 13% 88%;
+    --sidebar: 220 13% 96%;
+    --sidebar-foreground: 220 13% 15%;
+    --sidebar-border: 220 13% 88%;
+    --sidebar-primary: 201 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 13% 92%;
+    --sidebar-accent-foreground: 220 13% 15%;
+    --sidebar-ring: 201 100% 50%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 9%;
+    --popover-border: 220 13% 88%;
+    --primary: 201 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 13% 94%;
+    --secondary-foreground: 220 13% 20%;
+    --muted: 220 13% 94%;
+    --muted-foreground: 220 13% 50%;
+    --accent: 201 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --input: 220 13% 85%;
+    --ring: 201 100% 50%;
+    --chart-1: 201 100% 50%;
+    --chart-2: 210 79% 46%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 0 84% 60%;
+  }
+
+  html,
+  body,
+  #root {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: hsl(220 13% 9%) !important;
+    font-size: 9.5pt;
+    line-height: 1.4;
+  }
+
+  /* Navbar is hidden in print — drop the layout offset reserved for it */
+  main {
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+
+  .vin-report-print {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: hsl(220 13% 9%) !important;
+  }
+
+  /* Reset all max-width containers */
+  .max-w-4xl,
+  .max-w-2xl,
+  .max-w-7xl,
+  .max-w-6xl {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Compress card padding so sections fit tighter */
+  .py-10 { padding-top: 0.4rem !important; padding-bottom: 0.4rem !important; }
+  .py-5  { padding-top: 0.45rem !important; padding-bottom: 0.45rem !important; }
+  .py-4  { padding-top: 0.3rem !important;  padding-bottom: 0.3rem !important; }
+  .py-3  { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+  .px-6  { padding-left: 0.7rem !important; padding-right: 0.7rem !important; }
+  .px-4  { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+
+  /* Compress gaps */
+  .gap-6 { gap: 0.5rem !important; }
+  .gap-5 { gap: 0.4rem !important; }
+  .gap-4 { gap: 0.35rem !important; }
+  .gap-3 { gap: 0.3rem !important; }
+
+  /* Compress space-y rhythm */
+  .space-y-6 > * + * { margin-top: 0.45rem !important; }
+  .space-y-5 > * + * { margin-top: 0.4rem !important; }
+  .space-y-4 > * + * { margin-top: 0.35rem !important; }
+  .space-y-3 > * + * { margin-top: 0.3rem !important; }
+
+  /* Compress timeline item padding */
+  .pb-5 { padding-bottom: 0.45rem !important; }
+
+  /* Full report UI — hidden in print; summary PDF is separate */
+  .vin-report-screen {
+    display: none !important;
+  }
+
+  .vin-report-print-summary {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: hsl(220 13% 9%) !important;
+  }
+
+  .vin-report-print-summary .print-page {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .vin-report-print-summary .print-page-cover {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  .vin-report-print-summary .print-page-history {
+    page-break-before: auto;
+    break-before: auto;
+    margin-top: 0.35rem !important;
+    padding-top: 0.25rem !important;
+    border-top: 1px solid hsl(var(--border) / 0.35);
+  }
+
+  .vin-report-print-summary .print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  .vin-report-print-summary .print-cover-header {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    border-bottom: 1.5pt solid hsl(var(--primary) / 0.25) !important;
+    background: transparent !important;
+  }
+
+  .vin-report-print-summary .print-page-cover > h2,
+  .vin-report-print-summary .print-page-cover .print-cover-header h2 {
+    font-size: 14pt !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .vin-report-print-summary .print-score-box {
+    border-color: hsl(var(--primary) / 0.35) !important;
+    background: hsl(var(--primary) / 0.06) !important;
+  }
+
+  .vin-report-print-summary .print-report-link {
+    border-color: hsl(var(--primary) / 0.35) !important;
+    background: hsl(var(--primary) / 0.04) !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .vin-report-print-summary .print-report-qr {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .vin-report-print-summary .print-cover-footer {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .vin-report-print-summary .print-hero-layout {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.45rem !important;
+  }
+
+  .vin-report-print-summary .print-hero-photo-wrap {
+    min-height: 0;
+    max-height: 220px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .vin-report-print-summary .print-hero-photo-main {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 220px !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+
+  .vin-report-print-summary .print-spec-grid {
+    gap: 0.3rem !important;
+  }
+
+  .vin-report-print-summary .print-spec-cell {
+    padding: 0.25rem 0.35rem !important;
+  }
+
+  .vin-report-print-summary .print-section-head {
+    padding: 0.3rem 0.45rem !important;
+    background: hsl(var(--primary) / 0.06) !important;
+    border-left: 3px solid hsl(var(--primary) / 0.55) !important;
+  }
+
+  .vin-report-print-summary .print-section-count {
+    color: hsl(var(--primary)) !important;
+    background: hsl(var(--primary) / 0.1);
+    border-radius: 9999px;
+    padding: 0.05rem 0.35rem;
+    min-width: 1.1rem;
+    text-align: center;
+  }
+
+  .vin-report-print-summary .print-block-title-accent {
+    background: hsl(var(--primary)) !important;
+  }
+
+  .vin-report-print-summary .print-finding-positive {
+    background: #ecfdf5 !important;
+    border-color: #6ee7b7 !important;
+    color: #075985 !important;
+  }
+
+  .vin-report-print-summary .print-finding-negative {
+    background: #fef2f2 !important;
+    border-color: #fca5a5 !important;
+    color: #991b1b !important;
+  }
+
+  .vin-report-print-summary .print-finding-neutral {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .vin-report-print-summary .print-section-body {
+    padding: 0.3rem 0.4rem !important;
+  }
+
+  .vin-report-print-summary .print-findings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.35rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  .vin-report-print-summary .print-findings-grid > * {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .vin-report-print-summary .print-gallery-cell img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+
+  .vin-report-print-summary .print-section {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .vin-report-print-summary .print-timeline-table td {
+    padding: 0.2rem 0.35rem 0.2rem 0 !important;
+    vertical-align: top;
+  }
+
+  .vin-report-print-summary .print-timeline-table td:first-child {
+    width: 26%;
+    white-space: nowrap;
+  }
+
+  .vin-report-print-summary .print-photo-gallery {
+    page-break-inside: auto;
+    break-inside: auto;
+    margin-top: 0.25rem !important;
+  }
+
+  .vin-report-print-summary .print-gallery-cell {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .vin-report-print-summary .print-photo-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.25rem !important;
+  }
+
+  .vin-report-print > .print-brand-top,
+  .vin-report-print .print-brand-bottom {
+    display: none !important;
+  }
+
+  /* Legacy: no longer used for print layout */
+  .print-two-col {
+    display: none !important;
+  }
+
+  .print-hero-photo {
+    height: 130px !important;
+    max-height: 130px !important;
+    overflow: hidden !important;
+  }
+
+  /* Vin report hero — hidden in summary PDF */
+  .vin-report-hero {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 0.25rem !important;
+    box-shadow: none !important;
+  }
+
+  .vin-report-hero > div {
+    display: block !important;
+  }
+
+  .print-vin-hero-photo {
+    max-height: 72px !important;
+    border-radius: 4pt !important;
+  }
+
+  .print-vin-hero-photo img,
+  .print-vin-hero-photo > div {
+    max-height: 72px !important;
+    aspect-ratio: auto !important;
+    object-fit: cover !important;
+  }
+
+  .vin-report-hero h1 {
+    font-size: 13pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .vin-hero-stats {
+    font-size: 8pt !important;
+  }
+
+  .vin-hero-stats .text-xs,
+  .vin-hero-stats .text-\[11px\] {
+    font-size: 7.5pt !important;
+  }
+
+  .photo-slider-section {
+    display: none !important;
+  }
+
+  .print-hide-chart {
+    display: none !important;
+  }
+
+  /* Keep report card borders visible */
+  .rounded-2xl, .rounded-xl {
+    border-radius: 6pt !important;
+  }
+
+  /* Page breaks — only on key blocks; avoid forcing every card to a new page */
+  .print-avoid-break,
+  .vin-report-hero,
+  .print-brand-top,
+  .print-brand-bottom {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .vin-report-print .rounded-2xl {
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+
+  .vin-report-print .print-two-col > * {
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+
+  /* Legacy screen-only photo wrappers */
+  .print-no-photo {
+    display: none !important;
+  }
+
+  /* Print branding strips */
+  .print-brand-top,
+  .print-brand-bottom {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .print-brand-top {
+    page-break-after: avoid;
+    break-after: avoid;
+    margin-bottom: 0.35rem !important;
+  }
+
+  .print-brand-bottom {
+    margin-top: 0.2rem !important;
+    padding-top: 0.2rem !important;
+  }
+
+  .print-brand-bottom .mt-4 {
+    margin-top: 0.2rem !important;
+    padding: 0.25rem 0.4rem !important;
+  }
+
+  .print-brand-bottom .text-lg {
+    font-size: 10pt !important;
+  }
+
+  .print-brand-bottom .mt-8 {
+    margin-top: 0.2rem !important;
+  }
+
+  /* Tighter section headings in PDF */
+  .vin-report-print h2 {
+    font-size: 8pt !important;
+    margin-bottom: 0.2rem !important;
+  }
+
+  .vin-report-print .rounded-2xl.border {
+    margin-bottom: 0.15rem !important;
+  }
+
+  /* Hero text readable in PDF */
+  .print-hero-photo + div,
+  [class*="primary-foreground"] {
+    color: inherit !important;
+  }
+}
+@layer theme, base, components, utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-amber-accent: oklch(79.5% 0.184 86.047);
+  --color-amber-accent-muted: oklch(96.6% 0.037 90.049);
+  --color-orange-accent: oklch(69.1% 0.207 37.553);
+  --color-orange-accent-muted: oklch(97.1% 0.021 37.1);
+}
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-primary-border: var(--sidebar-primary-border);
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent-border: var(--sidebar-accent-border);
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: calc(1 / 0.75);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-base: 1rem;
+  --text-base--line-height: calc(1.5 / 1);
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5);
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: calc(2.25 / 1.875);
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: calc(2.5 / 2.25);
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 6rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 8rem;
+  --text-9xl--line-height: 1;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --app-font-sans: 'Sora Variable', 'Sora', system-ui, sans-serif;
+  --background: 0 0% 98%;
+  --foreground: 220 13% 9%;
+  --border: 220 13% 90%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 13% 9%;
+  --card-border: 220 13% 88%;
+  --sidebar: 220 13% 96%;
+  --sidebar-foreground: 220 13% 15%;
+  --sidebar-border: 220 13% 88%;
+  --sidebar-primary: 201 100% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 13% 92%;
+  --sidebar-accent-foreground: 220 13% 15%;
+  --sidebar-ring: 201 100% 50%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 13% 9%;
+  --popover-border: 220 13% 88%;
+  --primary: 201 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 13% 94%;
+  --secondary-foreground: 220 13% 20%;
+  --muted: 220 13% 94%;
+  --muted-foreground: 220 13% 50%;
+  --accent: 201 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 220 13% 85%;
+  --ring: 201 100% 50%;
+  --chart-1: 201 100% 50%;
+  --chart-2: 210 79% 46%;
+  --chart-3: 38 92% 50%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 0 84% 60%;
+  --radius: 0.375rem;
+}
+
+.dark {
+  --background: 222 20% 8%;
+  --foreground: 210 17% 92%;
+  --border: 222 14% 18%;
+  --card: 222 16% 11%;
+  --card-foreground: 210 17% 92%;
+  --card-border: 222 14% 18%;
+  --sidebar: 222 18% 9%;
+  --sidebar-foreground: 210 17% 85%;
+  --sidebar-border: 222 14% 16%;
+  --sidebar-primary: 201 100% 42%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 222 14% 16%;
+  --sidebar-accent-foreground: 210 17% 85%;
+  --sidebar-ring: 201 100% 42%;
+  --popover: 222 16% 11%;
+  --popover-foreground: 210 17% 92%;
+  --popover-border: 222 14% 18%;
+  --primary: 201 100% 42%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 14% 16%;
+  --secondary-foreground: 210 17% 80%;
+  --muted: 222 14% 16%;
+  --muted-foreground: 210 17% 55%;
+  --accent: 201 100% 42%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 222 14% 22%;
+  --ring: 201 100% 42%;
+  --chart-1: 201 100% 42%;
+  --chart-2: 210 79% 56%;
+  --chart-3: 38 92% 55%;
+  --chart-4: 280 65% 65%;
+  --chart-5: 0 72% 55%;
+}
+
+/* Blog hero: slow drift. Content stays visible (no fade-from-zero) so the text is in the first paint. */
+@media (prefers-reduced-motion: no-preference) {
+  .blog-hero-photo {
+    animation: blog-hero-drift 22s ease-in-out infinite alternate;
+    transform-origin: center 42%;
+  }
+  .blog-demo-bar {
+    animation: blog-demo-bar 1.15s ease both;
+  }
+  .blog-demo-spot {
+    animation: blog-demo-spot 4.8s ease-in-out infinite;
+  }
+}
+
+@keyframes blog-hero-drift {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.07); }
+}
+
+@keyframes blog-demo-bar {
+  from { width: 8%; }
+  to { width: var(--blog-bar, 40%); }
+}
+
+@keyframes blog-demo-spot {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgb(0 165 253 / 0.25); }
+  40% { box-shadow: inset 0 0 0 2px #00a5fd; }
+}
+
+/* --- Admin area themes: Studio + Orbit — tokens scoped to .admin-shell only --- */
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell .admin-display,
+.admin-shell .font-display {
+  font-family: var(--admin-font-display);
+}
+
+html.admin-theme-active .admin-shell {
+  --admin-font-sans: var(--app-font-sans);
+  --admin-font-display: var(--admin-font-sans);
+  --admin-tracking: 0em;
+  /* Keep dimensions identical across themes to avoid layout jump when switching */
+  --admin-radius: 0.75rem;
+  --admin-card-radius: 0.85rem;
+  --admin-sidebar-width: 16.5rem;
+  --admin-card-shadow: 0 1px 2px hsl(220 20% 20% / 0.04);
+  --admin-card-border: hsl(var(--card-border, var(--border)));
+  --admin-card-bg: hsl(var(--card));
+  --admin-sidebar-bg: hsl(var(--sidebar, var(--background)));
+  --admin-sidebar-border: hsl(var(--sidebar-border, var(--border)));
+  --admin-sidebar-blur: none;
+  --admin-sidebar-shadow: none;
+  --admin-sidebar-accent-line: hsl(var(--primary) / 0.45);
+  --admin-sidebar-header-bg: transparent;
+  --admin-nav-radius: 0.65rem;
+  --admin-nav-active-bg: hsl(var(--primary) / 0.12);
+  --admin-nav-active-fg: hsl(var(--primary));
+  --admin-nav-active-shadow: none;
+  --admin-nav-hover-bg: hsl(var(--muted));
+  --admin-shell-bg: hsl(var(--background));
+  --admin-main-glow: none;
+  font-family: var(--admin-font-sans);
+  letter-spacing: var(--admin-tracking);
+  color: hsl(var(--foreground));
+  background: var(--admin-shell-bg);
+  --radius: var(--admin-radius);
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+/* Contain horizontal overflow without killing desktop max-w-[88rem] on the content column */
+html.admin-theme-active .admin-main {
+  min-width: 0;
+  overflow-x: clip;
+  overflow-wrap: break-word;
+}
+
+html.admin-theme-active .admin-main > div {
+  min-width: 0;
+}
+
+html.admin-theme-active .admin-main table {
+  max-width: 100%;
+}
+
+html.admin-theme-active .admin-main img,
+html.admin-theme-active .admin-main video,
+html.admin-theme-active .admin-main iframe {
+  max-width: 100%;
+}
+
+html.admin-theme-active .admin-main pre,
+html.admin-theme-active .admin-main code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+html.admin-theme-active .admin-shell::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--admin-main-glow);
+}
+
+/* Do NOT force position on all shell children — that breaks mobile fixed drawer/overlay */
+html.admin-theme-active .admin-shell > div.flex-1 {
+  position: relative;
+  z-index: 1;
+}
+
+html.admin-theme-active .admin-sidebar {
+  background: var(--admin-sidebar-bg) !important;
+  border-color: var(--admin-sidebar-border) !important;
+  backdrop-filter: var(--admin-sidebar-blur);
+  -webkit-backdrop-filter: var(--admin-sidebar-blur);
+  box-shadow: var(--admin-sidebar-shadow);
+  color: hsl(var(--sidebar-foreground, var(--foreground)));
+}
+
+@media (min-width: 768px) {
+  html.admin-theme-active .admin-sidebar {
+    width: var(--admin-sidebar-width) !important;
+    position: fixed !important;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  html.admin-theme-active .admin-shell > div.flex-1 {
+    margin-left: var(--admin-sidebar-width);
+  }
+}
+
+html.admin-theme-active .admin-sidebar::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 7.5rem;
+  background: var(--admin-sidebar-header-bg);
+  z-index: 0;
+}
+
+html.admin-theme-active .admin-sidebar::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: 1.15rem;
+  bottom: 1.15rem;
+  right: 0;
+  width: 2px;
+  border-radius: 999px 0 0 999px;
+  background: var(--admin-sidebar-accent-line);
+  opacity: 0.85;
+  z-index: 0;
+}
+
+html.admin-theme-active[data-admin-theme="studio"] .admin-sidebar::after {
+  display: none;
+}
+
+html.admin-theme-active .admin-sidebar > *:not(.admin-sidebar-close) {
+  position: relative;
+  z-index: 1;
+}
+
+html.admin-theme-active .admin-sidebar-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.75rem;
+  z-index: 5;
+}
+
+html.admin-theme-active .admin-sidebar .text-muted-foreground {
+  color: hsl(var(--sidebar-foreground, var(--muted-foreground)) / 0.72) !important;
+}
+
+html.admin-theme-active .admin-sidebar .admin-nav-group-label {
+  color: hsl(var(--sidebar-foreground, var(--muted-foreground)) / 0.48);
+  letter-spacing: 0.14em;
+}
+
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .admin-nav-group-label {
+  color: hsl(217 40% 88% / 0.55);
+}
+
+/* Orbit rail is always dark — never inherit light-shell foreground/muted for labels */
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .text-foreground,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar [class*="text-foreground"] {
+  color: hsl(var(--sidebar-foreground) / 0.92) !important;
+}
+
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .hover\:text-foreground:hover {
+  color: hsl(var(--sidebar-foreground)) !important;
+}
+
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .hover\:bg-muted:hover {
+  background: hsl(217 40% 100% / 0.07) !important;
+}
+
+/* Header / footer dividers: cyan-tinted edge, not washed white */
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .border-b,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .border-t {
+  border-color: hsl(217 40% 72% / 0.34) !important;
+}
+
+html.admin-theme-active[data-admin-theme="orbit"] .admin-nav-link:hover,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-nav-link:focus,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-nav-link:focus-visible {
+  background: transparent !important;
+  box-shadow: none;
+}
+
+html.admin-theme-active[data-admin-theme="orbit"] .admin-nav-link--active,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-nav-link--active:hover,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-nav-link--active:focus,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-nav-link--active:focus-visible {
+  background: hsl(217 70% 45% / 0.12) !important;
+  box-shadow: inset 2px 0 0 hsl(201 100% 55%);
+}
+
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .admin-mood-chip {
+  display: none;
+}
+
+html.admin-theme-active .admin-sidebar .admin-nav-link:not(.admin-nav-link--active) {
+  color: hsl(var(--sidebar-foreground, var(--muted-foreground)) / 0.8);
+}
+
+html.admin-theme-active .admin-nav-link {
+  border-radius: var(--admin-nav-radius) !important;
+  transition: background-color 40ms linear, color 40ms linear;
+}
+
+html.admin-theme-active .admin-nav-link:hover {
+  background: var(--admin-nav-hover-bg) !important;
+}
+
+html.admin-theme-active .admin-nav-link--active {
+  background: var(--admin-nav-active-bg) !important;
+  color: var(--admin-nav-active-fg) !important;
+  box-shadow: var(--admin-nav-active-shadow);
+  transition: background-color 40ms linear, color 40ms linear;
+}
+
+/* Snappy hovers across admin chrome (Tailwind transition-* defaults feel laggy) */
+html.admin-theme-active .admin-shell :is(a, button, [role="button"], .transition-colors, .transition-all, .transition-opacity) {
+  transition-duration: 50ms !important;
+  transition-timing-function: linear !important;
+}
+
+html.admin-theme-active .admin-main .bg-card,
+html.admin-theme-active .admin-main [class*="bg-card"] {
+  background: var(--admin-card-bg) !important;
+  border-color: var(--admin-card-border) !important;
+  box-shadow: var(--admin-card-shadow);
+}
+
+/* Keep card radius stable; avoid per-theme radius jumps */
+html.admin-theme-active .admin-main .rounded-xl,
+html.admin-theme-active .admin-main .rounded-2xl,
+html.admin-theme-active .admin-main .rounded-lg,
+html.admin-theme-active .admin-main .rounded-md {
+  border-radius: var(--admin-card-radius) !important;
+}
+
+html.admin-theme-active .admin-main .shadow-sm {
+  box-shadow: var(--admin-card-shadow) !important;
+}
+
+/* Dark mode cards: always use dark token surfaces (never leftover light shell vars) */
+html.dark.admin-theme-active .admin-main .bg-card,
+html.dark.admin-theme-active .admin-main [class*="bg-card"] {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--card-border, var(--border))) !important;
+}
+
+html.dark.admin-theme-active .admin-main .bg-background {
+  background-color: hsl(var(--background));
+}
+
+/* ========== STUDIO ========== */
+html.admin-theme-active[data-admin-theme="studio"] .admin-shell {
+  --admin-font-sans: var(--app-font-sans);
+  --admin-font-display: var(--app-font-sans);
+  --background: 210 18% 98%;
+  --foreground: 222 18% 16%;
+  --border: 214 14% 90%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 18% 16%;
+  --card-border: 214 14% 91%;
+  --muted: 210 14% 95%;
+  --muted-foreground: 215 10% 44%;
+  --secondary: 210 14% 95%;
+  --secondary-foreground: 222 14% 24%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 18% 16%;
+  --popover-border: 214 14% 90%;
+  --input: 214 12% 84%;
+  --primary: 201 90% 38%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 217 40% 94%;
+  --accent-foreground: 217 40% 24%;
+  --ring: 201 90% 38%;
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 222 14% 28%;
+  --sidebar-border: 214 12% 82%;
+  --sidebar-primary: 201 90% 38%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 35% 96%;
+  --sidebar-accent-foreground: 217 40% 28%;
+  --sidebar-ring: 201 90% 38%;
+  --chart-1: 201 90% 38%;
+}
+
+html.admin-theme-active[data-admin-theme="studio"] .admin-shell {
+  --admin-card-shadow: 0 1px 2px hsl(215 20% 40% / 0.04), 0 8px 24px hsl(215 20% 40% / 0.04);
+  --admin-sidebar-bg: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%);
+  --admin-sidebar-border: hsl(214 12% 82%);
+  --admin-sidebar-shadow: 6px 0 28px hsl(215 20% 50% / 0.04);
+  --admin-sidebar-header-bg: linear-gradient(180deg, hsl(217 60% 96% / 0.9), transparent);
+  --admin-sidebar-accent-line: none;
+  --admin-nav-active-bg: hsl(217 60% 95%);
+  --admin-nav-active-fg: hsl(217 45% 28%);
+  --admin-nav-active-shadow: none;
+  --admin-nav-hover-bg: hsl(210 14% 96%);
+  --admin-shell-bg: #f4f8fb;
+  --admin-main-glow: radial-gradient(ellipse 50% 35% at 100% 0%, hsl(217 40% 70% / 0.07), transparent 60%);
+}
+
+html.dark.admin-theme-active[data-admin-theme="studio"] .admin-shell {
+  --background: 220 14% 8%;
+  --foreground: 210 14% 93%;
+  --border: 220 10% 18%;
+  --card: 220 12% 10%;
+  --card-foreground: 210 14% 93%;
+  --card-border: 220 10% 18%;
+  --muted: 220 10% 13%;
+  --muted-foreground: 215 8% 58%;
+  --secondary: 220 10% 13%;
+  --secondary-foreground: 210 12% 86%;
+  --popover: 220 12% 10%;
+  --popover-foreground: 210 14% 93%;
+  --popover-border: 220 10% 18%;
+  --input: 220 10% 22%;
+  --primary: 201 85% 46%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 217 24% 16%;
+  --accent-foreground: 217 40% 72%;
+  --ring: 201 85% 46%;
+  --sidebar: 220 14% 7%;
+  --sidebar-foreground: 210 12% 88%;
+  --sidebar-border: 220 8% 24%;
+  --sidebar-primary: 201 85% 46%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 22% 14%;
+  --sidebar-accent-foreground: 217 40% 70%;
+  --sidebar-ring: 201 85% 46%;
+  --chart-1: 201 85% 46%;
+}
+
+html.dark.admin-theme-active[data-admin-theme="studio"] .admin-shell {
+  --admin-card-bg: hsl(var(--card));
+  --admin-card-border: hsl(var(--card-border));
+  --admin-card-shadow: 0 8px 28px hsl(0 0% 0% / 0.28);
+  --admin-sidebar-bg: linear-gradient(180deg, hsl(220 14% 9%) 0%, hsl(220 14% 7%) 100%);
+  --admin-sidebar-border: hsl(0 0% 100% / 0.14);
+  --admin-sidebar-header-bg: linear-gradient(180deg, hsl(217 30% 14% / 0.4), transparent);
+  --admin-shell-bg: hsl(var(--background));
+  --admin-main-glow: radial-gradient(ellipse 45% 30% at 100% 0%, hsl(217 40% 40% / 0.08), transparent 55%);
+  --admin-nav-active-bg: hsl(217 28% 16%);
+  --admin-nav-active-fg: hsl(217 45% 68%);
+  --admin-nav-active-shadow: none;
+  --admin-nav-hover-bg: hsl(220 10% 14%);
+}
+
+/* ========== ORBIT — glass ink rail · cyan aurora ========== */
+html.admin-theme-active[data-admin-theme="orbit"] .admin-shell {
+  --admin-font-sans: "Outfit", "Inter Variable", system-ui, sans-serif;
+  --admin-font-display: "Outfit", "Inter Variable", system-ui, sans-serif;
+  --admin-tracking: -0.015em;
+  --admin-card-radius: 1rem;
+  --admin-nav-radius: 0.85rem;
+  --background: 210 18% 97%;
+  --foreground: 222 28% 12%;
+  --border: 214 12% 88%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 28% 12%;
+  --card-border: 214 14% 90%;
+  --muted: 210 14% 94%;
+  --muted-foreground: 215 14% 42%;
+  --secondary: 210 14% 94%;
+  --secondary-foreground: 222 20% 22%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 28% 12%;
+  --popover-border: 214 12% 88%;
+  --input: 214 10% 84%;
+  --primary: 201 90% 38%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 217 40% 94%;
+  --accent-foreground: 217 45% 24%;
+  --ring: 201 90% 38%;
+  --sidebar: 222 28% 8%;
+  --sidebar-foreground: 210 20% 92%;
+  --sidebar-border: 217 18% 16%;
+  --sidebar-primary: 217 55% 48%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 18% 14%;
+  --sidebar-accent-foreground: 217 50% 72%;
+  --sidebar-ring: 217 55% 48%;
+  --chart-1: 201 90% 38%;
+}
+
+html.admin-theme-active[data-admin-theme="orbit"] .admin-shell {
+  --admin-card-shadow:
+    0 0 0 1px hsl(214 20% 70% / 0.08),
+    0 8px 28px hsl(217 30% 30% / 0.06),
+    0 1px 0 hsl(0 0% 100% / 0.8) inset;
+  --admin-sidebar-bg:
+    radial-gradient(120% 80% at 0% 0%, hsl(217 70% 42% / 0.28), transparent 52%),
+    radial-gradient(90% 60% at 100% 100%, hsl(199 50% 32% / 0.2), transparent 55%),
+    linear-gradient(165deg, hsl(222 28% 10%) 0%, hsl(222 32% 6%) 48%, hsl(217 28% 7%) 100%);
+  --admin-sidebar-border: hsl(217 30% 70% / 0.18);
+  --admin-sidebar-blur: blur(18px) saturate(1.25);
+  --admin-sidebar-shadow:
+    12px 0 40px hsl(222 30% 8% / 0.35),
+    inset -1px 0 0 hsl(217 60% 50% / 0.14);
+  --admin-sidebar-header-bg:
+    linear-gradient(180deg, hsl(217 55% 42% / 0.22), transparent 72%);
+  --admin-sidebar-accent-line:
+    linear-gradient(180deg, transparent 8%, hsl(217 70% 48% / 0.9) 42%, hsl(199 70% 45% / 0.5) 68%, transparent 92%);
+  --admin-nav-active-bg: hsl(217 70% 45% / 0.12);
+  --admin-nav-active-fg: hsl(217 60% 78%);
+  --admin-nav-active-shadow: inset 2px 0 0 hsl(201 100% 55%);
+  --admin-nav-hover-bg: transparent;
+  --admin-shell-bg:
+    radial-gradient(ellipse 70% 50% at 100% -10%, hsl(217 55% 55% / 0.12), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 0% 100%, hsl(199 50% 55% / 0.08), transparent 50%),
+    linear-gradient(180deg, hsl(210 20% 98%) 0%, hsl(210 16% 96%) 100%);
+  --admin-main-glow:
+    radial-gradient(ellipse 45% 35% at 85% 8%, hsl(217 55% 48% / 0.1), transparent 60%);
+}
+
+html.dark.admin-theme-active[data-admin-theme="orbit"] .admin-shell {
+  --background: 222 28% 6%;
+  --foreground: 210 16% 94%;
+  --border: 217 12% 16%;
+  --card: 222 24% 9%;
+  --card-foreground: 210 16% 94%;
+  --card-border: 217 12% 16%;
+  --muted: 222 18% 12%;
+  --muted-foreground: 215 10% 58%;
+  --secondary: 222 18% 12%;
+  --secondary-foreground: 210 12% 88%;
+  --popover: 222 24% 9%;
+  --popover-foreground: 210 16% 94%;
+  --popover-border: 217 12% 16%;
+  --input: 217 12% 22%;
+  --primary: 201 90% 46%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 217 28% 14%;
+  --accent-foreground: 217 50% 72%;
+  --ring: 201 90% 46%;
+  --sidebar: 222 30% 5%;
+  --sidebar-foreground: 210 18% 92%;
+  --sidebar-border: 217 14% 14%;
+  --sidebar-primary: 217 52% 48%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 14% 12%;
+  --sidebar-accent-foreground: 217 50% 72%;
+  --sidebar-ring: 217 52% 48%;
+  --chart-1: 201 90% 46%;
+}
+
+html.dark.admin-theme-active[data-admin-theme="orbit"] .admin-shell {
+  --admin-card-bg: hsl(var(--card));
+  --admin-card-border: hsl(217 25% 70% / 0.1);
+  --admin-card-shadow:
+    0 0 0 1px hsl(217 50% 45% / 0.06),
+    0 12px 36px hsl(0 0% 0% / 0.4);
+  --admin-sidebar-bg:
+    radial-gradient(110% 70% at 0% 0%, hsl(217 60% 40% / 0.24), transparent 50%),
+    radial-gradient(80% 50% at 100% 110%, hsl(199 45% 28% / 0.18), transparent 50%),
+    linear-gradient(165deg, hsl(222 28% 8%) 0%, hsl(222 32% 4%) 100%);
+  --admin-sidebar-border: hsl(217 35% 78% / 0.28);
+  --admin-sidebar-header-bg:
+    linear-gradient(180deg, hsl(217 50% 40% / 0.18), transparent 70%);
+  --admin-shell-bg:
+    radial-gradient(ellipse 55% 40% at 100% 0%, hsl(217 50% 36% / 0.12), transparent 55%),
+    hsl(var(--background));
+  --admin-nav-active-bg: hsl(217 70% 45% / 0.12);
+  --admin-nav-active-fg: hsl(217 55% 78%);
+  --admin-nav-hover-bg: transparent;
+  --admin-main-glow:
+    radial-gradient(ellipse 40% 30% at 90% 5%, hsl(217 55% 40% / 0.1), transparent 55%);
+}
+
+/* Admin chrome matches the public navbar (#030712), in both themes and both color modes. */
+html.admin-theme-active .admin-sidebar {
+  background: #030712 !important;
+  color: #fff !important;
+  border-color: rgb(0 165 253 / 0.2) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+html.admin-theme-active .admin-sidebar::before {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(0 165 253 / 0.7), transparent);
+}
+
+html.admin-theme-active .admin-sidebar-close {
+  color: rgb(255 255 255 / 0.75) !important;
+}
+
+html.admin-theme-active[data-admin-theme="studio"] .admin-sidebar::after {
+  display: block;
+}
+
+html.admin-theme-active .admin-sidebar .text-muted-foreground,
+html.admin-theme-active .admin-sidebar .admin-nav-group-label,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .admin-nav-group-label {
+  color: rgb(255 255 255 / 0.48) !important;
+}
+
+html.admin-theme-active .admin-sidebar .text-foreground,
+html.admin-theme-active .admin-sidebar [class*="text-foreground"],
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .text-foreground,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar [class*="text-foreground"] {
+  color: #fff !important;
+}
+
+html.admin-theme-active .admin-sidebar .border-b,
+html.admin-theme-active .admin-sidebar .border-t,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .border-b,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .border-t {
+  border-color: rgb(255 255 255 / 0.1) !important;
+}
+
+html.admin-theme-active .admin-sidebar .admin-nav-link:not(.admin-nav-link--active) {
+  color: rgb(255 255 255 / 0.68) !important;
+}
+
+html.admin-theme-active .admin-sidebar .admin-nav-link:hover,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .admin-nav-link:hover,
+html.admin-theme-active .admin-sidebar .hover\:bg-muted:hover,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .hover\:bg-muted:hover {
+  background: rgb(255 255 255 / 0.06) !important;
+  color: #fff !important;
+}
+
+html.admin-theme-active .admin-sidebar .admin-nav-link--active,
+html.admin-theme-active .admin-sidebar .admin-nav-link--active:hover,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .admin-nav-link--active,
+html.admin-theme-active[data-admin-theme="orbit"] .admin-sidebar .admin-nav-link--active:hover {
+  background: rgb(0 165 253 / 0.16) !important;
+  color: #fff !important;
+  box-shadow: inset 3px 0 0 #00a5fd !important;
+}
+
+/* ========== Revenue mood gauge (desktop floating cluster) ========== */
+.admin-mood-gauge {
+  position: relative;
+  width: 8.15rem;
+  padding: 0.35rem 0.4rem 0.4rem;
+  border-radius: 0.95rem;
+  border: 1px solid hsl(var(--border) / 0.85);
+  background:
+    linear-gradient(160deg, hsl(var(--card) / 0.98), hsl(220 18% 12% / 0.04)),
+    hsl(var(--card) / 0.94);
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.45) inset,
+    0 10px 28px hsl(220 25% 12% / 0.12);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  overflow: hidden;
+}
+
+html.dark .admin-mood-gauge {
+  border-color: hsl(0 0% 100% / 0.1);
+  background:
+    linear-gradient(165deg, hsl(220 16% 14% / 0.96), hsl(220 18% 8% / 0.94));
+  box-shadow:
+    0 1px 0 hsl(0 0% 100% / 0.06) inset,
+    0 12px 32px hsl(0 0% 0% / 0.38);
+}
+
+.admin-mood-gauge__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.admin-mood-gauge__needle {
+  will-change: transform;
+}
+
+.admin-mood-gauge__cluster {
+  margin-top: -1.15rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.admin-mood-gauge__speed {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: hsl(var(--foreground));
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-mood-gauge__unit {
+  margin: 0.08rem 0 0;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+.admin-mood-gauge__footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid hsl(var(--border) / 0.55);
+}
+
+.admin-mood-gauge__title {
+  margin: 0;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--primary));
+  line-height: 1.15;
+}
+
+html.dark .admin-mood-gauge__title {
+  color: color-mix(in oklab, hsl(var(--primary)) 55%, white);
+}
+
+.admin-mood-gauge__sub {
+  margin: 0.1rem 0 0;
+  font-size: 0.5rem;
+  color: hsl(var(--muted-foreground));
+  letter-spacing: 0.02em;
+}
+
+.admin-mood-gauge__amount {
+  margin: 0;
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  line-height: 1.1;
+  transition: color 200ms ease;
+}
+
+.admin-mood-gauge__amount--live {
+  color: hsl(217 70% 36%);
+  animation: admin-gauge-money-tick 0.55s ease-in-out infinite;
+}
+
+html.dark .admin-mood-gauge__amount--live {
+  color: hsl(217 72% 58%);
+}
+
+.admin-mood-gauge--minting::after {
+  content: "";
+  position: absolute;
+  inset: auto 12% -20% 12%;
+  height: 55%;
+  background: radial-gradient(ellipse at 50% 0%, hsl(217 70% 45% / 0.22), transparent 70%);
+  pointer-events: none;
+  animation: admin-gauge-mint-glow 1.1s ease-in-out infinite;
+}
+
+.admin-mood-gauge--sport {
+  border-color: hsl(var(--primary) / 0.4);
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.12),
+    0 10px 28px hsl(var(--primary) / 0.14);
+}
+
+.admin-mood-gauge--sport .admin-mood-gauge__title {
+  letter-spacing: 0.12em;
+}
+
+.admin-mood-gauge--redline .admin-mood-gauge__speed {
+  color: hsl(2 78% 52%);
+  animation: admin-gauge-pulse var(--admin-gauge-tick, 0.7s) ease-in-out infinite;
+}
+
+.admin-mood-gauge--sport:not(.admin-mood-gauge--redline) .admin-mood-gauge__speed {
+  animation: admin-gauge-pulse var(--admin-gauge-tick, 1.1s) ease-in-out infinite;
+}
+
+@keyframes admin-gauge-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.88; transform: scale(1.03); }
+}
+
+@keyframes admin-gauge-money-tick {
+  0%, 100% { opacity: 1; transform: translateY(0); }
+  50% { opacity: 0.82; transform: translateY(-0.5px); }
+}
+
+@keyframes admin-gauge-mint-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+html.dark.admin-theme-active[data-admin-theme="orbit"] .admin-mood-gauge {
+  border-color: hsl(217 40% 55% / 0.28);
+  background:
+    linear-gradient(165deg, hsl(222 24% 12% / 0.96), hsl(222 28% 9% / 0.94));
+}
+
+html.dark.admin-theme-active[data-admin-theme="orbit"] .admin-mood-gauge__title {
+  color: color-mix(in oklab, hsl(var(--primary)) 50%, white);
+}
+
+html.dark.admin-theme-active[data-admin-theme="orbit"] .admin-mood-gauge__amount {
+  color: hsl(210 16% 94%);
+}
+
+.admin-shell[data-admin-revenue-mood="heat"],
+.admin-shell[data-admin-revenue-mood="blaze"],
+.admin-shell[data-admin-revenue-mood="supercar"] {
+  --admin-main-glow: radial-gradient(
+    ellipse 45% 30% at 100% 100%,
+    hsl(var(--primary) / 0.1),
+    transparent 60%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-mood-gauge--redline .admin-mood-gauge__speed,
+  .admin-mood-gauge--sport .admin-mood-gauge__speed,
+  .admin-mood-gauge__amount--live,
+  .admin-mood-gauge--minting::after {
+    animation: none !important;
+  }
+  .admin-mood-gauge__needle {
+    will-change: auto;
+  }
+}
+
+/* Legacy chip selectors kept inert (mobile sidebar no longer mounts the chip) */
+.admin-mood-chip {
+  display: none;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.vin-hero-accent-risk {
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.18);
+  animation: vin-hero-risk-pulse 4s ease-in-out infinite;
+}
+
+@media (max-width: 639px), (prefers-reduced-motion: reduce) {
+  .vin-hero-accent-risk {
+    animation: none;
+    box-shadow: none;
+  }
+}
+
+@keyframes vin-hero-risk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.88; }
+}
+
+.hero-input-glow {
+  background-size: 200% 100%;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+/* VIN inputs stay LTR even on Arabic pages — including Arabic-script placeholders. */
+.vin-input-ltr,
+.vin-input-ltr input {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate;
+}
+
+.vin-input-ltr::placeholder,
+.vin-input-ltr input::placeholder {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: plaintext;
+}
+
+/* Animated moving brand-cyan border on the hero VIN field (hover / focus) */
+@property --hero-vin-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.hero-vin-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--hero-vin-angle),
+    hsl(var(--primary) / 0.16),
+    hsl(var(--primary) / 0.16) 55deg,
+    hsl(var(--primary) / 0.55) 85deg,
+    hsl(var(--primary)) 100deg,
+    hsl(217 92% 72%) 108deg,
+    hsl(var(--primary)) 116deg,
+    hsl(var(--primary) / 0.55) 131deg,
+    hsl(var(--primary) / 0.16) 161deg,
+    hsl(var(--primary) / 0.16) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  filter: drop-shadow(0 0 2px hsl(var(--primary) / 0.35));
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.hero-vin-field:hover::before,
+.hero-vin-field:focus-within::before {
+  opacity: 1;
+  animation: hero-vin-border-rotate 2.8s linear infinite;
+}
+
+.hero-vin-field:focus-within {
+  border-color: hsl(var(--primary) / 0.55);
+  box-shadow:
+    0 0 0 3px hsl(var(--primary) / 0.12),
+    0 12px 34px -10px hsl(var(--primary) / 0.28);
+}
+
+@keyframes hero-vin-border-rotate {
+  to {
+    --hero-vin-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-vin-field:hover::before,
+  .hero-vin-field:focus-within::before {
+    animation: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .home-stats-strip img,
+  .home-stats-flag {
+    box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+  }
+
+  /* Safari iOS: backdrop-blur can bleed past overflow:hidden — disable blur on small screens, keep shadow */
+  .hero-vin-field {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .hero-vin-field::before {
+    filter: none !important;
+  }
+
+  .hero-vin-field:focus-within {
+    box-shadow:
+      0 0 0 3px hsl(var(--primary) / 0.12),
+      0 12px 34px -10px hsl(var(--primary) / 0.28) !important;
+  }
+
+  .hero-orb-a,
+  .hero-orb-b,
+  .hero-orb-c {
+    animation: none !important;
+    opacity: 0.35;
+  }
+
+  .hero-orb-a {
+    opacity: 0.4;
+  }
+}
+
+/* (mobile sheet content animation removed — nested transforms felt sluggish) */
+
+@keyframes demo-scan {
+  0%, 100% { background-position: 0% -30%; }
+  50% { background-position: 0% 130%; }
+}
+
+@keyframes pending-vin-border-scan {
+  0% { background-position: 220% 0; }
+  100% { background-position: -220% 0; }
+}
+
+@keyframes pending-search-ring {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes pending-search-scan-beam {
+  0% {
+    background-position: 0% -20%;
+  }
+  100% {
+    background-position: 0% 120%;
+  }
+}
+
+.pending-search-ring {
+  animation: pending-search-ring 2.4s ease-out infinite;
+}
+
+.pending-radar {
+  background:
+    radial-gradient(circle, rgba(0, 165, 253, 0.16), transparent 62%);
+}
+
+.pending-radar-sweep {
+  background: conic-gradient(
+    from 0deg,
+    rgba(51, 187, 253, 0.45) 0deg,
+    rgba(0, 165, 253, 0.05) 55deg,
+    transparent 80deg,
+    transparent 360deg
+  );
+  animation: pending-radar-spin 2.8s linear infinite;
+  -webkit-mask: radial-gradient(circle, transparent 28%, #000 29%);
+  mask: radial-gradient(circle, transparent 28%, #000 29%);
+}
+
+@keyframes pending-radar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pending-search-scan-beam {
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    hsl(var(--primary) / 0.06) 42%,
+    hsl(var(--primary) / 0.16) 50%,
+    hsl(var(--primary) / 0.06) 58%,
+    transparent 100%
+  );
+  background-size: 100% 220%;
+  animation: pending-search-scan-beam 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pending-search-ring,
+  .pending-search-scan-beam,
+  .pending-radar-sweep {
+    animation: none !important;
+  }
+}
+
+@keyframes hero-orb-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(28px, -18px) scale(1.08); }
+}
+
+@keyframes hero-orb-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-22px, 20px) scale(1.05); }
+}
+
+@keyframes hero-orb-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.65; }
+}
+
+@keyframes coverage-region-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes coverage-arc-flow {
+  to { stroke-dashoffset: -28; }
+}
+
+@keyframes coverage-data-rise {
+  0% { opacity: 0; transform: translateY(6px); }
+  12% { opacity: 0.85; }
+  100% { opacity: 0; transform: translateY(-32px); }
+}
+
+.coverage-region-pulse {
+  animation: coverage-region-pulse 4.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px hsl(var(--primary) / 0.28));
+}
+
+.coverage-map-svg-edge {
+  display: block;
+  height: 100%;
+  width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1200 / 560;
+}
+
+.coverage-map-edge-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes coverage-live-ping {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  65% {
+    opacity: 0.12;
+  }
+  100% {
+    transform: scale(2.15);
+    opacity: 0;
+  }
+}
+
+.coverage-map-live-ring {
+  animation: coverage-live-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.coverage-map-live-ring-active {
+  animation: coverage-live-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.coverage-map-live-label-active .coverage-map-live-label-chip {
+  border-color: hsl(var(--primary) / 0.55);
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.2);
+}
+
+.coverage-map-live-dot {
+  fill: hsl(var(--primary));
+  animation: coverage-map-live-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes coverage-map-live-dot {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.coverage-map-live-label-layer {
+  pointer-events: none;
+}
+
+.coverage-map-live-label {
+  animation: coverage-map-live-label-in 0.36s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.coverage-map-live-label-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background) / 0.96);
+  border: 0.85px solid hsl(var(--primary) / 0.35);
+  font-family: inherit;
+}
+
+.coverage-map-live-label-dot {
+  flex-shrink: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  animation: coverage-map-live-dot 1.6s ease-in-out infinite;
+}
+
+.coverage-map-live-label-text {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes coverage-map-live-label-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.coverage-map-live-marker {
+  pointer-events: none;
+}
+
+.coverage-map-edge-left::after {
+  background:
+    linear-gradient(to right, hsl(var(--background) / 0.32) 0%, transparent 14%),
+    linear-gradient(to left, hsl(var(--background) / 0.18) 0%, transparent 16%),
+    linear-gradient(
+      to top,
+      hsl(var(--background) / 0.78) 0%,
+      hsl(var(--background) / 0.48) 18%,
+      hsl(var(--background) / 0.22) 38%,
+      hsl(var(--background) / 0.08) 58%,
+      transparent 82%
+    );
+}
+
+.coverage-map-edge-right::after {
+  /* Inner (center) edge: very soft — map continues under hero copy */
+  background:
+    linear-gradient(to left, transparent 0%, transparent 38%, hsl(var(--background) / 0.06) 58%, hsl(var(--background) / 0.14) 72%, hsl(var(--background) / 0.22) 86%, hsl(var(--background) / 0.08) 96%, transparent 100%),
+    linear-gradient(to right, hsl(var(--background) / 0.2) 0%, hsl(var(--background) / 0.08) 10%, transparent 22%),
+    linear-gradient(
+      to top,
+      hsl(var(--background) / 0.72) 0%,
+      hsl(var(--background) / 0.42) 16%,
+      hsl(var(--background) / 0.18) 36%,
+      hsl(var(--background) / 0.06) 56%,
+      transparent 80%
+    );
+}
+
+.dark .coverage-map-edge-left::after {
+  background:
+    linear-gradient(to right, rgb(6 10 20 / 0.34) 0%, transparent 14%),
+    linear-gradient(to left, rgb(6 10 20 / 0.16) 0%, transparent 16%),
+    linear-gradient(
+      to top,
+      rgb(6 10 20 / 0.62) 0%,
+      rgb(6 10 20 / 0.38) 18%,
+      rgb(6 10 20 / 0.18) 38%,
+      rgb(6 10 20 / 0.06) 58%,
+      transparent 82%
+    );
+}
+
+.dark .coverage-map-edge-right::after {
+  /* Match hero #060a14 — avoid harsh dark band on inner edge */
+  background:
+    linear-gradient(to left, transparent 0%, transparent 42%, rgb(6 10 20 / 0.04) 60%, rgb(6 10 20 / 0.1) 78%, rgb(6 10 20 / 0.06) 92%, transparent 100%),
+    linear-gradient(to right, rgb(6 10 20 / 0.16) 0%, rgb(6 10 20 / 0.06) 10%, transparent 22%),
+    linear-gradient(
+      to top,
+      rgb(6 10 20 / 0.52) 0%,
+      rgb(6 10 20 / 0.3) 16%,
+      rgb(6 10 20 / 0.14) 36%,
+      rgb(6 10 20 / 0.05) 56%,
+      transparent 80%
+    );
+}
+
+.coverage-map-edge-left {
+  mask-image:
+    linear-gradient(to right, #000 0%, #000 52%, rgba(0, 0, 0, 0.9) 62%, rgba(0, 0, 0, 0.62) 76%, rgba(0, 0, 0, 0.28) 90%, transparent 100%),
+    linear-gradient(to bottom, #000 0%, #000 42%, rgba(0, 0, 0, 0.86) 54%, rgba(0, 0, 0, 0.58) 68%, rgba(0, 0, 0, 0.26) 84%, transparent 100%),
+    linear-gradient(to left, #000 0%, #000 90%, rgba(0, 0, 0, 0.42) 96%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to right, #000 0%, #000 52%, rgba(0, 0, 0, 0.9) 62%, rgba(0, 0, 0, 0.62) 76%, rgba(0, 0, 0, 0.28) 90%, transparent 100%),
+    linear-gradient(to bottom, #000 0%, #000 42%, rgba(0, 0, 0, 0.86) 54%, rgba(0, 0, 0, 0.58) 68%, rgba(0, 0, 0, 0.26) 84%, transparent 100%),
+    linear-gradient(to left, #000 0%, #000 90%, rgba(0, 0, 0, 0.42) 96%, transparent 100%);
+  -webkit-mask-composite: source-in;
+}
+
+.coverage-map-edge-right {
+  /* Long inner fade so Europe extends beneath center text; outer right + bottom fade for Africa / Australia */
+  mask-image:
+    linear-gradient(
+      to left,
+      #000 0%,
+      #000 46%,
+      rgba(0, 0, 0, 0.94) 56%,
+      rgba(0, 0, 0, 0.82) 66%,
+      rgba(0, 0, 0, 0.62) 76%,
+      rgba(0, 0, 0, 0.38) 86%,
+      rgba(0, 0, 0, 0.16) 94%,
+      transparent 100%
+    ),
+    linear-gradient(to bottom, #000 0%, #000 40%, rgba(0, 0, 0, 0.88) 52%, rgba(0, 0, 0, 0.6) 66%, rgba(0, 0, 0, 0.28) 82%, transparent 100%),
+    linear-gradient(to right, #000 0%, #000 58%, rgba(0, 0, 0, 0.82) 68%, rgba(0, 0, 0, 0.5) 80%, rgba(0, 0, 0, 0.2) 92%, transparent 100%);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(
+      to left,
+      #000 0%,
+      #000 46%,
+      rgba(0, 0, 0, 0.94) 56%,
+      rgba(0, 0, 0, 0.82) 66%,
+      rgba(0, 0, 0, 0.62) 76%,
+      rgba(0, 0, 0, 0.38) 86%,
+      rgba(0, 0, 0, 0.16) 94%,
+      transparent 100%
+    ),
+    linear-gradient(to bottom, #000 0%, #000 40%, rgba(0, 0, 0, 0.88) 52%, rgba(0, 0, 0, 0.6) 66%, rgba(0, 0, 0, 0.28) 82%, transparent 100%),
+    linear-gradient(to right, #000 0%, #000 58%, rgba(0, 0, 0, 0.82) 68%, rgba(0, 0, 0, 0.5) 80%, rgba(0, 0, 0, 0.2) 92%, transparent 100%);
+  -webkit-mask-composite: source-in;
+}
+
+.country-focus-map-panel {
+  overflow: visible;
+}
+
+/* Match hero dot grid + cyan glow so the map feels embedded, not pasted on. */
+.country-focus-map-panel::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0.07;
+  background: radial-gradient(#00a5fd 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.country-focus-map-panel::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(
+    ellipse 88% 72% at 58% 42%,
+    rgb(34 211 238 / 0.1),
+    transparent 68%
+  );
+}
+
+.dark .country-focus-map-panel::before {
+  opacity: 0.18;
+}
+
+.dark .country-focus-map-panel::after {
+  background: radial-gradient(
+    ellipse 88% 72% at 58% 42%,
+    rgb(34 211 238 / 0.16),
+    transparent 68%
+  );
+}
+
+/*
+ * Radial vignette — soft edge dissolve into hero (never fully opaque).
+ */
+.country-focus-map-vignette {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background:
+    radial-gradient(
+      ellipse 92% 86% at 54% 44%,
+      transparent 0%,
+      transparent 38%,
+      rgb(239 246 255 / 0.06) 52%,
+      rgb(239 246 255 / 0.18) 66%,
+      rgb(239 246 255 / 0.34) 78%,
+      rgb(239 246 255 / 0.48) 88%,
+      rgb(239 246 255 / 0.55) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgb(239 246 255 / 0.12) 0%,
+      transparent 22%,
+      transparent 78%,
+      rgb(239 246 255 / 0.1) 100%
+    );
+}
+
+.country-focus-map-vignette-left {
+  pointer-events: none;
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 44%;
+  z-index: 4;
+  background: linear-gradient(
+    to right,
+    rgb(239 246 255 / 0.42) 0%,
+    rgb(239 246 255 / 0.24) 22%,
+    rgb(239 246 255 / 0.1) 42%,
+    rgb(239 246 255 / 0.04) 62%,
+    transparent 100%
+  );
+}
+
+.dark .country-focus-map-vignette {
+  background:
+    radial-gradient(
+      ellipse 92% 86% at 54% 44%,
+      transparent 0%,
+      transparent 38%,
+      rgb(6 10 20 / 0.06) 52%,
+      rgb(6 10 20 / 0.18) 66%,
+      rgb(6 10 20 / 0.32) 78%,
+      rgb(6 10 20 / 0.44) 88%,
+      rgb(6 10 20 / 0.52) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgb(6 10 20 / 0.14) 0%,
+      transparent 22%,
+      transparent 78%,
+      rgb(6 10 20 / 0.12) 100%
+    );
+}
+
+.dark .country-focus-map-vignette-left {
+  background: linear-gradient(
+    to right,
+    rgb(6 10 20 / 0.4) 0%,
+    rgb(6 10 20 / 0.22) 22%,
+    rgb(6 10 20 / 0.1) 42%,
+    rgb(6 10 20 / 0.04) 62%,
+    transparent 100%
+  );
+}
+
+.country-focus-map-atmosphere {
+  display: none;
+}
+
+.country-focus-map-svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+  max-height: none;
+  aspect-ratio: 1050 / 750;
+}
+
+.coverage-arc-flow {
+  stroke-dasharray: 5 9;
+  animation: coverage-arc-flow 3.8s linear infinite;
+}
+
+.coverage-data-rise {
+  animation: coverage-data-rise 3.4s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb-a,
+  .hero-orb-b,
+  .hero-orb-c {
+    animation: none !important;
+  }
+
+  .pending-vin-border-scan {
+    animation: none !important;
+  }
+
+  .coverage-region-pulse,
+  .coverage-arc-flow,
+  .coverage-data-rise,
+  .coverage-map-live-ring,
+  .coverage-map-live-label,
+  .coverage-map-live-dot,
+  .coverage-map-live-label-dot {
+    animation: none !important;
+  }
+
+  .coverage-map-edge-panel {
+    transition: none !important;
+  }
+}
+
+.pending-vin-border-scan {
+  overflow: hidden;
+}
+
+.pending-vin-border-scan::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      110deg,
+      transparent 0%,
+      transparent 35%,
+      hsl(var(--primary) / 0.18) 50%,
+      transparent 65%,
+      transparent 100%
+    );
+  background-size: 220% 100%;
+  animation: pending-vin-border-scan 5.2s linear infinite;
+  opacity: 0.9;
+}
+
+.hero-orb-a {
+  animation: hero-orb-drift-a 14s ease-in-out infinite;
+}
+
+.hero-orb-b {
+  animation: hero-orb-drift-b 11s ease-in-out infinite;
+  animation-delay: 0.8s;
+}
+
+.hero-orb-c {
+  animation: hero-orb-pulse 6s ease-in-out infinite;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  a, button, [role="button"], label[for], select, summary {
+    cursor: pointer;
+  }
+
+  html {
+    overflow-x: clip;
+  }
+
+  /* Instant theme switch — prevents sluggish bg/color cross-fade */
+  html.disable-transitions,
+  html.disable-transitions *,
+  html.disable-transitions *::before,
+  html.disable-transitions *::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    overflow-x: clip;
+    max-width: 100vw;
+  }
+}
+
+/* reCAPTCHA v3 — hide badge (protected by reCAPTCHA per Google ToS) */
+.grecaptcha-badge {
+  visibility: hidden !important;
+}
+
+/* Client area — slightly denser report UI on small screens */
+@layer components {
+  /*
+   * VIN report section chrome: hairline + soft corner wash via pseudo-elements
+   * (no extra DOM nodes per card). Disabled on print; hairline-only on small screens.
+   */
+  .vin-report-section--decorated {
+    --vr-accent: hsl(var(--primary));
+  }
+
+  .vin-report-section--decorated::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 0;
+    inset-block-end: auto;
+    height: 2px;
+    width: auto;
+    z-index: 1;
+    background: #00a5fd;
+  }
+
+  /* Phones: drop decorative glow blobs only — keep intentional locked-content blur. */
+  @media (max-width: 767px), (pointer: coarse) {
+    .vin-report-screen .blur-2xl {
+      filter: none !important;
+      -webkit-filter: none !important;
+    }
+  }
+
+  @media print {
+    .vin-report-section--decorated::before,
+    .vin-report-section--decorated::after {
+      display: none !important;
+    }
+  }
+
+  /* Soft page field — desktop only; skip on mobile for paint cost. */
+  .vin-report-screen {
+    position: relative;
+  }
+
+  @media (min-width: 640px) {
+    .vin-report-screen::before {
+      content: "";
+      pointer-events: none;
+      position: absolute;
+      inset: -1rem -0.5rem auto;
+      height: min(22rem, 45vh);
+      border-radius: 1.5rem;
+      background: radial-gradient(
+        ellipse 75% 65% at 50% 0%,
+        hsl(var(--primary) / 0.05),
+        transparent 60%
+      );
+      z-index: 0;
+    }
+
+    .vin-report-screen > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  @media print {
+    .vin-report-screen::before {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .vin-report-screen .grid.gap-6 {
+      gap: 1rem;
+    }
+
+    .vin-report-screen .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+      margin-top: 1rem;
+    }
+
+    .vin-report-screen .rounded-md.border > .px-6,
+    .vin-report-screen .rounded-md.border > .px-5,
+    .vin-report-screen .rounded-md.border.px-6,
+    .vin-report-screen .rounded-2xl.border > .px-6,
+    .vin-report-screen .rounded-2xl.border > .px-5,
+    .vin-report-screen .rounded-2xl.border.px-6 {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .vin-report-screen .rounded-md.border > .py-5,
+    .vin-report-screen .rounded-md.border.px-6.py-5,
+    .vin-report-screen .rounded-2xl.border > .py-5,
+    .vin-report-screen .rounded-2xl.border.px-6.py-5 {
+      padding-top: 0.875rem;
+      padding-bottom: 0.875rem;
+    }
+
+    .vin-report-screen .rounded-md.border > .py-4,
+    .vin-report-screen .rounded-md.border > .border-b,
+    .vin-report-screen .rounded-2xl.border > .py-4,
+    .vin-report-screen .rounded-2xl.border > .border-b {
+      padding-top: 0.625rem;
+      padding-bottom: 0.625rem;
+    }
+
+    .vin-report-screen .text-3xl {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+
+    /* Case-file cards are full-bleed: keep the accent rail flush, only tighten type. */
+    .client-report-list .report-list-card {
+      font-size: 0.8125rem;
+    }
+
+    .client-report-list .report-list-thumb {
+      height: 2.75rem;
+      width: 3.25rem;
+    }
+
+    .client-report-list .report-list-thumb-fallback {
+      height: 2.75rem;
+      width: 2.75rem;
+    }
+  }
+}
+
+/* B2B marketing — paint below-fold sections later; respect reduced motion */
+.api-b2b-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 640px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .api-b2b * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* POK GuestCheckout — card-only UI; email/billing prefilled & hidden (still validated by SDK) */
+.verifykm-pok-checkout #pok-payment-container {
+  max-width: 100%;
+}
+
+.verifykm-pok-checkout [data-verifykm-pok-hidden="1"] {
+  display: none !important;
+}
+
+.verifykm-pok-checkout .pok-payment-button {
+  border-radius: 0.75rem;
+  font-weight: 700;
+}
+
+/* VerifyKM motion — investigative scan (distinct from kmcheck) */
+@keyframes vk-scan-sweep {
+  0% { transform: translateX(-120%); opacity: 0; }
+  15% { opacity: 0.55; }
+  50% { opacity: 0.35; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+@keyframes vk-pulse-cyan {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 165, 253, 0.35); }
+  50% { box-shadow: 0 0 0 10px rgba(0, 165, 253, 0); }
+}
+.vk-scan-line {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.vk-scan-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgba(0, 165, 253, 0.12), transparent);
+  animation: vk-scan-sweep 4.5s ease-in-out infinite;
+}
+.vk-cta-pulse {
+  animation: vk-pulse-cyan 2.4s ease-out infinite;
+}
+
+/* Auth screens stay light even when the rest of the site is dark. */
+.auth-light {
+  color-scheme: light;
+  --background: 210 33% 97%;
+  --foreground: 222 28% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 28% 12%;
+  --muted: 210 30% 96%;
+  --muted-foreground: 215 14% 38%;
+  --border: 214 22% 88%;
+  --input: 214 22% 88%;
+  --secondary: 210 30% 96%;
+  --secondary-foreground: 222 28% 12%;
+  --primary: 200 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --ring: 200 100% 50%;
+  background: #eef4f8;
+  color: #0f172a;
+}
+
+.dark .auth-light input,
+.dark .auth-light [role="combobox"] {
+  background-color: #fff;
+  color: #0f172a;
+  border-color: #e2e8f0;
+}
+
+/* Checkout stays a light receipt, even when the rest of the site is dark. */
+.checkout-light {
+  color-scheme: light;
+  --background: 210 33% 97%;
+  --foreground: 222 28% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 28% 12%;
+  --muted: 210 30% 96%;
+  --muted-foreground: 215 14% 38%;
+  --border: 214 22% 88%;
+  --input: 214 22% 88%;
+  --secondary: 210 30% 96%;
+  --secondary-foreground: 222 28% 12%;
+}
+
+@keyframes vk-evidence-float {
+  0%, 100% { transform: translateY(0); opacity: 0.92; }
+  50% { transform: translateY(-8px); opacity: 1; }
+}
+@keyframes vk-vin-slot-in {
+  0% { opacity: 0.25; border-color: rgba(0, 165, 253, 0.15); }
+  40% { opacity: 1; border-color: rgba(0, 165, 253, 0.55); }
+  100% { opacity: 0.7; border-color: rgba(0, 165, 253, 0.3); }
+}
+@keyframes vk-hero-beam {
+  0% { transform: translateY(-40px); opacity: 0; }
+  20% { opacity: 0.85; }
+  80% { opacity: 0.35; }
+  100% { transform: translateY(120px); opacity: 0; }
+}
+.vk-evidence-float {
+  animation: vk-evidence-float 5.5s ease-in-out infinite;
+}
+.vk-vin-slot {
+  animation: vk-vin-slot-in 3.2s ease-in-out infinite;
+}
+.vk-hero-beam {
+  animation: vk-hero-beam 5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vk-evidence-float,
+  .vk-vin-slot,
+  .vk-hero-beam,
+  .vk-scan-line::after,
+  .vk-cta-pulse {
+    animation: none !important;
+  }
+}
+

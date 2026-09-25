@@ -1,0 +1,206 @@
+Build a production-ready SaaS web application called kmcheck.com.
+
+1. Core Idea
+
+A VIN lookup platform for cars that provides:
+
+* Accident history
+* Mileage history
+* Car specifications
+* Photos
+* Market/auction data (when available)
+
+Data is retrieved from external APIs (starting with: https://carstat.dev), with support for multiple future providers per country (e.g. USA = provider A, Korea = provider B).
+
+Each country can have only one active provider at a time, configurable from admin dashboard.
+
+⸻
+
+2. Tech Requirements
+
+* Fast, modern full-stack web app
+* SEO optimized (critical for all public pages)
+* Multi-language support (important)
+* Secure backend (rate limits, abuse protection)
+* Scalable architecture (avoid API overload)
+* Clean REST or server actions architecture
+* Database required (store VIN results + users + logs)
+
+⸻
+
+3. Frontend Requirements
+
+Design: modern SaaS style, minimal, premium feel
+
+* Primary color: green accent
+* Support Light & Dark mode
+* Smooth animations (framer-motion style)
+* Mobile-first responsive design
+* Very fast load times
+
+Public pages:
+
+* Homepage (VIN input as main CTA)
+* Pricing page
+* Login / Register page
+* VIN result preview page (SEO-friendly if shared)
+
+Homepage flow:
+
+* User enters VIN
+* Clicks “Check”
+* If not logged in → prompt login/register + payment
+* If logged in → proceed to checkout/payment → then results
+
+⸻
+
+4. Payment System
+
+* Stripe + PayPal integration
+* Price per VIN check:
+    * 19.9€ base price
+    * 9.9€ discounted price (controlled from admin panel)
+* Admin must be able to change pricing anytime
+
+⸻
+
+5. Authentication
+
+* Email/password auth
+* Social login (Google + Apple if possible)
+* User dashboard:
+    * VIN check history
+    * Download/view reports
+    * Payment history
+
+⸻
+
+6. Admin Dashboard (English only)
+
+Admin must control everything:
+
+Users:
+
+* View all users
+* Ban/unban users
+* Limit user activity
+* View user VIN check history
+
+VIN System:
+
+* View all VIN lookups
+* Cached database results
+* Force refresh from API
+
+API Provider Settings:
+
+* Configure provider per country
+* Enable/disable API providers
+* Set API keys securely
+
+Pricing:
+
+* Set price per VIN check
+* Set discount price
+
+System Controls:
+
+* Rate limiting rules
+* Abuse detection settings
+* API usage monitoring
+* Error logs
+
+⸻
+
+7. VIN Data Logic (VERY IMPORTANT)
+
+When a user requests a VIN:
+
+1. Check internal database first
+2. If exists → return instantly (no API call)
+3. If not exists:
+    * Call active API provider for that country
+    * Normalize response format
+    * Store result in database (cache it permanently)
+    * Return to user
+
+This system must:
+
+* Prevent duplicate API calls
+* Handle high traffic safely
+* Include queue or caching strategy if needed
+* Be optimized for concurrency (many users at once)
+
+⸻
+
+8. Multi-language Support
+
+Frontend languages:
+
+* English
+* Arabic (RTL support required)
+* Ukrainian
+* Russian
+* Albanian
+
+Requirements:
+
+* Fully SEO-friendly per language
+* Separate routes or localized URLs (e.g. /en /ar /ru /ua /sq)
+* Metadata (title, description) translated per language
+* Admin panel stays English only
+
+⸻
+
+9. SEO Requirements
+
+* Fully indexable pages
+* Server-side rendering (important)
+* Clean URLs
+* Structured data for VIN pages
+* Fast Core Web Vitals
+* Multilingual SEO optimization (hreflang tags)
+
+⸻
+
+10. Security & Abuse Protection
+
+* Google reCAPTCHA v3 on forms
+* Rate limiting per IP + per user
+* API request throttling
+* Fraud detection (multiple VIN spam)
+* Secure API keys (never exposed frontend)
+* Protect admin routes strictly
+
+⸻
+
+11. Performance Requirements
+
+* Must handle hundreds of concurrent users
+* Cache VIN results aggressively
+* Minimize external API calls
+* Use background jobs if needed
+* Optimize DB indexing for VIN queries
+
+⸻
+
+12. UI/UX Style
+
+* Sleek SaaS dashboard style
+* Smooth transitions
+* Modern cards layout
+* Green accents for actions/success states
+* Clean typography
+* Fast interactions (no lag)
+
+⸻
+
+13. Key Feature Summary
+
+* VIN lookup system with caching
+* Multi-provider API system per country
+* Payment per VIN check
+* Full admin control panel
+* Multi-language SEO-ready frontend
+* User dashboard with history
+* Secure scalable backend
