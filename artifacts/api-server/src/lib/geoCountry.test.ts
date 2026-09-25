@@ -58,6 +58,35 @@ describe("resolveRequestCountryCode", () => {
     }
   });
 
+  it("maps Kosovo aliases to XK", () => {
+    const kv = mockReq({ headers: { "cf-ipcountry": "KV" }, nodeEnv: "production" });
+    expect(resolveRequestCountryCode(kv)).toBe("XK");
+    const ks = mockReq({ headers: { "cf-ipcountry": "KS" }, nodeEnv: "production" });
+    expect(resolveRequestCountryCode(ks)).toBe("XK");
+  });
+
+  it("falls back to geoip in production when no CDN country header is present", () => {
+    const prevEnabled = process.env.GEOIP_ENABLED;
+    const prevDisabled = process.env.GEOIP_DISABLED;
+    const prevNode = process.env.NODE_ENV;
+    delete process.env.GEOIP_ENABLED;
+    delete process.env.GEOIP_DISABLED;
+    process.env.NODE_ENV = "production";
+    try {
+      const req = mockReq({
+        headers: { "x-forwarded-for": "8.8.8.8" },
+        remoteAddress: "127.0.0.1",
+      });
+      expect(resolveRequestCountryCode(req)).toBe("US");
+    } finally {
+      if (prevEnabled === undefined) delete process.env.GEOIP_ENABLED;
+      else process.env.GEOIP_ENABLED = prevEnabled;
+      if (prevDisabled === undefined) delete process.env.GEOIP_DISABLED;
+      else process.env.GEOIP_DISABLED = prevDisabled;
+      process.env.NODE_ENV = prevNode ?? "test";
+    }
+  });
+
   it("resolves country from public IP via geoip", () => {
     const prevEnabled = process.env.GEOIP_ENABLED;
     const prevNode = process.env.NODE_ENV;

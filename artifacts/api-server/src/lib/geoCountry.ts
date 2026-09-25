@@ -10,8 +10,8 @@ let geoipModule: GeoipLite | null | undefined;
 function geoipDisabled(): boolean {
   if (process.env.GEOIP_DISABLED === "true") return true;
   if (process.env.GEOIP_ENABLED === "true") return false;
-  // Production runs behind Cloudflare — cf-ipcountry is enough; skip ~50–90MB MaxMind heap.
-  return process.env.NODE_ENV === "production";
+  // Used only when CDN country headers are missing (Railway has no CF-IPCountry).
+  return false;
 }
 
 /** Load MaxMind data only on first IP lookup — skipped when Cloudflare sends country headers. */
@@ -36,6 +36,8 @@ function normalizeCountryCode(raw: unknown): string | null {
   const upper = raw.trim().toUpperCase();
   if (!COUNTRY_RE.test(upper)) return null;
   if (upper === "XX" || upper === "T1") return null;
+  // MaxMind / some CDNs still emit KV or KS for Kosovo. Keep XK in admin rules.
+  if (upper === "KV" || upper === "KS") return "XK";
   return upper;
 }
 

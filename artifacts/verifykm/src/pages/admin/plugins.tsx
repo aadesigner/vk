@@ -307,11 +307,12 @@ export default function AdminPlugins() {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Default rules are pre-configured for Albanian, Ukrainian, Arabic, Russian, and Chinese-speaking regions.
+            Default Albanian rule is Albania (<code className="bg-muted px-1 rounded">AL</code>) and Kosovo (<code className="bg-muted px-1 rounded">XK</code>) — both stay separate countries, both get Shqip.
             Use <strong>Restore default rules</strong> after upgrades, then enable the switch and save.
-            Requires a country header from your CDN (e.g. Cloudflare <code className="bg-muted px-1 rounded">CF-IPCountry</code>).
-            Without it, no redirect occurs. QA locally with{" "}
-            <code className="bg-muted px-1 rounded">X-VerifyKM-Debug-Country: AL</code>.
+            Country comes from Cloudflare <code className="bg-muted px-1 rounded">CF-IPCountry</code> when present, otherwise from the visitor IP.
+            QA locally with{" "}
+            <code className="bg-muted px-1 rounded">/?geo_country=AL</code> or{" "}
+            <code className="bg-muted px-1 rounded">/?geo_country=XK</code>.
           </p>
         </CardContent>
       </Card>

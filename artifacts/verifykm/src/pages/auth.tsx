@@ -48,7 +48,7 @@ function AuthField({
   return (
     <div className={cn("space-y-2 min-w-0", className)}>
       <div className="flex items-center justify-between gap-2">
-        <Label htmlFor={id} className="text-[13px] font-semibold tracking-tight text-slate-800">
+        <Label htmlFor={id} className="text-[12px] font-semibold tracking-tight text-slate-500">
           {label}
           {optional ? (
             <span className="ml-1 font-normal text-muted-foreground">{optional}</span>
@@ -91,7 +91,7 @@ function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
-const SOCIAL_BTN = "flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-900 transition-colors hover:border-[#00a5fd] hover:bg-[#f3f9fd]";
+const SOCIAL_BTN = "flex h-12 w-full items-center justify-center gap-2.5 rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-900 transition-colors hover:border-[#00a5fd] hover:bg-[#f3f9fd]";
 
 type SocialProviderId = "facebook" | "google";
 
@@ -452,62 +452,81 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={mode}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
               >
-                <div className="mb-6">
-                  <div className="mb-5 grid grid-cols-2 rounded-xl bg-slate-100 p-1">
+                <div className="mb-7 text-center">
+                  <h1 className="text-[1.85rem] font-extrabold tracking-[-0.04em] text-slate-950 sm:text-[2.05rem]">
+                    {isSignIn ? t("auth_welcome_back") : t("auth_create_account")}
+                  </h1>
+                  <p className="mx-auto mt-2 max-w-[22rem] text-sm leading-relaxed text-slate-500">
+                    {isSignIn ? t("auth_signin_subtitle") : t("auth_signup_subtitle")}
+                  </p>
+                  <div className="mt-5 flex items-center justify-center gap-6 text-sm font-semibold">
                     <button
                       type="button"
                       onClick={() => switchAuthMode("sign-in")}
                       className={cn(
-                        "h-10 rounded-lg text-sm font-semibold transition-colors",
-                        isSignIn ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-800",
+                        "relative pb-1.5 transition-colors",
+                        isSignIn ? "text-slate-950" : "text-slate-400 hover:text-slate-700",
                       )}
                     >
                       {t("sign_in")}
+                      {isSignIn ? <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#00a5fd]" /> : null}
                     </button>
                     <button
                       type="button"
                       onClick={() => switchAuthMode("sign-up")}
                       className={cn(
-                        "h-10 rounded-lg text-sm font-semibold transition-colors",
-                        !isSignIn ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-800",
+                        "relative pb-1.5 transition-colors",
+                        !isSignIn ? "text-slate-950" : "text-slate-400 hover:text-slate-700",
                       )}
                     >
                       {t("sign_up")}
+                      {!isSignIn ? <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#00a5fd]" /> : null}
                     </button>
                   </div>
-                  <h1 className="text-[1.65rem] font-bold tracking-tight text-slate-950 sm:text-[1.85rem]">
-                    {isSignIn ? t("auth_welcome_back") : t("auth_create_account")}
-                  </h1>
-                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
-                    {isSignIn ? t("auth_signin_subtitle") : t("auth_signup_subtitle")}
-                  </p>
                 </div>
 
                 <form onSubmit={handleSubmit} autoComplete="on" className="space-y-4">
                   {!isSignIn ? (
-                    <AuthField
-                      id="name"
-                      label={t("auth_name_label")}
-                      optional={t("auth_name_optional")}
-                    >
-                      <Input
+                    <div className="grid grid-cols-[minmax(0,1fr)_8.75rem] items-start gap-2 sm:grid-cols-[minmax(0,1fr)_9.5rem] sm:gap-3">
+                      <AuthField
                         id="name"
-                        name="name"
-                        type="text"
-                        placeholder={t("auth_name_placeholder")}
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        onInput={e => syncFieldFromInput("name", e.currentTarget.value)}
-                        autoComplete="name"
-                        disabled={loading}
-                        className={cn(AUTH_INPUT, "auth-field-input")}
-                      />
-                    </AuthField>
+                        label={t("auth_name_label")}
+                        optional={t("auth_name_optional")}
+                      >
+                        <Input
+                          id="name"
+                          name="name"
+                          type="text"
+                          placeholder={t("auth_name_placeholder")}
+                          value={name}
+                          onChange={e => setName(e.target.value)}
+                          onInput={e => syncFieldFromInput("name", e.currentTarget.value)}
+                          autoComplete="name"
+                          disabled={loading}
+                          className={cn(AUTH_INPUT, "auth-field-input")}
+                        />
+                      </AuthField>
+                      <AuthField id="country" label={t("auth_country_label")}>
+                        <UserCountrySelect
+                          id="country"
+                          value={countryCode}
+                          onValueChange={setCountryCode}
+                          preferredCode={geoCountryHint}
+                          placeholder={t("auth_country_placeholder")}
+                          searchPlaceholder={t("auth_country_search")}
+                          emptySearchLabel={t("auth_country_search_empty")}
+                          disabled={loading}
+                          size="lg"
+                          triggerClassName={cn(AUTH_INPUT, "justify-between px-2.5 sm:px-3")}
+                          contentClassName="min-w-[16.5rem]"
+                        />
+                      </AuthField>
+                    </div>
                   ) : null}
 
                   <AuthField id="email" label={t("email")}>
@@ -556,7 +575,7 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400 hover:text-slate-800 transition-colors rounded-r-xl"
+                        className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 hover:text-slate-800 transition-colors rounded-r-xl"
                         onClick={() => setShowPassword(v => !v)}
                         tabIndex={-1}
                         aria-label={showPassword ? "Hide password" : "Show password"}
@@ -579,26 +598,6 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
                     </AnimatePresence>
                   </AuthField>
 
-                  {!isSignIn && (
-                    <AuthField id="country" label={t("auth_country_label")}>
-                      <UserCountrySelect
-                        id="country"
-                        value={countryCode}
-                        onValueChange={setCountryCode}
-                        preferredCode={geoCountryHint}
-                        placeholder={t("auth_country_placeholder")}
-                        searchPlaceholder={t("auth_country_search")}
-                        emptySearchLabel={t("auth_country_search_empty")}
-                        disabled={loading}
-                        size="lg"
-                        triggerClassName={cn(
-                          AUTH_INPUT,
-                          "justify-between",
-                        )}
-                      />
-                    </AuthField>
-                  )}
-
                   <AnimatePresence>
                     {error && (
                       <motion.div
@@ -614,7 +613,7 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
                   </AnimatePresence>
 
                   {!isSignIn && (
-                    <div className="flex items-start gap-3.5 sm:gap-2.5 rounded-xl border border-slate-200 bg-[#f7fafc] px-3 py-2.5">
+                    <div className="flex items-start gap-3 rounded-2xl bg-[#f3f7fb] px-3.5 py-3">
                       <Checkbox
                         id="accept-terms"
                         checked={acceptedTerms}
@@ -652,7 +651,7 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
 
                   <Button
                     type="submit"
-                    className="h-12 w-full rounded-xl text-[15px] font-semibold"
+                    className="h-12 w-full rounded-full text-[15px] font-bold"
                     disabled={submitDisabled}
                     onPointerDown={primeRecaptcha}
                     onTouchStart={primeRecaptcha}
@@ -675,7 +674,7 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
               loading={socialSettingsLoading}
             />
 
-            <p className="mt-6 text-sm text-slate-500">
+            <p className="mt-7 text-center text-sm text-slate-500">
               {isSignIn ? (
                 <>
                   {t("auth_no_account")}{" "}

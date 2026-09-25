@@ -130,7 +130,7 @@ export default function ForgotPasswordPage() {
 
               <Button
                 type="submit"
-                className="h-12 w-full rounded-xl text-[15px] font-semibold"
+                className="h-12 w-full rounded-full text-[15px] font-bold"
                 disabled={submitDisabled}
               >
                 {loading ? (

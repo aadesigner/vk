@@ -178,7 +178,7 @@ export default function Home() {
           <HeroReportPreview className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-none" />
         </div>
 
-        <div className="relative z-10 mx-auto mt-8 hidden max-w-6xl lg:mt-12 lg:block">
+        <div className="relative z-10 mx-auto mt-14 hidden max-w-6xl lg:mt-20 lg:block">
           <HomeStatsStrip />
         </div>
       </section>
