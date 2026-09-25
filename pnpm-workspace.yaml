@@ -29,6 +29,9 @@ minimumReleaseAge: 1440
 
 minimumReleaseAgeExclude: []
 
+# Local pnpm workspace only. Railway must deploy the repo root as one service
+# (see railway.toml and .railway/railway.ts) — not a service per package.
+
 packages:
   - artifacts/*
   - lib/*

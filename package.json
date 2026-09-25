@@ -8,6 +8,7 @@
     "build:railway": "node scripts/railway-build.mjs",
     "db:push": "pnpm --filter @workspace/db run push",
     "db:push:prod": "node scripts/railway-db-push.mjs",
+    "start": "node --import ./artifacts/api-server/load-env.mjs ./artifacts/api-server/dist/index.mjs",
     "start:railway": "node --import ./artifacts/api-server/load-env.mjs ./artifacts/api-server/dist/index.mjs",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"

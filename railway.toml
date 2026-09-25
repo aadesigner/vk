@@ -1,6 +1,10 @@
+# Single production service at the repo root.
+# Do not add railway.toml under artifacts/* or lib/* — Railway would
+# treat those workspace packages as extra services on GitHub import.
 [build]
 builder = "NIXPACKS"
 buildCommand = "node scripts/railway-build.mjs"
+watchPatterns = ["**"]
 
 [deploy]
 startCommand = "node --import ./artifacts/api-server/load-env.mjs ./artifacts/api-server/dist/index.mjs"

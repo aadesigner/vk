@@ -2,6 +2,17 @@
 
 Clone of the kmcheck stack under `C:\Users\Pc\Downloads\vk`. Variable **names** match kmcheck; values are VerifyKM-specific.
 
+## One service only
+
+This repo is a pnpm workspace. Railway’s GitHub import will try to create a card for every `@workspace/*` package (`vin-decode`, `api-zod`, `odometer-resolve`, …). Those are libraries. **Do not deploy them.**
+
+Keep only:
+
+- one web service at the **repo root** (`/`)
+- one **Postgres** plugin
+
+If the import wizard lists detected packages, uncheck all of them and add a blank service from the same repo with an empty root directory. Or from this folder: `railway link` then `railway config apply` (see `.railway/railway.ts`).
+
 ## Required service variables
 
 | Variable | Notes |
