@@ -90,4 +90,29 @@ describe("classifyAcquisition", () => {
     expect(r.bucket).toBe("direct");
     expect(r.channel).toBe("direct");
   });
+
+  it("maps unpaid social utm sources to organic, not ads or referral", () => {
+    expect(classifyAcquisition("https://verifykm.com/en/?utm_source=tiktok", "").channel).toBe("tiktok_social");
+    expect(classifyAcquisition("https://verifykm.com/en/?utm_source=facebook", "").channel).toBe("facebook_social");
+    expect(classifyAcquisition("https://verifykm.com/en/?utm_source=twitter&utm_medium=social", "").channel).toBe("x_social");
+    expect(classifyAcquisition("https://verifykm.com/en/?utm_source=linkedin", "").channel).toBe("linkedin_social");
+    expect(classifyAcquisition("https://verifykm.com/en/?utm_source=youtube", "").bucket).toBe("organic_social");
+  });
+
+  it("maps social referrers to the matching organic channel", () => {
+    expect(classifyAcquisition("https://verifykm.com/en/", "https://www.tiktok.com/").channel).toBe("tiktok_social");
+    expect(classifyAcquisition("https://verifykm.com/en/", "https://t.co/abc").channel).toBe("x_social");
+    expect(classifyAcquisition("https://verifykm.com/en/", "https://lnkd.in/xyz").channel).toBe("linkedin_social");
+    expect(classifyAcquisition("https://verifykm.com/en/", "https://www.facebook.com/").channel).toBe("facebook_social");
+    expect(classifyAcquisition("https://verifykm.com/en/", "https://fb.me/x").channel).toBe("facebook_social");
+    expect(classifyAcquisition("https://verifykm.com/en/", "https://www.threads.net/").channel).toBe("threads_social");
+    expect(classifyAcquisition("https://verifykm.com/en/", "https://youtu.be/abc").channel).toBe("youtube_social");
+    expect(classifyAcquisition("https://verifykm.com/en/", "https://wa.me/").channel).toBe("whatsapp_social");
+  });
+
+  it("still maps ad-only click ids to paid", () => {
+    expect(classifyAcquisition("https://verifykm.com/en/?ttclid=tt", "").channel).toBe("tiktok_ads");
+    expect(classifyAcquisition("https://verifykm.com/en/?twclid=tw", "").channel).toBe("x_ads");
+    expect(classifyAcquisition("https://verifykm.com/en/?li_fat_id=li", "").channel).toBe("linkedin_ads");
+  });
 });

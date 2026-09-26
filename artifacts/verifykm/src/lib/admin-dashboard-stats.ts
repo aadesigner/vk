@@ -156,6 +156,8 @@ export const ACQUISITION_CHANNEL_SHORT: Record<string, string> = {
   facebook_social: "FB social",
   instagram_social: "Insta social",
   meta_social: "Meta social",
+  threads_social: "Threads",
+  messenger_social: "Messenger",
   tiktok_ads: "TikTok ads",
   tiktok_social: "TikTok",
   google_ads: "Google ads",
@@ -166,6 +168,13 @@ export const ACQUISITION_CHANNEL_SHORT: Record<string, string> = {
   x_social: "X social",
   linkedin_ads: "LinkedIn ads",
   linkedin_social: "LinkedIn",
+  youtube_social: "YouTube",
+  youtube_ads: "YouTube ads",
+  whatsapp_social: "WhatsApp",
+  telegram_social: "Telegram",
+  reddit_social: "Reddit",
+  pinterest_social: "Pinterest",
+  snapchat_social: "Snapchat",
   referral: "Referral",
   direct: "Direct",
   paid_ads: "Ads",
@@ -232,6 +241,34 @@ const ACQ_BRAND: Record<string, { text: string; tint: string }> = {
     text: "text-[#006AFF]",
     tint: "bg-[#006AFF]/10 text-[#005AE0] border-[#006AFF]/25",
   },
+  youtube: {
+    text: "text-[#FF0000]",
+    tint: "bg-[#FF0000]/10 text-[#CC0000] border-[#FF0000]/25",
+  },
+  whatsapp: {
+    text: "text-[#25D366]",
+    tint: "bg-[#25D366]/10 text-[#128C7E] border-[#25D366]/25",
+  },
+  telegram: {
+    text: "text-[#229ED9]",
+    tint: "bg-[#229ED9]/10 text-[#1A7AA8] border-[#229ED9]/25",
+  },
+  reddit: {
+    text: "text-[#FF4500]",
+    tint: "bg-[#FF4500]/10 text-[#CC3700] border-[#FF4500]/25",
+  },
+  pinterest: {
+    text: "text-[#E60023]",
+    tint: "bg-[#E60023]/10 text-[#B8001C] border-[#E60023]/25",
+  },
+  snapchat: {
+    text: "text-[#C9A227]",
+    tint: "bg-[#FFFC00]/30 text-[#7A6A00] border-[#C9A227]/40",
+  },
+  threads: {
+    text: "text-[#0F1419]",
+    tint: "bg-zinc-900/5 text-zinc-800 border-zinc-900/15",
+  },
   referral: {
     text: "text-amber-700",
     tint: "bg-amber-50 text-amber-800 border-amber-200/80",
@@ -277,6 +314,13 @@ function acquisitionBrandKey(channel: string | null | undefined): keyof typeof A
   }
   if (key === "bing_ads" || key.startsWith("bing")) return "bing";
   if (key === "messenger" || key.startsWith("messenger") || key === "msg") return "messenger";
+  if (key.startsWith("youtube")) return "youtube";
+  if (key.startsWith("whatsapp")) return "whatsapp";
+  if (key.startsWith("telegram")) return "telegram";
+  if (key.startsWith("reddit")) return "reddit";
+  if (key.startsWith("pinterest")) return "pinterest";
+  if (key.startsWith("snapchat")) return "snapchat";
+  if (key.startsWith("threads")) return "threads";
   if (key === "referral") return "referral";
   if (key === "direct") return "direct";
   if (key === "paid_ads") return "paid_ads";
