@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, Users, Search, Server, Settings, LogOut, CreditCard, Activity, Tag, Menu, X, Mail, Database, ReceiptText, ShieldAlert, Megaphone, Clock, Puzzle, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { VerifyKMLogo } from "@/components/logo";
+import { VerifyKMLogo, VerifyKMMark } from "@/components/logo";
 import { SEOHead } from "@/components/seo";
 import { AdminPinGate } from "@/components/admin-pin-gate";
 import { AdminThemeProvider, useAdminTheme, useAdminThemeDocumentSync } from "@/components/admin/admin-theme-provider";
@@ -240,7 +240,10 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#7dd3fc]">Admin</span>
+          <span className="flex items-center gap-2">
+            <VerifyKMMark className="h-4 w-4" />
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#7dd3fc]">Admin</span>
+          </span>
         </header>
 
         <main className="admin-main flex-1 min-w-0 overflow-y-auto overflow-x-clip pb-[4.5rem] md:pb-0">
