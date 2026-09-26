@@ -4,6 +4,7 @@ import { DashboardReportList, DASHBOARD_REPORTS_PER_PAGE } from "@/components/da
 import { ClientAreaLayout } from "@/components/client-area-layout";
 import { prefetchVinPageChunk, seedVinLookupsFromHistory } from "@/lib/prefetch-vin-report";
 import { warmVinImages } from "@/lib/vin-image-cache";
+import { withVinImageCardSize } from "@/lib/report-photos";
 import {
   useGetUserStats,
   useDeleteUserVinLookup,
@@ -226,8 +227,8 @@ export default function Dashboard() {
       .map((lookup) => {
         const d = lookup.data as { photos?: string[]; thumbnailUrl?: string | null } | null | undefined;
         if (!d) return null;
-        if (Array.isArray(d.photos) && d.photos[0]) return d.photos[0];
-        return d.thumbnailUrl ?? null;
+        if (Array.isArray(d.photos) && d.photos[0]) return withVinImageCardSize(d.photos[0]);
+        return d.thumbnailUrl ? withVinImageCardSize(d.thumbnailUrl) : null;
       })
       .filter((url): url is string => typeof url === "string" && url.length > 0);
     if (thumbUrls.length) void warmVinImages(thumbUrls.slice(0, 3));

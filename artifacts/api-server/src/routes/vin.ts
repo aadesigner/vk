@@ -22,8 +22,9 @@ import { logger } from "../lib/logger.js";
 import { decodeVin, decodeCountry, resolveCheckDigitValid, decodeVinDiagnostics, isVehicleTooOldForLookup } from "@workspace/vin-decode";
 import { decodeFreeVin } from "../lib/vinDecodeFree.js";
 import { decodeVinPeek } from "../lib/vinDecodePreview.js";
-import { verifyImageToken, buildImageProxyUrl, transformVinPhotoData, resolveVinPhotoUrlForClient } from "../lib/imageProxy.js";
-import { getOrFetchVinImage, getMemoryCachedVinImage, resolveVinImageDiskHit, getVinImageDiskHit, mediaVersionFromUpdatedAt, withVinImageUpstreamSlot } from "../lib/vinImageCache.js";
+import { verifyImageToken, buildImageProxyUrl, transformVinPhotoData, resolveVinPhotoUrlForClient, parseVinImageWidth, VIN_IMAGE_CARD_WIDTH } from "../lib/imageProxy.js";
+import { getOrFetchVinImage, getMemoryCachedVinImage, resolveVinImageDiskHit, getVinImageDiskHit, mediaVersionFromUpdatedAt, withVinImageUpstreamSlot, vinImageCacheKey } from "../lib/vinImageCache.js";
+import { resizeVinImageForDisplay } from "../lib/vinImageResize.js";
 import { signVinShareToken, verifyVinShareToken } from "../lib/vinShareToken.js";
 import { getSettings } from "../lib/settingsCache.js";
 import { getFreeDecoderSettings } from "../lib/freeDecoderSettingsCache.js";
@@ -342,7 +343,10 @@ router.get("/vin/image", async (req, res) => {
     return;
   }
   try {
-    const memoryCached = getMemoryCachedVinImage(url);
+    const width = parseVinImageWidth(req.query.w);
+    const cacheKey = vinImageCacheKey(url, width);
+
+    const memoryCached = getMemoryCachedVinImage(cacheKey);
     if (memoryCached) {
       if (memoryCached.body.length > MAX_VIN_IMAGE_BYTES) {
         res.status(413).json({ error: "Image too large" });
@@ -356,7 +360,7 @@ router.get("/vin/image", async (req, res) => {
       return;
     }
 
-    const diskCached = await resolveVinImageDiskHit(url);
+    const diskCached = await resolveVinImageDiskHit(cacheKey);
     if (diskCached) {
       if (diskCached.byteLength > MAX_VIN_IMAGE_BYTES) {
         res.status(413).json({ error: "Image too large" });
@@ -370,30 +374,35 @@ router.get("/vin/image", async (req, res) => {
       return;
     }
 
-    const image = await getOrFetchVinImage(url, async () => {
-      return withVinImageUpstreamSlot(async () => {
-        const upstream = await fetch(url, {
-          headers: { Accept: "image/*,*/*" },
-          signal: AbortSignal.timeout(15_000),
-        });
-        if (!upstream.ok) {
-          throw new Error(`upstream ${upstream.status}`);
-        }
-        const ct = upstream.headers.get("content-type") ?? "image/jpeg";
-        const lenHeader = upstream.headers.get("content-length");
-        if (lenHeader) {
-          const len = Number(lenHeader);
-          if (Number.isFinite(len) && len > MAX_VIN_IMAGE_BYTES) {
-            throw new Error("upstream image too large");
+    const image = await getOrFetchVinImage(cacheKey, async () => {
+      const original = await getOrFetchVinImage(url, async () => {
+        return withVinImageUpstreamSlot(async () => {
+          const upstream = await fetch(url, {
+            headers: { Accept: "image/*,*/*" },
+            signal: AbortSignal.timeout(15_000),
+          });
+          if (!upstream.ok) {
+            throw new Error(`upstream ${upstream.status}`);
           }
-        }
-        const body = Buffer.from(await upstream.arrayBuffer());
-        if (!body.length) throw new Error("empty image body");
-        if (body.length > MAX_VIN_IMAGE_BYTES) throw new Error("upstream image too large");
-        return { contentType: ct, body };
+          const ct = upstream.headers.get("content-type") ?? "image/jpeg";
+          const lenHeader = upstream.headers.get("content-length");
+          if (lenHeader) {
+            const len = Number(lenHeader);
+            if (Number.isFinite(len) && len > MAX_VIN_IMAGE_BYTES) {
+              throw new Error("upstream image too large");
+            }
+          }
+          const body = Buffer.from(await upstream.arrayBuffer());
+          if (!body.length) throw new Error("empty image body");
+          if (body.length > MAX_VIN_IMAGE_BYTES) throw new Error("upstream image too large");
+          return { contentType: ct, body };
+        });
       });
+      if (!width) return original;
+      const resized = await resizeVinImageForDisplay(original.body, width);
+      return resized ?? original;
     });
-    const diskHit = await getVinImageDiskHit(url);
+    const diskHit = await getVinImageDiskHit(cacheKey);
     if (diskHit) {
       if (diskHit.byteLength > MAX_VIN_IMAGE_BYTES) {
         res.status(413).json({ error: "Image too large" });
@@ -1463,7 +1472,7 @@ router.get("/vin/preview/:vin", publicVinLimiter, optionalAuth, async (req, res)
     model: cached.model ?? null,
     year: cached.year ?? null,
     country: cached.country ?? null,
-    thumbnailUrl: firstPhoto ? buildImageProxyUrl(firstPhoto, { mediaVersion }) : null,
+    thumbnailUrl: firstPhoto ? buildImageProxyUrl(firstPhoto, { mediaVersion, width: VIN_IMAGE_CARD_WIDTH }) : null,
   });
 });
 

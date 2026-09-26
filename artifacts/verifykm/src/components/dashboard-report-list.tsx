@@ -22,6 +22,7 @@ import {
   isVinImageSessionLoaded,
   markVinImageSessionLoaded,
 } from "@/lib/vin-image-cache";
+import { withVinImageCardSize } from "@/lib/report-photos";
 
 const SORT_OPTIONS: DashboardLookupSort[] = [
   "newest",
@@ -77,8 +78,10 @@ function resolveReportPhotoCandidates(data: VinLookup["data"]): string[] {
   const fromPhotos = Array.isArray(vd.photos)
     ? vd.photos.filter((p): p is string => typeof p === "string" && p.length > 0)
     : [];
-  if (fromPhotos.length > 0) return fromPhotos.slice(0, 4);
-  if (typeof vd.thumbnailUrl === "string" && vd.thumbnailUrl) return [vd.thumbnailUrl];
+  if (fromPhotos.length > 0) return fromPhotos.slice(0, 4).map((url) => withVinImageCardSize(url));
+  if (typeof vd.thumbnailUrl === "string" && vd.thumbnailUrl) {
+    return [withVinImageCardSize(vd.thumbnailUrl)];
+  }
   return [];
 }
 

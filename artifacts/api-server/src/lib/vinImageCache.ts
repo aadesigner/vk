@@ -199,6 +199,12 @@ export function mediaVersionFromUpdatedAt(
   return Number.isFinite(ms) ? ms : undefined;
 }
 
+export function vinImageCacheKey(url: string, width?: number | null): string {
+  return width ? `${url}::w${width}` : url;
+}
+
+const VIN_IMAGE_VARIANT_WIDTHS = [480, 720, 960, 1280] as const;
+
 export function getMemoryCachedVinImage(url: string): CachedVinImage | null {
   return memoryCache.get(url) ?? null;
 }
@@ -265,10 +271,14 @@ export async function writeVinImageCache(
 
 export async function invalidateVinImageCache(urls: string[]): Promise<void> {
   const unique = [...new Set(urls.filter(Boolean))];
-  await Promise.all(unique.map(async (url) => {
-    inflight.delete(url);
-    forgetInMemory(url);
-    const { bodyPath, metaPath } = pathsForUrl(url);
+  const keys = unique.flatMap((url) => [
+    url,
+    ...VIN_IMAGE_VARIANT_WIDTHS.map((width) => vinImageCacheKey(url, width)),
+  ]);
+  await Promise.all(keys.map(async (key) => {
+    inflight.delete(key);
+    forgetInMemory(key);
+    const { bodyPath, metaPath } = pathsForUrl(key);
     await Promise.allSettled([fs.unlink(bodyPath), fs.unlink(metaPath)]);
   }));
 }

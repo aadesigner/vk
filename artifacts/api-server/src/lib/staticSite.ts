@@ -5,7 +5,7 @@ import { parseVinPagePath, buildLockedHistorySummary, extractLockedPreviewSignal
 import { logger } from "./logger.js";
 import { resolveLockedPreviewPhotoSources, vinHasReportData } from "./vinService.js";
 import { buildVinSeoFromCatalogData, catalogDataToVinSeoVehicle } from "./vinPageSeo.js";
-import { buildImageProxyUrl } from "./imageProxy.js";
+import { buildImageProxyUrl, VIN_IMAGE_CARD_WIDTH } from "./imageProxy.js";
 import { buildVinOnlyFallbackSeo, injectVinPageSeoIntoHtml } from "./vinSeoHtmlInject.js";
 import { injectMarketingPageSeoFromPath } from "./marketingSeoHtmlInject.js";
 import { isKnownSpaPath } from "./spaKnownPaths.js";
@@ -144,7 +144,7 @@ async function injectVinCatalogSeo(html: string, reqPath: string, origin: string
     const d = report.dataSource;
     const lockedPreviewSources = await resolveLockedPreviewPhotoSources(parsed.vin, d);
     const thumbnailUrl = lockedPreviewSources[0]
-      ? buildImageProxyUrl(lockedPreviewSources[0], { mediaVersion: report.mediaVersion })
+      ? buildImageProxyUrl(lockedPreviewSources[0], { mediaVersion: report.mediaVersion, width: VIN_IMAGE_CARD_WIDTH })
       : null;
 
     if (!thumbnailUrl) {

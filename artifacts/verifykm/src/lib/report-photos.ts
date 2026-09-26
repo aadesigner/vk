@@ -1,3 +1,12 @@
+/** Match api-server VIN_IMAGE_CARD_WIDTH — hero/thumbs, not lightbox HD. */
+const VIN_IMAGE_CARD_WIDTH = 960;
+
+export function withVinImageCardSize(url: string, width = VIN_IMAGE_CARD_WIDTH): string {
+  if (!url.includes("/api/vin/image")) return url;
+  if (/[?&]w=\d+/.test(url)) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}w=${width}`;
+}
+
 /** Resolve display (hero/thumbs) vs HD (lightbox) photo lists from report data. */
 export function resolveReportPhotoSets(data: {
   photos?: string[] | null;
@@ -16,7 +25,8 @@ export function resolveReportPhotoSets(data: {
       : data.thumbnailUrl
         ? [data.thumbnailUrl]
         : []
-  ).filter((p): p is string => typeof p === "string" && p.length > 0);
+  ).filter((p): p is string => typeof p === "string" && p.length > 0)
+    .map((p) => withVinImageCardSize(p));
 
   const hdRaw = Array.isArray(data.photosHd)
     ? data.photosHd.filter((p): p is string => typeof p === "string" && p.length > 0)
@@ -26,7 +36,9 @@ export function resolveReportPhotoSets(data: {
   const rawAlts = Array.isArray(data.photoAlternates) ? data.photoAlternates : [];
   const photoAlternates = photos.map((_, i) => {
     const alt = rawAlts[i];
-    return typeof alt === "string" && alt.length > 0 && alt !== photos[i] ? alt : null;
+    return typeof alt === "string" && alt.length > 0 && alt !== photos[i]
+      ? withVinImageCardSize(alt)
+      : null;
   });
 
   return { photos, photosHd, photoAlternates };
