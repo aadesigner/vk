@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertTriangle, ArrowLeft, CheckCircle2, Clock, Loader2, Download, Trash2,
+  AlertTriangle, ArrowLeft, Loader2, Download, Trash2,
   Rocket, Gift, Banknote, FileText,
 } from "lucide-react";
 import { AdminVinSaveBar } from "@/components/admin/admin-vin-save-bar";
@@ -386,53 +386,96 @@ export default function AdminPendingVinDetail({ params }: { params: { id: string
         onChange={(e) => void handlePdfFileChange(e)}
       />
 
-      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-        <div>
-          <Link href="/adminx/pending-vin-checks" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-3">
-            <ArrowLeft className="h-3.5 w-3.5" /> Pending VIN Checks
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 flex-wrap">
-            <Clock className="h-6 w-6 text-primary shrink-0" />
-            <span className="font-mono">{detail.vin}</span>
-            <Badge variant="outline" className="text-amber-600 border-amber-300">Awaiting publish</Badge>
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Edit vehicle data, then publish to add this VIN to the catalog and email purchasers.
+      <Link href="/adminx/pending-vin-checks" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+        <ArrowLeft className="h-3.5 w-3.5" /> Queue
+      </Link>
+
+      <div className="flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-mono text-lg font-bold tracking-wide sm:text-xl">{detail.vin}</h1>
+            <Badge variant="outline" className="text-amber-700 border-amber-300 dark:text-amber-300">Waiting</Badge>
+          </div>
+          <p className="mt-1 truncate text-sm text-muted-foreground">
+            {(detail.requests ?? []).length === 0
+              ? "No buyers"
+              : (detail.requests ?? []).map((req) => req.email || req.name || req.userId.slice(0, 8)).join(" · ")}
           </p>
         </div>
-        <div className="flex w-full lg:w-auto gap-2 shrink-0">
+        <div className="flex flex-wrap gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 gap-1.5"
+            onClick={handlePdfPickClick}
+            disabled={saving || publishing || removing || crediting || refunding || pdfImporting}
+            title="Read vehicle history PDF on this device — nothing is uploaded"
+          >
+            {pdfImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+            {pdfImporting ? "Reading PDF…" : "Fill from PDF"}
+          </Button>
+          <Button
+            className="h-10 gap-1.5"
+            onClick={handlePublish}
+            disabled={saving || publishing || removing || crediting || refunding || pdfImporting}
+          >
+            {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+            {publishing ? "Publishing…" : "Publish"}
+          </Button>
+        </div>
+      </div>
+
+      <details className="rounded-xl border bg-muted/20 px-4 py-2">
+        <summary className="cursor-pointer list-none py-1 text-sm font-medium text-muted-foreground [&::-webkit-details-marker]:hidden">
+          Can&apos;t deliver · extra tools
+        </summary>
+        <div className="flex flex-wrap gap-2 pb-2 pt-1">
           <Button
             variant="outline"
-            className="flex-1 basis-0 min-w-0 border-amber-300 text-amber-800 hover:bg-amber-50 px-2 sm:px-3 text-xs sm:text-sm"
+            size="sm"
+            className="h-9 gap-1.5"
             onClick={handleCreditAndNotify}
             disabled={saving || publishing || removing || crediting || refunding || pdfImporting || (detail.requests ?? []).length === 0}
             title="Adds 1 credit per user, emails them, and removes this pending check"
           >
-            {crediting ? <Loader2 className="h-4 w-4 sm:mr-1.5 animate-spin shrink-0" /> : <Gift className="h-4 w-4 sm:mr-1.5 shrink-0" />}
-            <span className="truncate">Credit</span>
+            {crediting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />}
+            Credit buyers
           </Button>
           <Button
             variant="outline"
-            className="flex-1 basis-0 min-w-0 border-orange-300 text-orange-800 hover:bg-orange-50 px-2 sm:px-3 text-xs sm:text-sm"
+            size="sm"
+            className="h-9 gap-1.5"
             onClick={handleRemoveAndRefund}
             disabled={saving || publishing || removing || crediting || refunding || pdfImporting}
             title="Removes pending, marks payments refunded (deducts sales), emails customer. Refund PayPal/POK yourself."
           >
-            {refunding ? <Loader2 className="h-4 w-4 sm:mr-1.5 animate-spin shrink-0" /> : <Banknote className="h-4 w-4 sm:mr-1.5 shrink-0" />}
-            <span className="truncate">Refunded</span>
+            {refunding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Banknote className="h-4 w-4" />}
+            Mark refunded
           </Button>
           <Button
             variant="outline"
-            className="flex-1 basis-0 min-w-0 text-destructive border-destructive/30 hover:bg-destructive/10 px-2 sm:px-3 text-xs sm:text-sm"
+            size="sm"
+            className="h-9 gap-1.5 text-destructive"
             onClick={handleRemove}
             disabled={saving || publishing || removing || crediting || refunding || pdfImporting}
             title="Remove pending"
           >
-            {removing ? <Loader2 className="h-4 w-4 sm:mr-1.5 animate-spin shrink-0" /> : <Trash2 className="h-4 w-4 sm:mr-1.5 shrink-0" />}
-            <span className="truncate">Remove</span>
+            {removing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            Remove
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-9 gap-1.5"
+            onClick={handleExportJson}
+            disabled={exportLoading || saving || publishing || removing || crediting || refunding}
+          >
+            {exportLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            JSON
           </Button>
         </div>
-      </div>
+      </details>
 
       {publishMsg && (
         <div className={`text-sm px-4 py-2 rounded-lg border ${publishMsg.ok ? "bg-[#e6f6ff] border-[#b3e3fe] text-[#075985]" : "bg-red-50 border-red-200 text-red-800"}`}>
@@ -448,55 +491,10 @@ export default function AdminPendingVinDetail({ params }: { params: { id: string
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-primary" />
-            Requesting users ({(detail.requests ?? []).length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {(detail.requests ?? []).length === 0 ? (
-            <p className="text-sm text-muted-foreground">No linked requests.</p>
-          ) : (
-            <ul className="space-y-2">
-              {(detail.requests ?? []).map((req) => (
-                <li key={req.id} className="text-sm flex flex-wrap items-center gap-x-3 gap-y-1 py-2 border-b last:border-0">
-                  <span className="font-medium">{req.email ?? req.userId}</span>
-                  {req.name && <span className="text-muted-foreground">{req.name}</span>}
-                  <span className="text-xs text-muted-foreground">Lookup #{req.lookupId}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(req.createdAt).toLocaleString()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <div className="min-w-0">
-              <CardTitle className="text-base">Edit draft data</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">
-                Use tabs to jump between vehicle info, metrics, photos, and history. Save draft before publishing.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="shrink-0 gap-1.5"
-              onClick={handlePdfPickClick}
-              disabled={saving || publishing || removing || crediting || refunding || pdfImporting}
-              title="Read vehicle history PDF on this device — nothing is uploaded"
-            >
-              {pdfImporting
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <FileText className="h-4 w-4" />}
-              {pdfImporting ? "Reading PDF…" : "Fill from PDF"}
-            </Button>
-          </div>
+          <CardTitle className="text-base">Draft report</CardTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            Fill from PDF or edit tabs, save draft, then publish.
+          </p>
         </CardHeader>
         <CardContent className="pb-0">
           <VinCatalogDataForm
@@ -510,7 +508,7 @@ export default function AdminPendingVinDetail({ params }: { params: { id: string
             saving={saving}
             saveLabel="Save draft"
             saveMsg={saveMsg}
-            hint="Ctrl+S to save draft · publish adds this VIN to the catalog"
+            hint="Ctrl+S to save draft · publish emails every waiting buyer"
             disabled={publishing || removing || crediting || refunding || pdfImporting}
             extra={(
               <Button onClick={handlePublish} disabled={saving || publishing || removing || crediting || refunding || pdfImporting} className="gap-1.5">
@@ -521,18 +519,6 @@ export default function AdminPendingVinDetail({ params }: { params: { id: string
           />
         </CardContent>
       </Card>
-
-      <p className="text-sm text-muted-foreground -mt-2">
-        <button
-          type="button"
-          onClick={handleExportJson}
-          disabled={exportLoading || saving || publishing || removing || crediting || refunding}
-          className="inline-flex items-center gap-1 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-50 disabled:no-underline"
-        >
-          {exportLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-          Download JSON
-        </button>
-      </p>
 
       <div className="h-4" aria-hidden />
     </div>

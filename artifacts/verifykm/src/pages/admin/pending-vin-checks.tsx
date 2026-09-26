@@ -4,10 +4,29 @@ import { Link, useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Search, ChevronRight, Users, Download, Upload, Loader2, CheckCircle2 } from "lucide-react";
+import { Search, ChevronRight, Download, Upload, Loader2, CheckCircle2, Copy, Check } from "lucide-react";
 import { formatCountryName } from "@/lib/format-country-name";
 import { ADMIN_PENDING_COUNT_QUERY_KEY } from "@/lib/admin-pending-count";
+
+function waitLabel(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return "just now";
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 48) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
+function vehicleTitle(data: Record<string, unknown> | null): string | null {
+  if (!data) return null;
+  const year = data.year != null ? String(data.year) : "";
+  const make = typeof data.make === "string" ? data.make : "";
+  const model = typeof data.model === "string" ? data.model : "";
+  const parts = [year, make, model].filter(Boolean);
+  return parts.length ? parts.join(" ") : null;
+}
 
 type PendingRequest = {
   id: number;
@@ -36,6 +55,7 @@ export default function AdminPendingVinChecks() {
   const [exportLoading, setExportLoading] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
   const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [copiedVin, setCopiedVin] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const exportLinkRef = useRef<HTMLAnchorElement>(null);
   const limit = 50;
@@ -55,7 +75,14 @@ export default function AdminPendingVinChecks() {
   const items = (data?.items ?? []).filter((row) => {
     if (!search.trim()) return true;
     const q = search.trim().toUpperCase();
-    return row.vin.includes(q);
+    if (row.vin.toUpperCase().includes(q)) return true;
+    const title = vehicleTitle(row.draftData)?.toUpperCase() ?? "";
+    if (title.includes(q)) return true;
+    return row.requests.some(
+      (r) =>
+        (r.email ?? "").toUpperCase().includes(q) ||
+        (r.name ?? "").toUpperCase().includes(q),
+    );
   });
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / limit) || 1;
@@ -113,20 +140,14 @@ export default function AdminPendingVinChecks() {
     }
   };
 
-  const handleExportOne = async (e: React.MouseEvent, pendingId: number, vin: string) => {
+  const handleCopyVin = async (e: React.MouseEvent, vin: string) => {
     e.stopPropagation();
     try {
-      const r = await fetch(`${basePath}/api/admin/pending-vin-checks/${pendingId}/export.json`, { credentials: "include" });
-      if (!r.ok) throw new Error("Export failed");
-      const blob = await r.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = objectUrl;
-      a.download = `pending-vin-${vin}-${new Date().toISOString().split("T")[0]}.json`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+      await navigator.clipboard.writeText(vin);
+      setCopiedVin(vin);
+      window.setTimeout(() => setCopiedVin((cur) => (cur === vin ? null : cur)), 1500);
     } catch {
-      setImportMsg({ ok: false, text: `Export failed for ${vin}.` });
+      setImportMsg({ ok: false, text: `Could not copy ${vin}.` });
     }
   };
 
@@ -135,27 +156,21 @@ export default function AdminPendingVinChecks() {
       <a ref={exportLinkRef} className="hidden" aria-hidden="true" />
       <input ref={importInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleImportJson} />
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Clock className="h-6 w-6 text-primary" />
-            Pending VIN Checks
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">Pending VIN checks</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Paid reports awaiting manual data entry before catalog publish.
+            {total} waiting · open a row, fill the report, publish
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary" className="w-fit">
-            {total} open
-          </Badge>
-          <Button variant="outline" size="sm" onClick={handleExportAll} disabled={exportLoading || importLoading}>
-            {exportLoading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
-            Download JSON (all)
+          <Button variant="ghost" size="sm" className="h-9 gap-1.5 text-muted-foreground" onClick={handleExportAll} disabled={exportLoading || importLoading || total === 0}>
+            {exportLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Export
           </Button>
-          <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()} disabled={exportLoading || importLoading}>
-            {importLoading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Upload className="h-4 w-4 mr-1.5" />}
-            Upload JSON (all)
+          <Button variant="ghost" size="sm" className="h-9 gap-1.5 text-muted-foreground" onClick={() => importInputRef.current?.click()} disabled={exportLoading || importLoading}>
+            {importLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            Import
           </Button>
         </div>
       </div>
@@ -171,9 +186,9 @@ export default function AdminPendingVinChecks() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-9"
-          placeholder="Filter by VIN…"
+          placeholder="VIN, car, or email"
           value={search}
-          onChange={(e) => setSearch(e.target.value.toUpperCase())}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
@@ -183,39 +198,39 @@ export default function AdminPendingVinChecks() {
         </div>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border bg-background p-12 text-center text-muted-foreground">
-          No pending VIN checks.
+          {search.trim() ? "No match on this page." : "Nothing waiting."}
         </div>
       ) : (
-        <div className="rounded-2xl border bg-background overflow-hidden divide-y">
+        <div className="rounded-2xl border bg-card overflow-hidden divide-y">
           {items.map((row) => {
-            const d = row.draftData ?? {};
-            const title = d.year && d.make && d.model
-              ? `${d.year} ${d.make} ${d.model}`
-              : row.vin;
-            const country = typeof d.country === "string" ? d.country : null;
+            const title = vehicleTitle(row.draftData);
+            const country = typeof row.draftData?.country === "string" ? row.draftData.country : null;
+            const buyer = row.requests[0]?.email || row.requests[0]?.name || null;
+            const waited = waitLabel(row.requests[0]?.createdAt ?? row.createdAt);
             return (
               <div
                 key={row.id}
-                className="flex items-center gap-2 px-4 sm:px-5 py-4 hover:bg-muted/40 transition-colors"
+                className="flex items-center gap-2 px-4 sm:px-5 py-3.5 hover:bg-muted/40 transition-colors"
               >
                 <button
                   type="button"
-                  className="flex-1 min-w-0 text-left flex items-center gap-4"
+                  className="flex-1 min-w-0 text-left flex items-center gap-3"
                   onClick={() => setLocation(`/adminx/pending-vin-checks/${row.id}`)}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{title}</p>
-                    <p className="font-mono text-xs text-muted-foreground mt-0.5">{row.vin}</p>
-                    {country && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatCountryName(country, "en", { usa: "USA", korea: "Korea" })}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-mono text-[13px] font-semibold tracking-wide truncate">{row.vin}</p>
+                    </div>
+                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                      {title ?? "No vehicle data yet"}
+                      {country ? ` · ${formatCountryName(country, "en", { usa: "USA", korea: "Korea" })}` : ""}
+                      {buyer ? ` · ${buyer}` : ""}
+                      {row.requests.length > 1 ? ` · +${row.requests.length - 1}` : ""}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-                    <Users className="h-3.5 w-3.5" />
-                    {row.requests.length} request{row.requests.length === 1 ? "" : "s"}
-                  </div>
+                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+                    {waited}
+                  </span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 </button>
                 <Button
@@ -223,10 +238,10 @@ export default function AdminPendingVinChecks() {
                   variant="ghost"
                   size="icon"
                   className="shrink-0 h-8 w-8"
-                  title="Download JSON for this VIN"
-                  onClick={(e) => handleExportOne(e, row.id, row.vin)}
+                  title={`Copy ${row.vin}`}
+                  onClick={(e) => handleCopyVin(e, row.vin)}
                 >
-                  <Download className="h-4 w-4" />
+                  {copiedVin === row.vin ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
             );
