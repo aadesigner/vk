@@ -15,6 +15,7 @@ import {
   warmVinImageNeighbors,
 } from "@/lib/vin-image-cache";
 import { firstAvailablePhotoIndex, nextAvailablePhotoIndex } from "@/lib/report-photos";
+import { mileageColor } from "@/lib/mileage-color";
 
 export type VinHeroScore = {
   score: string;
@@ -34,6 +35,8 @@ export type VinHeroSummaryItem = {
   kind: "accidents" | "mileage" | "salvage" | "theft" | "taxi";
   label: string;
   tone: "positive" | "negative" | "neutral" | "muted";
+  /** When set, mileage uses the same color scale as the odometer gauge. */
+  mileageKm?: number;
 };
 
 type VinReportHeroProps = {
@@ -109,27 +112,47 @@ function summaryToneClasses(tone: VinHeroSummaryItem["tone"], kind: VinHeroSumma
   };
 }
 
+function mileageTileClasses(km: number) {
+  const col = mileageColor(km);
+  if (km < 100_000) return { tile: "border-[#00a5fd]/25 bg-[#eef8fd]", text: col.text, dot: "bg-[#00a5fd]" };
+  if (km < 140_000) return { tile: "border-lime-200 bg-lime-50", text: col.text, dot: "bg-lime-500" };
+  if (km < 180_000) return { tile: "border-amber-200 bg-amber-50", text: col.text, dot: "bg-amber-500" };
+  if (km < 200_000) return { tile: "border-orange-200 bg-orange-50", text: col.text, dot: "bg-orange-500" };
+  if (km < 230_000) return { tile: "border-orange-300 bg-orange-50", text: col.text, dot: "bg-orange-600" };
+  if (km < 250_000) return { tile: "border-orange-300 bg-orange-50", text: col.text, dot: "bg-orange-700" };
+  return { tile: "border-red-200 bg-red-50", text: col.text, dot: "bg-red-600" };
+}
+
 function HeroSummaryList({ items }: { items: VinHeroSummaryItem[] }) {
   return (
     <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 print:grid">
       {items.map((item) => {
         const tone = summaryToneClasses(item.tone, item.kind);
         const Icon = item.tone === "positive" || item.tone === "negative" ? tone.Icon : SUMMARY_ICON[item.kind];
+        const mileage = item.kind === "mileage" && item.mileageKm != null
+          ? mileageTileClasses(item.mileageKm)
+          : null;
         return (
           <li
             key={item.kind}
             className={cn(
               "flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-medium",
-              item.tone === "negative"
-                ? "border-red-200 bg-red-50/70"
-                : item.tone === "positive"
-                  ? "border-[#00a5fd]/20 bg-[#eef8fd]"
-                  : "border-slate-200 bg-[#f7fbfe]",
-              tone.row,
+              mileage
+                ? mileage.tile
+                : item.tone === "negative"
+                  ? "border-red-200 bg-red-50/70"
+                  : item.tone === "positive"
+                    ? "border-[#00a5fd]/20 bg-[#eef8fd]"
+                    : "border-slate-200 bg-[#f7fbfe]",
+              mileage ? mileage.text : tone.row,
             )}
           >
-            <Icon className={cn("h-4 w-4 shrink-0", tone.icon)} aria-hidden />
-            <span className="leading-snug">{item.label}</span>
+            {mileage ? (
+              <span className={cn("h-2 w-2 shrink-0 rounded-full", mileage.dot)} aria-hidden />
+            ) : (
+              <Icon className={cn("h-4 w-4 shrink-0", tone.icon)} aria-hidden />
+            )}
+            <span className="leading-snug tabular-nums">{item.label}</span>
           </li>
         );
       })}
@@ -794,7 +817,7 @@ export function VinReportHero({
           className={cn(
             "vin-hero-stats flex flex-wrap content-start justify-start gap-2 border-t border-[#00a5fd]/10 bg-white px-4 py-3.5 sm:gap-2.5 sm:px-6",
             "print:flex print:flex-wrap print:justify-start print:gap-1.5 print:bg-white print:px-2 print:py-1.5",
-            showDesktopSummary && !locked && "sm:hidden print:flex",
+            showDesktopSummary && !locked && "hidden print:flex",
           )}
         >
           {children}

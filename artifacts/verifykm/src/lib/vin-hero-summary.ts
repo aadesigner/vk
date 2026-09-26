@@ -29,6 +29,7 @@ export function buildVinHeroSummaryItems(opts: BuildOpts): VinHeroSummaryItem[] 
       kind: "mileage",
       label: `${opts.odometer.toLocaleString()} km`,
       tone: "neutral",
+      mileageKm: opts.odometer,
     });
   }
 
