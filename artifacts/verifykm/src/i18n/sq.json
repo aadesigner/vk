@@ -741,7 +741,7 @@
   "owner_low": "Numër i ulët pronarësh",
   "owner_many_suffix": "pronarë, të regjistruar",
   "contact_support": "Na kontakto",
-  "checkout_step_vin": "Futni VIN",
+  "checkout_step_vin": "Vendos VIN",
   "checkout_step_pay": "Pagesa",
   "checkout_step_done": "Raporti",
   "pw_req_min_length": "Të paktën 6 karaktere",
