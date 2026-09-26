@@ -5,6 +5,7 @@
 import { mkdirSync, writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { optimizeDemoCarJpeg } from "./optimize-demo-car-photos.mjs";
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "assets", "demo-cars");
 const OUT_PUBLIC = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "demo-cars");
@@ -232,7 +233,8 @@ for (const car of CARS) {
     try {
       await sleep(1200);
       const url = await wikiThumbUrl(wiki);
-      const buf = await download(url);
+      const raw = await download(url);
+      const buf = await optimizeDemoCarJpeg(raw);
       writeFileSync(join(OUT, car.out), buf);
       writeFileSync(join(OUT_PUBLIC, car.out), buf);
       console.log(`ok (${Math.round(buf.length / 1024)} KB) ← ${wiki}`);

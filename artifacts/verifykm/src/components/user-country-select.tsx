@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { FlagImg } from "@/components/flag-img";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,10 +11,17 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { isLightMotionEnv } from "@/hooks/use-light-motion";
 import {
   getUserCountryOptions,
   getUserCountryOptionsWithPreferred,
@@ -79,6 +86,12 @@ export type UserCountrySelectProps = {
 
 type SearchableOption = UserCountryOption & { search: string };
 
+function matchesQuery(search: string, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return search.toLowerCase().includes(q);
+}
+
 export function UserCountrySelect({
   value,
   onValueChange,
@@ -98,6 +111,16 @@ export function UserCountrySelect({
   size = "default",
 }: UserCountrySelectProps) {
   const [open, setOpen] = useState(false);
+  const [useSheet, setUseSheet] = useState(false);
+  const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    setUseSheet(isLightMotionEnv());
+  }, []);
+
+  useEffect(() => {
+    if (!open) setQuery("");
+  }, [open]);
 
   const pinnedPreferred = useRef<string | null>(null);
   if (preferredCode && !pinnedPreferred.current) {
@@ -114,6 +137,11 @@ export function UserCountrySelect({
       search: userCountrySearchValue(c.code, c.name),
     }));
   }, [optionsProp, preferredCode]);
+
+  const filtered = useMemo(
+    () => options.filter((c) => matchesQuery(c.search, query)),
+    [options, query],
+  );
 
   const flagSize = size === "lg" ? 18 : 16;
   const selectedLabel = value && value !== emptyValue ? userCountryLabel(value) : null;
@@ -138,40 +166,117 @@ export function UserCountrySelect({
     setOpen(false);
   };
 
+  const triggerClass = cn(
+    "w-full justify-between font-normal bg-background text-foreground border-input shadow-sm",
+    "dark:bg-card dark:text-foreground dark:border-border",
+    "hover:bg-background dark:hover:bg-card",
+    size === "default" && "h-9 px-3",
+    size === "lg" && "h-12 rounded-xl text-[15px] px-3.5",
+    triggerClassName,
+    className,
+  );
+
+  const triggerButton = (
+    <Button
+      id={id}
+      type="button"
+      variant="outline"
+      role="combobox"
+      aria-expanded={open}
+      aria-haspopup={useSheet ? "dialog" : "listbox"}
+      disabled={disabled}
+      className={triggerClass}
+      onClick={useSheet ? () => setOpen(true) : undefined}
+    >
+      <span className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-left">
+        {triggerLabel}
+      </span>
+      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+    </Button>
+  );
+
+  const sheetRows = (
+    <div
+      data-vaul-no-drag
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    >
+      {allLabel != null && matchesQuery(allLabel, query) ? (
+        <CountrySheetRow
+          selected={value === ""}
+          label={allLabel}
+          onSelect={() => selectItem(ALL_SENTINEL)}
+        />
+      ) : null}
+      {emptyLabel != null && matchesQuery(emptyLabel, query) ? (
+        <CountrySheetRow
+          selected={value === emptyValue}
+          muted
+          label={emptyLabel}
+          onSelect={() => selectItem(EMPTY_SENTINEL)}
+        />
+      ) : null}
+      {filtered.map((c) => (
+        <CountrySheetRow
+          key={c.code}
+          selected={value === c.code}
+          code={c.code}
+          label={c.name}
+          onSelect={() => selectItem(c.code)}
+        />
+      ))}
+      {filtered.length === 0
+        && !(allLabel != null && matchesQuery(allLabel, query))
+        && !(emptyLabel != null && matchesQuery(emptyLabel, query)) ? (
+        <p className="px-3 py-8 text-center text-sm text-muted-foreground">{emptySearchLabel}</p>
+      ) : null}
+    </div>
+  );
+
+  if (useSheet) {
+    return (
+      <>
+        {triggerButton}
+        <Drawer open={open} onOpenChange={setOpen} shouldScaleBackground={false}>
+          <DrawerContent
+            overlayClassName="z-[120]"
+            className="z-[120] h-[min(88dvh,36rem)] max-h-[88dvh] gap-0 rounded-t-2xl bg-white p-0 text-slate-950"
+          >
+            <DrawerHeader className="shrink-0 border-b border-slate-100 px-4 pb-3 pt-2 text-left">
+              <DrawerTitle className="text-base font-semibold">{placeholder}</DrawerTitle>
+              <label className="mt-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-[#f4f8fc] px-3">
+                <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                <input
+                  type="text"
+                  inputMode="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="search"
+                  className="h-11 w-full bg-transparent text-base outline-none placeholder:text-slate-400"
+                />
+              </label>
+            </DrawerHeader>
+            {sheetRows}
+          </DrawerContent>
+        </Drawer>
+      </>
+    );
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          id={id}
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          disabled={disabled}
-          className={cn(
-            "w-full justify-between font-normal bg-background text-foreground border-input shadow-sm",
-            "dark:bg-card dark:text-foreground dark:border-border",
-            "hover:bg-background dark:hover:bg-card",
-            size === "default" && "h-9 px-3",
-            size === "lg" && "h-12 rounded-xl text-[15px] px-3.5",
-            triggerClassName,
-            className,
-          )}
-        >
-          <span className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden text-left">
-            {triggerLabel}
-          </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
+    <Popover open={open} onOpenChange={setOpen} modal>
+      <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
       <PopoverContent
         align="start"
         sideOffset={4}
+        collisionPadding={16}
         className={cn(
-          "w-[var(--radix-popover-trigger-width)] p-0 z-[80]",
+          "w-[var(--radix-popover-trigger-width)] p-0 z-[120]",
           "bg-popover text-popover-foreground border-border shadow-lg",
           "dark:bg-popover dark:text-popover-foreground dark:border-border",
-          // Skip enter/exit animation — feels snappier on long lists.
           "data-[state=open]:animate-none data-[state=closed]:animate-none",
           contentClassName,
         )}
@@ -245,5 +350,39 @@ export function UserCountrySelect({
         ) : null}
       </PopoverContent>
     </Popover>
+  );
+}
+
+function CountrySheetRow({
+  selected,
+  label,
+  code,
+  muted,
+  onSelect,
+}: {
+  selected: boolean;
+  label: string;
+  code?: string;
+  muted?: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px]",
+        "active:bg-slate-100",
+        selected ? "bg-[#e7f6ff] text-slate-950" : "text-slate-800",
+      )}
+    >
+      <Check className={cn("h-4 w-4 shrink-0", selected ? "opacity-100" : "opacity-0")} />
+      {code ? (
+        <span className="inline-flex w-6 justify-center text-[17px] leading-none" aria-hidden>
+          {code === "XK" ? "🇽🇰" : flagEmoji(code)}
+        </span>
+      ) : null}
+      <span className={cn("min-w-0 flex-1 truncate", muted && "text-muted-foreground")}>{label}</span>
+    </button>
   );
 }

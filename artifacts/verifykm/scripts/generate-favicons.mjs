@@ -30,3 +30,22 @@ for (const { file, size } of outputs) {
   const bytes = fs.statSync(out).size;
   console.log(`Wrote ${file} (${size}x${size}, ${bytes} bytes)`);
 }
+
+/** Navbar/footer wordmark — 3x retina at ~64px display height. Do not touch logo.png. */
+const logoClear = path.join(publicDir, "brand", "logo-clear.png");
+const logoNavPng = path.join(publicDir, "brand", "logo-nav.png");
+const logoNavWebp = path.join(publicDir, "brand", "logo-nav.webp");
+if (fs.existsSync(logoClear)) {
+  const NAV_WIDTH = 640;
+  const resized = sharp(logoClear).resize(NAV_WIDTH, null, { withoutEnlargement: true });
+  await resized.clone().png({ compressionLevel: 9, adaptiveFiltering: true }).toFile(logoNavPng);
+  await resized.clone().webp({ quality: 84, alphaQuality: 90 }).toFile(logoNavWebp);
+  for (const file of ["logo-nav.png", "logo-nav.webp"]) {
+    const out = path.join(publicDir, "brand", file);
+    const bytes = fs.statSync(out).size;
+    const meta = await sharp(out).metadata();
+    console.log(`Wrote brand/${file} (${meta.width}x${meta.height}, ${bytes} bytes)`);
+  }
+} else {
+  console.warn("generate-favicons: public/brand/logo-clear.png not found, skipping logo-nav");
+}

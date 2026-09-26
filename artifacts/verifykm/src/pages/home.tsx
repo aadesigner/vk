@@ -19,7 +19,7 @@ import { HeroVinForm } from "@/components/hero-vin-form";
 import { HeroReportPreview } from "@/components/hero-report-preview";
 import { prefetchFlags } from "@/components/flag-img";
 import { useVinLookupDisabledForUser } from "@/hooks/use-site-public-flags";
-import { useLightMotion } from "@/hooks/use-light-motion";
+import { shouldDeferHeavyClientWarmup, useLightMotion } from "@/hooks/use-light-motion";
 import { lazyWithRetry } from "@/lib/lazy-with-retry";
 import { cn } from "@/lib/utils";
 import { pathFor } from "@/lib/localized-routes";
@@ -68,6 +68,7 @@ export default function Home() {
   const deferFar = lightMotion ? "140px 0px" : "280px 0px";
 
   useEffect(() => {
+    if (shouldDeferHeavyClientWarmup()) return;
     prefetchFlags(["ca", "us", "kr", "cn", "ae", "jp"]);
   }, []);
 

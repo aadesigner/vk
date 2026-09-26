@@ -12,6 +12,7 @@ import {
   type Language,
 } from "@/lib/languages";
 import { FlagImg, prefetchFlags } from "@/components/flag-img";
+import { shouldDeferHeavyClientWarmup } from "@/hooks/use-light-motion";
 import { formatImageFlagAlt } from "@/lib/flag-alt";
 import { LangPickerList, usePrefetchPickerFlags } from "@/components/lang-picker-list";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,7 @@ export function Footer() {
   usePrefetchPickerFlags(langOpen);
 
   useEffect(() => {
+    if (shouldDeferHeavyClientWarmup()) return;
     prefetchFlags(MARKETS.map((m) => m.code));
   }, []);
 

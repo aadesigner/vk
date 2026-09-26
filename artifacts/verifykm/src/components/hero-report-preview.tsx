@@ -83,9 +83,13 @@ export function HeroReportPreview({
 
   useEffect(() => {
     if (cars.length === 0) return;
-    const next = cars[(idx + 1) % cars.length];
-    preloadDemoCarPhotos([cars[idx]?.photo, next?.photo].filter((u): u is string => Boolean(u)));
-  }, [cars, idx]);
+    const urls = [cars[idx]?.photo].filter((u): u is string => Boolean(u));
+    if (!lightMotion && cars.length > 1) {
+      const next = cars[(idx + 1) % cars.length];
+      if (next?.photo) urls.push(next.photo);
+    }
+    preloadDemoCarPhotos(urls);
+  }, [cars, idx, lightMotion]);
 
   const car = cars[idx] ?? cars[0];
   const flagCode = car
@@ -148,7 +152,7 @@ export function HeroReportPreview({
             cars.map((slide, slideIdx) => {
               const isActive = slideIdx === idx;
               const isNext = slideIdx === (idx + 1) % cars.length;
-              if (!isActive && !isNext) return null;
+              if (!isActive && (lightMotion || !isNext)) return null;
               return (
               <div
                 key={slide.vin}

@@ -492,7 +492,7 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
 
                 <form onSubmit={handleSubmit} autoComplete="on" className="space-y-4">
                   {!isSignIn ? (
-                    <div className="grid grid-cols-[minmax(0,1fr)_8.75rem] items-start gap-2 sm:grid-cols-[minmax(0,1fr)_9.5rem] sm:gap-3">
+                    <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-[minmax(0,1fr)_10rem] sm:gap-3">
                       <AuthField
                         id="name"
                         label={t("auth_name_label")}
@@ -522,8 +522,8 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
                           emptySearchLabel={t("auth_country_search_empty")}
                           disabled={loading}
                           size="lg"
-                          triggerClassName={cn(AUTH_INPUT, "justify-between px-2.5 sm:px-3")}
-                          contentClassName="min-w-[16.5rem]"
+                          triggerClassName={cn(AUTH_INPUT, "justify-between px-3")}
+                          contentClassName="min-w-[16.5rem] w-[min(22rem,calc(100vw-1.5rem))]"
                         />
                       </AuthField>
                     </div>

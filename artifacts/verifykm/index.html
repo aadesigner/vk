@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" as="image" type="image/webp" href="/brand/logo-nav.webp" fetchpriority="high" />
     <script src="/seo-bootstrap.js" defer></script>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <style>
@@ -16,9 +17,9 @@
       .dark #root:empty,.dark .app-boot-shell{background:#0b1220;color:#f8fafc}
       .app-boot-bar{height:4rem;border-bottom:1px solid rgba(15,23,42,.08);display:flex;align-items:center;justify-content:space-between;padding:0 1rem;max-width:80rem;margin:0 auto}
       .dark .app-boot-bar{border-bottom-color:rgba(255,255,255,.08)}
-      .app-boot-logo,.app-boot-pill,.app-boot-line,.app-boot-card{background:rgba(15,23,42,.08);border-radius:.75rem;animation:boot-pulse 1.4s ease-in-out infinite}
-      .dark .app-boot-logo,.dark .app-boot-pill,.dark .app-boot-line,.dark .app-boot-card{background:rgba(255,255,255,.08)}
-      .app-boot-logo{height:2rem;width:7rem}
+      .app-boot-pill,.app-boot-line,.app-boot-card{background:rgba(15,23,42,.08);border-radius:.75rem;animation:boot-pulse 1.4s ease-in-out infinite}
+      .dark .app-boot-pill,.dark .app-boot-line,.dark .app-boot-card{background:rgba(255,255,255,.08)}
+      .app-boot-logo{height:2rem;width:auto;display:block}
       .app-boot-pill{height:2.25rem;width:5.5rem;border-radius:999px}
       .app-boot-body{max-width:80rem;margin:0 auto;padding:2.5rem 1rem}
       .app-boot-line{height:2.5rem;width:min(66%,32rem);margin-bottom:1rem}
@@ -39,7 +40,10 @@
     <div id="root">
       <div class="app-boot-shell" aria-hidden="true">
         <div class="app-boot-bar">
-          <div class="app-boot-logo"></div>
+          <picture>
+            <source type="image/webp" srcset="/brand/logo-nav.webp" />
+            <img class="app-boot-logo" src="/brand/logo-nav.png" alt="verifykm.com" width="128" height="43" />
+          </picture>
           <div class="app-boot-pill"></div>
         </div>
         <div class="app-boot-body">
