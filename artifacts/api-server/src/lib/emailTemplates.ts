@@ -1,4 +1,4 @@
-import { buildEmailBase } from "./emailLayout.js";
+import { buildEmailBase, emailCtaButton, EMAIL_BRAND } from "./emailLayout.js";
 
 /**
  * `vinready` is the single combined report-ready + payment-confirmation email.
@@ -31,14 +31,7 @@ type TemplateDefaults = {
   preheader?: string;
 };
 
-const btn = (href: string, label: string) => `
-<table cellpadding="0" cellspacing="0" border="0">
-  <tr>
-    <td bgcolor="#16a34a" style="border-radius:8px">
-      <a href="${href}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-weight:700;font-size:15px;text-decoration:none;font-family:Arial,Helvetica,sans-serif">${label}</a>
-    </td>
-  </tr>
-</table>`;
+const btn = emailCtaButton;
 
 export const EMAIL_TEMPLATE_DEFAULTS: Record<EmailTemplateKey, TemplateDefaults> = {
   welcome: {
@@ -58,16 +51,16 @@ export const EMAIL_TEMPLATE_DEFAULTS: Record<EmailTemplateKey, TemplateDefaults>
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#111111">Your report is ready! &#127881;</h1>
     <p style="margin:0 0 4px;color:#444444">Hi {{name}},</p>
     <p style="margin:0 0 16px;color:#444444">Your payment is confirmed and your full VIN history report is ready to view.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;border-radius:8px;overflow:hidden;border:1px solid #d7e6f0">
       <tr>
-        <td bgcolor="#f9fafb" style="padding:16px 20px;background:#f9fafb">
-          <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif">Vehicle</p>
+        <td bgcolor="${EMAIL_BRAND.wash}" style="padding:16px 20px;background:${EMAIL_BRAND.wash}">
+          <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:${EMAIL_BRAND.cyanDeep};text-transform:uppercase;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif">Vehicle</p>
           <p style="margin:0 0 6px;font-size:18px;font-weight:800;color:#111111;font-family:Arial,Helvetica,sans-serif">{{vehicleLabel}}</p>
-          <p style="margin:0;font-family:monospace;font-size:13px;color:#6b7280;background:#e5e7eb;display:inline-block;padding:2px 8px;border-radius:4px">{{vin}}</p>
+          <p style="margin:0;font-family:monospace;font-size:13px;color:#0369a1;background:#e8f6fd;display:inline-block;padding:2px 8px;border-radius:4px">{{vin}}</p>
         </td>
       </tr>
     </table>
-    <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif">Key findings</p>
+    <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:${EMAIL_BRAND.cyanDeep};text-transform:uppercase;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif">Key findings</p>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:20px">
       <tr>
         <td style="padding:10px 16px;border-bottom:1px solid #f3f4f6;font-size:14px;color:#555555;font-family:Arial,Helvetica,sans-serif">Recorded mileage</td>
@@ -120,7 +113,7 @@ export const EMAIL_TEMPLATE_DEFAULTS: Record<EmailTemplateKey, TemplateDefaults>
     <p style="margin:0 0 12px;color:#444444">If you typed a digit or character wrong, try again with the correct one.</p>
     <p style="margin:0 0 24px;color:#444444">Meanwhile, we have credited <strong>{{credits}} free report credit</strong> to your account. You can use it on our marketplace for another VIN check at no charge.</p>
     ${btn("{{checkoutUrl}}", "Check another VIN &rarr;")}
-    <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#888888">If you don&apos;t want to check another car, you can request a refund &mdash; just <a href="mailto:info@verifykm.com" style="color:#16a34a;text-decoration:underline">send us an email</a>.</p>
+    <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#888888">If you don&apos;t want to check another car, you can request a refund &mdash; just <a href="mailto:info@verifykm.com" style="color:${EMAIL_BRAND.cyanDeep};text-decoration:underline">send us an email</a>.</p>
   `,
   },
   noinforefund: {
@@ -133,7 +126,7 @@ export const EMAIL_TEMPLATE_DEFAULTS: Record<EmailTemplateKey, TemplateDefaults>
     <p style="margin:0 0 12px;color:#444444">Please double-check that the VIN was entered correctly. If it was wrong, you can purchase a new report with the correct number.</p>
     <p style="margin:0 0 24px;color:#444444">We have <strong>refunded you in full</strong>. Depending on your payment method, the refund may take a few business days to appear.</p>
     ${btn("{{checkoutUrl}}", "Check another VIN &rarr;")}
-    <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#888888">Questions? <a href="mailto:info@verifykm.com" style="color:#16a34a;text-decoration:underline">Email us</a>.</p>
+    <p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#888888">Questions? <a href="mailto:info@verifykm.com" style="color:${EMAIL_BRAND.cyanDeep};text-decoration:underline">Email us</a>.</p>
   `,
   },
 };

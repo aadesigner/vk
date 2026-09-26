@@ -150,4 +150,16 @@ describe("combined report-ready template", () => {
   it("no longer offers a separate payment-confirmation template", () => {
     expect(Object.keys(EMAIL_TEMPLATE_DEFAULTS)).not.toContain("confirm");
   });
+
+  it("uses verifykm cyan instead of kmcheck green", () => {
+    const { html } = renderEmailTemplate(
+      "welcome",
+      getSampleTemplateVars("welcome", siteUrl),
+      undefined,
+      siteUrl,
+    );
+    expect(html).toContain("#00a5fd");
+    expect(html).not.toContain("#16a34a");
+    expect(html).toContain("/brand/logo-nav.png");
+  });
 });

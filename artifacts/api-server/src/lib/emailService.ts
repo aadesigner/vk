@@ -18,7 +18,7 @@ import {
   smtpTransportSecurity,
   type SmtpSecurityLevel,
 } from "./smtpSecurity.js";
-import { buildEmailBase } from "./emailLayout.js";
+import { buildEmailBase, emailCtaButton, EMAIL_BRAND } from "./emailLayout.js";
 import { formatSmtpConfigError, formatSmtpTransportError } from "./smtpErrors.js";
 import { logger } from "./logger.js";
 
@@ -417,15 +417,9 @@ export function buildPromoEmail(
   siteUrl?: string,
 ): { subject: string; html: string } {
   const displayName = name || "there";
-  const ctaBlock = ctaText && ctaUrl ? `
-    <table cellpadding="0" cellspacing="0" border="0" style="margin-top:24px">
-      <tr>
-        <td bgcolor="#16a34a" style="border-radius:8px">
-          <a href="${ctaUrl}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-weight:700;font-size:15px;text-decoration:none;font-family:Arial,Helvetica,sans-serif">${ctaText}</a>
-        </td>
-      </tr>
-    </table>
-  ` : "";
+  const ctaBlock = ctaText && ctaUrl
+    ? `<div style="margin-top:24px">${emailCtaButton(ctaUrl, ctaText)}</div>`
+    : "";
   const content = `
     <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#111111">Hi ${displayName}!</h1>
     <div style="color:#444444;line-height:1.7">${bodyHtml}</div>
@@ -439,7 +433,7 @@ export function buildPromoEmail(
 
 export function buildSmtpTestEmail(siteUrl?: string): { subject: string; html: string } {
   const content = `
-    <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:#16a34a">SMTP is working! &#10003;</h1>
+    <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:${EMAIL_BRAND.cyanDeep}">SMTP is working! &#10003;</h1>
     <p style="margin:0 0 12px;color:#444444">Your verifykm email configuration is correctly set up.</p>
     <p style="margin:0;color:#444444">You can now send transactional emails including welcome messages, VIN report notifications, and payment confirmations.</p>
   `;
