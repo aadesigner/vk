@@ -217,8 +217,8 @@ function StatCell({
       )}
     >
       {isMain ? (
-        <div className="md:hidden">
-          <div className="min-w-0">
+        <div className="relative md:hidden">
+          <div className="min-w-0 pr-8 pb-6">
             <div className="flex items-baseline gap-1.5">
               <span className="text-lg font-bold tabular-nums leading-none">{value}</span>
               <TrendBadge value={trend ?? null} compact />
@@ -230,9 +230,7 @@ function StatCell({
             )}
           </div>
           {Icon ? (
-            <div className="mt-2 flex justify-end">
-              <Icon className="h-3.5 w-3.5 text-primary/70 shrink-0" />
-            </div>
+            <Icon className="pointer-events-none absolute bottom-0 right-0 h-5 w-5 text-primary/70" />
           ) : null}
         </div>
       ) : null}
