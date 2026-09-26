@@ -19,13 +19,15 @@ export type AcquisitionPayload = {
   campaign?: string | null;
   clickId?: string | null;
   referrer?: string | null;
+  landingPath?: string | null;
+  inApp?: string | null;
   capturedAt: string;
 };
 
 const STORAGE_KEY = "verifykm_acquisition_v1";
 const COOKIE_NAME = "vk_acq";
 const TTL_MS = 90 * 24 * 60 * 60 * 1000;
-const COOKIE_MAX_AGE_SEC = 10 * 60;
+const COOKIE_MAX_AGE_SEC = 90 * 24 * 60 * 60;
 
 const PAID_MEDIUMS = new Set([
   "cpc",
@@ -147,6 +149,83 @@ function sourceBrand(source: string | null): TrafficBrand | null {
   return null;
 }
 
+/** Instagram / TikTok / WhatsApp in-app browsers often strip document.referrer. */
+export function detectInAppBrowser(ua: string): SocialBrand | null {
+  if (!ua) return null;
+  if (/Instagram/i.test(ua)) return "instagram";
+  if (/WhatsApp/i.test(ua)) return "whatsapp";
+  if (/TikTok|BytedanceWebview|musical_ly|TTWebView/i.test(ua)) return "tiktok";
+  if (/Telegram/i.test(ua)) return "telegram";
+  if (/LinkedInApp/i.test(ua)) return "linkedin";
+  if (/Pinterest/i.test(ua)) return "pinterest";
+  if (/Snapchat/i.test(ua)) return "snapchat";
+  if (/Twitter|X\/Twitter/i.test(ua)) return "x";
+  if (/FBAN|FBAV|FB_IAB|FB4A|FBIOS|FB_FW/i.test(ua)) return "facebook";
+  return null;
+}
+
+function landingPathFromHref(href: string): string | null {
+  try {
+    const path = new URL(href).pathname.replace(/\/+$/, "") || "/";
+    return path.slice(0, 160);
+  } catch {
+    return null;
+  }
+}
+
+const BUCKET_RANK: Record<AcquisitionBucket, number> = {
+  paid_ads: 50,
+  google: 40,
+  organic_social: 30,
+  referral: 20,
+  unknown: 5,
+  direct: 0,
+};
+
+export function isWeakAcquisition(payload: AcquisitionPayload): boolean {
+  return payload.bucket === "direct"
+    || payload.bucket === "unknown"
+    || payload.channel === "meta_social";
+}
+
+function acquisitionScore(payload: AcquisitionPayload): number {
+  let score = BUCKET_RANK[payload.bucket] ?? 0;
+  if (payload.channel === "meta_social") score -= 10;
+  if (payload.campaign) score += 4;
+  if (payload.source) score += 3;
+  if (payload.referrer) score += 2;
+  if (payload.inApp) score += 2;
+  return score;
+}
+
+/** Upgrade Direct / unknown / generic Meta when a later hit has a real channel. */
+export function shouldUpgradeAcquisition(
+  existing: AcquisitionPayload,
+  next: AcquisitionPayload,
+): boolean {
+  if (!isWeakAcquisition(existing)) return false;
+  return acquisitionScore(next) > acquisitionScore(existing);
+}
+
+/** Add first-touch UTMs to share / profile links without overwriting existing tags. */
+export function tagAcquisitionUrl(
+  raw: string,
+  source: string,
+  medium = "social",
+  campaign = "share",
+): string {
+  try {
+    const u = new URL(raw);
+    if (u.searchParams.get("utm_source")) return u.toString();
+    u.searchParams.set("utm_source", source.slice(0, 40));
+    u.searchParams.set("utm_medium", medium.slice(0, 40));
+    u.searchParams.set("utm_campaign", campaign.slice(0, 60));
+    return u.toString();
+  } catch {
+    return raw;
+  }
+}
+
 function paidChannelForBrand(brand: TrafficBrand | null, source: string | null): string {
   if (brand === "facebook" || brand === "messenger") return "meta_ads";
   if (brand === "instagram" || brand === "threads") return "instagram_ads";
@@ -164,10 +243,11 @@ function paidChannelForBrand(brand: TrafficBrand | null, source: string | null):
   return "paid_ads";
 }
 
-/** Classify current landing URL + document.referrer. */
+/** Classify current landing URL + document.referrer (+ in-app user agent). */
 export function classifyAcquisition(
   href: string = typeof window !== "undefined" ? window.location.href : "",
   referrerUrl: string = typeof document !== "undefined" ? document.referrer : "",
+  userAgent: string = typeof navigator !== "undefined" ? navigator.userAgent : "",
 ): AcquisitionPayload {
   let sp: URLSearchParams;
   try {
@@ -190,6 +270,8 @@ export function classifyAcquisition(
   const extReferrer = isSelfHost(referrer) ? null : referrer;
   const brand = sourceBrand(source);
   const social = socialKind(extReferrer);
+  const inApp = detectInAppBrowser(userAgent);
+  const landingPath = landingPathFromHref(href);
   const capturedAt = new Date().toISOString();
   const clickId = fbclid ?? gclid ?? ttclid ?? msclkid ?? twclid ?? liFatId;
 
@@ -198,6 +280,8 @@ export function classifyAcquisition(
     medium,
     campaign,
     referrer: extReferrer,
+    landingPath,
+    inApp,
     capturedAt,
   };
 
@@ -241,6 +325,11 @@ export function classifyAcquisition(
   // Unpaid social UTMs (utm_source=tiktok, facebook, x, … without a paid medium)
   if (brand && brand !== "google") {
     return { ...base, bucket: "organic_social", channel: SOCIAL_ORGANIC_CHANNEL[brand], clickId };
+  }
+
+  // In-app browser with no referrer (Instagram / TikTok / WhatsApp)
+  if (inApp) {
+    return { ...base, bucket: "organic_social", channel: SOCIAL_ORGANIC_CHANNEL[inApp], clickId };
   }
 
   // Bare fbclid = Meta organic click, not an ad
@@ -328,6 +417,8 @@ export function syncAcquisitionCookie(payload?: AcquisitionPayload | null): void
       campaign: p.campaign ?? undefined,
       clickId: p.clickId ?? undefined,
       referrer: p.referrer ?? undefined,
+      landingPath: p.landingPath ?? undefined,
+      inApp: p.inApp ?? undefined,
       capturedAt: p.capturedAt,
     };
     const val = toBase64Url(JSON.stringify(compact));
@@ -338,17 +429,17 @@ export function syncAcquisitionCookie(payload?: AcquisitionPayload | null): void
   }
 }
 
-/** Capture first-touch once (idempotent). Safe to call on every app load. */
+/** Capture first-touch; upgrade Direct / unknown if a later hit is stronger. */
 export function captureAcquisitionOnce(): AcquisitionPayload {
   const existing = readStored();
-  if (existing) {
-    syncAcquisitionCookie(existing.payload);
-    return existing.payload;
-  }
   const payload = classifyAcquisition();
-  writeStored(payload);
-  syncAcquisitionCookie(payload);
-  return payload;
+  if (!existing || shouldUpgradeAcquisition(existing.payload, payload)) {
+    writeStored(payload);
+    syncAcquisitionCookie(payload);
+    return payload;
+  }
+  syncAcquisitionCookie(existing.payload);
+  return existing.payload;
 }
 
 export function getStoredAcquisition(): AcquisitionPayload | null {

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/i18n/context";
 import { useToast } from "@/hooks/use-toast";
 import { openVinReportPdf, shareVinReportPdf, copyReportLink } from "@/lib/print-report";
+import { tagAcquisitionUrl } from "@/lib/acquisition";
 import { cn } from "@/lib/utils";
 
 export type VinSharePreviewData = {
@@ -141,8 +142,8 @@ export function VinReportShareActions({
     if (disabled) return;
     setSharing(true);
     try {
-      const url = shareUrl ?? await resolveShareUrl();
-      const result = await shareVinReportPdf({ vehicleTitle, vin, shareUrl: url, shareText });
+      const url = tagAcquisitionUrl(shareUrl ?? await resolveShareUrl() ?? "", "share", "native", "report_share");
+      const result = await shareVinReportPdf({ vehicleTitle, vin, shareUrl: url || null, shareText });
       if (result === "copied") {
         toast({ description: t("vin_share_pdf_copied") });
       } else if (result === "failed") {
@@ -159,7 +160,7 @@ export function VinReportShareActions({
     if (disabled || !shareUrl) return;
     setCopying(true);
     try {
-      const ok = await copyReportLink(shareUrl);
+      const ok = await copyReportLink(tagAcquisitionUrl(shareUrl, "share", "copy", "report_share"));
       if (ok) {
         toast({ description: t("vin_share_pdf_copied") });
       } else {
@@ -172,10 +173,11 @@ export function VinReportShareActions({
 
   const openSocial = (kind: "whatsapp" | "telegram" | "email") => {
     if (!shareUrl) return;
-    const body = `${shareText}\n${shareUrl}`;
+    const tagged = tagAcquisitionUrl(shareUrl, kind, "social", "report_share");
+    const body = `${shareText}\n${tagged}`;
     const urls = {
       whatsapp: `https://wa.me/?text=${encodeURIComponent(body)}`,
-      telegram: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(tagged)}&text=${encodeURIComponent(shareText)}`,
       email: `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(body)}`,
     };
     window.open(urls[kind], kind === "email" ? "_self" : "_blank", "noopener,noreferrer");

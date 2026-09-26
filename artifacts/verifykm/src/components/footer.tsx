@@ -160,7 +160,7 @@ export function Footer() {
       <div className={cn(shell, "relative grid gap-12 py-14 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-10 lg:py-16")}>
         <div className="space-y-5 lg:col-span-5">
           <PrefetchLink href={`/${language}`} className="inline-flex">
-            <VerifyKMLogo variant="dark" className="h-14 md:h-16" />
+            <VerifyKMLogo variant="dark" className="h-14 w-auto md:h-16" />
           </PrefetchLink>
           <p className="max-w-xl text-[15px] leading-relaxed text-[#e7eef6]">
             {t("footer_tagline")}

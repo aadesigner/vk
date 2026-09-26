@@ -566,6 +566,8 @@ export interface AdminUser {
   acquisitionCampaign?: string | null;
   acquisitionClickId?: string | null;
   acquisitionReferrer?: string | null;
+  acquisitionLandingPath?: string | null;
+  acquisitionInApp?: string | null;
   acquisitionCapturedAt?: string | null;
 }
 

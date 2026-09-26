@@ -1,6 +1,6 @@
 /** Table-based email wrapper — no DB dependencies. */
 
-const EMAIL_LOGO_PATH = "/brand/logo-white.png";
+const EMAIL_LOGO_PATH = "/brand/logo.png";
 const EMAIL_LOGO_WIDTH = 160;
 const EMAIL_LOGO_HEIGHT = 40;
 

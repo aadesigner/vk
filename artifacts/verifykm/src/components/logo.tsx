@@ -1,15 +1,17 @@
-import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-/** Brand assets in `public/` — PNG wordmarks with transparent backgrounds. */
+/** Original lockup (black canvas) — not modified. */
+const LOGO_ORIGINAL = `${basePath}/brand/logo.png`;
+/** Display file: same art, black keyed to transparent. */
+const LOGO_SRC = `${basePath}/brand/logo-clear.png`;
+
 export const BRAND_ASSETS = {
-  /** Full wordmark for dark backgrounds (white + cyan VerifyKM art). */
-  logoWhite: `${basePath}/brand/logo-white.png`,
-  /** Same artwork for light surfaces sitting on dark chrome / navy headers. */
-  logoDark: `${basePath}/brand/logo-dark.png`,
-  /** Compact mark — favicon. */
+  logo: LOGO_SRC,
+  logoWhite: LOGO_SRC,
+  logoDark: LOGO_SRC,
+  logoOriginal: LOGO_ORIGINAL,
   favicon: `${basePath}/favicon.png`,
 } as const;
 
@@ -18,41 +20,33 @@ const prefetchedBrand = new Set<string>();
 /** Warm navbar wordmarks so the mobile sidebar logo does not flash on open. */
 export function prefetchBrandAssets(): void {
   if (typeof window === "undefined") return;
-  for (const src of [BRAND_ASSETS.logoWhite, BRAND_ASSETS.logoDark]) {
-    if (prefetchedBrand.has(src)) continue;
-    prefetchedBrand.add(src);
-    const img = new Image();
-    img.decoding = "async";
-    img.src = src;
-  }
+  if (prefetchedBrand.has(LOGO_SRC)) return;
+  prefetchedBrand.add(LOGO_SRC);
+  const img = new Image();
+  img.decoding = "async";
+  img.src = LOGO_SRC;
 }
 
 export type VerifyKMLogoVariant = "light" | "dark";
 
-/** Full horizontal verifykm.com wordmark. */
+/** Full horizontal verifykm.com lockup. */
 export function VerifyKMLogo({
-  variant,
+  variant: _variant,
   className,
   syncDecode = false,
 }: {
-  /** `dark` = dark background → white wordmark; `light` = light background → gray wordmark. */
   variant?: VerifyKMLogoVariant;
   className?: string;
-  /** Prefer for menus that remount — avoids a blank flash while the PNG decodes. */
   syncDecode?: boolean;
 }) {
-  const { resolvedTheme } = useTheme();
-  const resolved = variant ?? (resolvedTheme === "dark" ? "dark" : "light");
-  const src = resolved === "dark" ? BRAND_ASSETS.logoWhite : BRAND_ASSETS.logoDark;
-
   return (
     <img
-      src={src}
+      src={LOGO_SRC}
       alt="verifykm.com"
-      width={160}
-      height={40}
+      width={1024}
+      height={341}
       fetchPriority="high"
-      className={cn("w-auto max-w-none object-contain", className)}
+      className={cn("block bg-transparent", className)}
       decoding={syncDecode ? "sync" : "async"}
     />
   );
@@ -73,15 +67,15 @@ export function VerifyKMMark({ className }: { className?: string }) {
   );
 }
 
-/** Wordmark for print/PDF (always dark-on-white). */
+/** Same lockup for print/PDF. */
 export function VerifyKMPrintLogo({ className }: { className?: string }) {
   return (
     <img
-      src={BRAND_ASSETS.logoDark}
+      src={LOGO_SRC}
       alt="verifykm.com"
-      width={120}
-      height={28}
-      className={cn("h-6 w-auto object-contain object-left", className)}
+      width={1024}
+      height={341}
+      className={cn("block bg-transparent", className)}
       decoding="async"
     />
   );

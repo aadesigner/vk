@@ -23,7 +23,6 @@ export function prefetchNavMenuAssets(): void {
 
 /** Hidden <img> URLs decoded once and kept ready for sidebar remounts. */
 export const NAV_MENU_WARMUP_SOURCES = [
-  BRAND_ASSETS.logoWhite,
-  BRAND_ASSETS.logoDark,
+  BRAND_ASSETS.logo,
   ...NAV_MENU_FLAG_CODES.map((code) => flagUrl(code)),
 ] as const;

@@ -919,6 +919,8 @@ function withNullAcquisition(row: Record<string, unknown>): DbUser {
     acquisitionCampaign: null,
     acquisitionClickId: null,
     acquisitionReferrer: null,
+    acquisitionLandingPath: null,
+    acquisitionInApp: null,
     acquisitionCapturedAt: null,
   } as DbUser;
 }
@@ -979,6 +981,8 @@ function toAdminUser(
     acquisitionCampaign: user.acquisitionCampaign ?? null,
     acquisitionClickId: user.acquisitionClickId ?? null,
     acquisitionReferrer: user.acquisitionReferrer ?? null,
+    acquisitionLandingPath: user.acquisitionLandingPath ?? null,
+    acquisitionInApp: user.acquisitionInApp ?? null,
     acquisitionCapturedAt: user.acquisitionCapturedAt ?? null,
     totalChecks: stats?.totalChecks ?? 0,
     totalSpent: stats?.totalSpent ?? 0,

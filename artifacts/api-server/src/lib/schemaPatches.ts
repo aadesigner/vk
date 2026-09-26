@@ -65,6 +65,8 @@ const SYSTEM_SETTINGS_PATCHES = [
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_campaign text`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_click_id text`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_referrer text`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_landing_path text`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_in_app text`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_captured_at timestamp`,
   `CREATE INDEX IF NOT EXISTS users_acquisition_bucket_idx ON users (acquisition_bucket)`,
 ];

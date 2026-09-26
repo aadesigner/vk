@@ -49,6 +49,10 @@ export const usersTable = pgTable("users", {
   acquisitionClickId: text("acquisition_click_id"),
   /** External referrer hostname only */
   acquisitionReferrer: text("acquisition_referrer"),
+  /** First landing pathname, e.g. /sq or /en/pricing */
+  acquisitionLandingPath: text("acquisition_landing_path"),
+  /** In-app browser brand when the referrer was stripped (instagram, tiktok, …) */
+  acquisitionInApp: text("acquisition_in_app"),
   acquisitionCapturedAt: timestamp("acquisition_captured_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

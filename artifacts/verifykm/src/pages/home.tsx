@@ -153,7 +153,7 @@ export default function Home() {
                     {t("hero_headline_lead")} {t("hero_headline_tail")}
                   </span>
                   <span className="relative mt-1.5 inline-block text-[#073454]">
-                    <span aria-hidden className="absolute inset-x-[-0.08em] bottom-[0.04em] -z-10 h-[0.48em] bg-[#8fd8fe]" />
+                    <span aria-hidden className="absolute inset-x-[-0.08em] bottom-[-0.06em] -z-10 h-[0.26em] bg-[#8fd8fe]" />
                     <span className="relative">{t("hero_headline_2")}</span>
                   </span>
                 </>

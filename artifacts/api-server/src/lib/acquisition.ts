@@ -21,6 +21,8 @@ export type AcquisitionPayload = {
   campaign?: string | null;
   clickId?: string | null;
   referrer?: string | null;
+  landingPath?: string | null;
+  inApp?: string | null;
   capturedAt?: string | null;
 };
 
@@ -32,6 +34,8 @@ export type AcquisitionUserFields = {
   acquisitionCampaign?: string;
   acquisitionClickId?: string;
   acquisitionReferrer?: string;
+  acquisitionLandingPath?: string;
+  acquisitionInApp?: string;
   acquisitionCapturedAt?: Date;
 };
 
@@ -51,7 +55,25 @@ const MAX = {
   campaign: 128,
   clickId: 128,
   referrer: 200,
+  landingPath: 160,
+  inApp: 24,
 } as const;
+
+const IN_APP = new Set([
+  "instagram",
+  "facebook",
+  "messenger",
+  "tiktok",
+  "x",
+  "linkedin",
+  "youtube",
+  "whatsapp",
+  "telegram",
+  "reddit",
+  "pinterest",
+  "snapchat",
+  "threads",
+]);
 
 function clip(raw: unknown, max: number): string | undefined {
   if (typeof raw !== "string") return undefined;
@@ -80,6 +102,8 @@ export function sanitizeAcquisitionPayload(raw: unknown): AcquisitionPayload | n
   if (!BUCKETS.has(bucketRaw as AcquisitionBucket)) return null;
   const bucket = bucketRaw as AcquisitionBucket;
   const channel = clip(o.channel, MAX.channel)?.toLowerCase() ?? bucket;
+  const inAppRaw = clip(o.inApp ?? o.in_app, MAX.inApp)?.toLowerCase() ?? null;
+  const landingPath = clip(o.landingPath ?? o.landing_path, MAX.landingPath) ?? null;
   return {
     bucket,
     channel,
@@ -88,6 +112,8 @@ export function sanitizeAcquisitionPayload(raw: unknown): AcquisitionPayload | n
     campaign: clip(o.campaign, MAX.campaign) ?? null,
     clickId: clip(o.clickId ?? o.click_id, MAX.clickId) ?? null,
     referrer: clip(o.referrer, MAX.referrer)?.toLowerCase() ?? null,
+    landingPath,
+    inApp: inAppRaw && IN_APP.has(inAppRaw) ? inAppRaw : null,
     capturedAt: typeof o.capturedAt === "string" ? o.capturedAt : typeof o.captured_at === "string" ? o.captured_at : null,
   };
 }
@@ -122,6 +148,8 @@ export function acquisitionToUserFields(payload: AcquisitionPayload | null): Acq
     acquisitionCampaign: payload.campaign ?? undefined,
     acquisitionClickId: payload.clickId ?? undefined,
     acquisitionReferrer: payload.referrer ?? undefined,
+    acquisitionLandingPath: payload.landingPath ?? undefined,
+    acquisitionInApp: payload.inApp ?? undefined,
     acquisitionCapturedAt: capturedAt,
   };
 }

@@ -15,10 +15,14 @@ describe("acquisition sanitize", () => {
       campaign: "vin_al",
       clickId: "abc",
       referrer: "l.facebook.com",
+      landingPath: "/sq",
+      inApp: "instagram",
       capturedAt: new Date().toISOString(),
     });
     expect(p?.bucket).toBe("paid_ads");
     expect(p?.channel).toBe("meta_ads");
+    expect(p?.landingPath).toBe("/sq");
+    expect(p?.inApp).toBe("instagram");
   });
 
   it("rejects unknown bucket", () => {

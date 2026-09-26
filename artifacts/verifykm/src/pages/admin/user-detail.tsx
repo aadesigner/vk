@@ -84,6 +84,8 @@ export interface UserRow {
   acquisitionCampaign?: string | null;
   acquisitionClickId?: string | null;
   acquisitionReferrer?: string | null;
+  acquisitionLandingPath?: string | null;
+  acquisitionInApp?: string | null;
   acquisitionCapturedAt?: string | null;
 }
 
@@ -673,6 +675,8 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
                     </span>
                   ) : null}
                   {user.acquisitionReferrer ? <span>From: {user.acquisitionReferrer}</span> : null}
+                  {user.acquisitionLandingPath ? <span>Landed: {user.acquisitionLandingPath}</span> : null}
+                  {user.acquisitionInApp ? <span>In-app: {user.acquisitionInApp}</span> : null}
                   {user.acquisitionClickId ? (
                     <span className="font-mono truncate max-w-[14rem]" title={user.acquisitionClickId}>
                       Click id: {user.acquisitionClickId}

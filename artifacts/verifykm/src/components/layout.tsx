@@ -558,12 +558,9 @@ export function Navbar({ announcementOffset = 0 }: { announcementOffset?: number
           <PrefetchLink href={`/${language}`} className="flex items-center shrink-0 group -translate-y-px">
             <VerifyKMLogo
               syncDecode
-              variant="dark"
               className={cn(
-                "w-auto max-w-none object-contain transition-[height,opacity] duration-200",
-                "md:group-hover:opacity-[0.97] md:group-hover:drop-shadow-[0_0_8px_rgba(0,165,253,0.22)]",
-                "h-11",
-                scrolled ? "md:h-[3.25rem]" : "md:h-[3.75rem]",
+                "h-[43px] w-auto",
+                scrolled ? "md:h-[47px]" : "md:h-[55px]",
               )}
             />
           </PrefetchLink>

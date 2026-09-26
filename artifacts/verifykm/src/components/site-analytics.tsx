@@ -202,7 +202,7 @@ export function SiteAnalytics() {
     void import("@/lib/acquisition").then((m) => {
       m.captureAcquisitionOnce();
     });
-  }, []);
+  }, [location]);
 
   const { data: settings } = useQuery({
     queryKey: PUBLIC_SETTINGS_QUERY_KEY,

@@ -160,7 +160,7 @@ export function NavbarMobileMenu({
       >
         <div className="flex h-[4.25rem] shrink-0 items-center justify-between border-b border-white/10 bg-[#030712] px-5">
           <Link href={`/${language}`} onClick={close} className="flex items-center">
-            <VerifyKMLogo variant="dark" className="h-11" syncDecode />
+            <VerifyKMLogo variant="dark" className="h-[43px] w-auto" syncDecode />
           </Link>
           <button
             type="button"
