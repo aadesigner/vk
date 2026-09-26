@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   Car, ChevronLeft, ChevronRight, Lock, MapPin, ImageOff,
   CheckCircle2, XCircle, Gauge, ShieldCheck, ShieldAlert,
-  Copy, Check,
+  Copy, Check, FileSearch,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -713,9 +713,19 @@ export function VinReportHero({
 
       <div className="relative z-[2] bg-[#071018] text-white print:bg-white print:text-foreground">
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2.5 sm:px-6 print:border-slate-200">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-[#7dd3fc] print:text-[#0088d4]">
-            VerifyKM
-          </p>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[#00a5fd]/40 bg-[#00a5fd]/10 print:border-[#00a5fd]/30 print:bg-[#eef8fd]">
+              <FileSearch className="h-3.5 w-3.5 text-[#7dd3fc] print:text-[#0088d4]" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.26em] text-[#7dd3fc] print:text-[#0088d4]">
+                {t("vin_hero_stamp")}
+              </p>
+              <p className="hidden font-mono text-[9px] uppercase tracking-[0.16em] text-white/35 print:text-slate-500 sm:block">
+                {t("vin_hero_stamp_mark")}
+              </p>
+            </div>
+          </div>
           {unlockedLabel && !locked ? (
             <Badge
               variant="outline"

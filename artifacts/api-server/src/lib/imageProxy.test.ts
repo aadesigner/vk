@@ -1,47 +1,77 @@
 import { describe, expect, it } from "vitest";
 import {
   buildImageProxyUrl,
+  isCarstatImageUrl,
   resolveVinPhotoUrlForClient,
   transformVinPhotoData,
   unwrapVinImageProxyUrl,
-  withVinImageDisplayWidth,
 } from "./imageProxy.js";
 
 describe("resolveVinPhotoUrlForClient", () => {
-  it("passes provider URLs through without proxying", () => {
-    const url = "https://img.encar.com/cars/1.jpg";
-    expect(resolveVinPhotoUrlForClient(url)).toBe(url);
+  it("proxies only Carstat CDN URLs", () => {
+    const carstat = "https://i2.carstat.dev/copart/toyota/1.webp";
+    expect(isCarstatImageUrl(carstat)).toBe(true);
+    const out = resolveVinPhotoUrlForClient(carstat);
+    expect(out).toMatch(/^\/api\/vin\/image\?token=/);
+    expect(unwrapVinImageProxyUrl(out)).toBe(carstat);
   });
 
-  it("passes through non-allowlisted admin URLs unchanged", () => {
-    const url = "https://images.example-server.net/vehicle/front.jpg";
-    expect(resolveVinPhotoUrlForClient(url)).toBe(url);
+  it("leaves Encar, Copart-style, and admin URLs unproxied", () => {
+    expect(resolveVinPhotoUrlForClient("https://img.encar.com/cars/1.jpg")).toBe(
+      "https://img.encar.com/cars/1.jpg",
+    );
+    expect(resolveVinPhotoUrlForClient("https://vis.iaai.com/resizer?image=1.jpg")).toBe(
+      "https://vis.iaai.com/resizer?image=1.jpg",
+    );
+    expect(resolveVinPhotoUrlForClient("https://images.example-server.net/vehicle/front.jpg")).toBe(
+      "https://images.example-server.net/vehicle/front.jpg",
+    );
   });
 
-  it("unwraps leftover proxy paths to the original URL", () => {
-    const original = "https://img.encar.com/cars/1.jpg";
-    const proxied = buildImageProxyUrl(original);
-    expect(proxied).toMatch(/^\/api\/vin\/image\?token=/);
-    expect(unwrapVinImageProxyUrl(proxied)).toBe(original);
-    expect(resolveVinPhotoUrlForClient(proxied)).toBe(original);
+  it("unwraps leftover non-Carstat proxy paths", () => {
+    const encar = "https://img.encar.com/cars/1.jpg";
+    const proxied = buildImageProxyUrl(encar);
+    expect(resolveVinPhotoUrlForClient(proxied)).toBe(encar);
+  });
+
+  it("keeps leftover Carstat proxy paths proxied", () => {
+    const carstat = "https://carstat.dev/cache/encar/2.webp";
+    const proxied = buildImageProxyUrl(carstat);
+    const resolved = resolveVinPhotoUrlForClient(proxied);
+    expect(resolved).toMatch(/^\/api\/vin\/image\?token=/);
+    expect(unwrapVinImageProxyUrl(resolved)).toBe(carstat);
   });
 });
 
-describe("legacy proxy helpers", () => {
-  it("appends w= once on leftover proxy URLs", () => {
-    const once = withVinImageDisplayWidth("/api/vin/image?token=abc");
-    expect(once).toBe("/api/vin/image?token=abc&w=960");
-    expect(withVinImageDisplayWidth(once)).toBe(once);
-  });
-
-  it("does not rewrite report photos through the proxy", () => {
-    const photo = "https://img.encar.com/cars/1.jpg";
+describe("transformVinPhotoData", () => {
+  it("proxies Carstat gallery/thumbs (card width) and leaves other sources direct", () => {
+    const encar = "https://img.encar.com/cars/1.jpg";
     const hd = "https://img.encar.com/cars/1-hd.jpg";
+    const carstat = "https://i2.carstat.dev/copart/1.webp";
+    const carstatHd = "https://i2.carstat.dev/copart/1-hd.webp";
     const out = transformVinPhotoData({
-      photos: [photo],
-      photosHd: [hd],
-    }) as { photos: string[]; photosHd: string[] };
-    expect(out.photos[0]).toBe(photo);
+      photos: [encar, carstat],
+      photosHd: [hd, carstatHd],
+      thumbnailUrl: carstat,
+      photoAlternates: [encar, carstat],
+    }) as {
+      photos: string[];
+      photosHd: string[];
+      thumbnailUrl: string;
+      photoAlternates: Array<string | null>;
+    };
+
+    expect(out.photos[0]).toBe(encar);
+    expect(out.photos[1]).toMatch(/^\/api\/vin\/image\?token=/);
+    expect(out.photos[1]).toContain("&w=960");
+
     expect(out.photosHd[0]).toBe(hd);
+    expect(out.photosHd[1]).toMatch(/^\/api\/vin\/image\?token=/);
+    expect(out.photosHd[1]).not.toContain("&w=");
+
+    expect(out.thumbnailUrl).toMatch(/^\/api\/vin\/image\?token=/);
+    expect(out.thumbnailUrl).toContain("&w=960");
+    expect(out.photoAlternates[0]).toBe(encar);
+    expect(out.photoAlternates[1]).toMatch(/^\/api\/vin\/image\?token=/);
   });
 });

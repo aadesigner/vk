@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
         canonicalPath={seo.canonicalPath}
         noIndex
       />
-      <AuthPageShell>
+      <AuthPageShell hideLogo>
         {sent ? (
           <div className="text-center">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e7f6ff] text-[#0088d4]">

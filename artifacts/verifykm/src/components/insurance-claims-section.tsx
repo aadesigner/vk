@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { FileText, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { sortHistoryNewestFirst } from "@/lib/history-sort";
@@ -76,64 +77,56 @@ function ClaimRow({
   });
 
   return (
-    <div className="relative pl-4">
-      <div className="absolute left-0 top-2.5 h-2 w-2 rounded-full shrink-0 bg-sky-500" />
-      {index < total - 1 && (
-        <div className="absolute left-[3.5px] top-5 bottom-0 w-px bg-border" />
-      )}
-      <div className="border rounded-lg bg-muted/20 overflow-hidden">
-        <div className="px-3 py-2 space-y-0.5">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              {displayDate ? (
-                <p className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                  <Calendar className="h-3 w-3 shrink-0" />
-                  {displayDate}
-                </p>
-              ) : null}
-              {typeLabel && (
-                <p className="text-xs font-semibold text-foreground mt-0.5 leading-snug">{typeLabel}</p>
-              )}
-            </div>
-            {claim.lossAmount != null && (
-              <span className="text-[11px] tabular-nums text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 rounded-full px-2 py-0.5 shrink-0">
-                <ClaimAmount amount={claim.lossAmount} currencyCode={currencyCode} krwPerUsd={krwPerUsd} />
-              </span>
-            )}
-          </div>
-          {hasBreakdown && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 pt-1.5 border-t border-border/60">
-              {claim.partCost != null && (
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("insurance_claim_part_cost")}</p>
-                  <p className="text-[11px] font-medium tabular-nums">
-                    <ClaimAmount amount={claim.partCost} currencyCode={currencyCode} krwPerUsd={krwPerUsd} />
-                  </p>
-                </div>
-              )}
-              {claim.laborCost != null && (
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("insurance_claim_labor_cost")}</p>
-                  <p className="text-[11px] font-medium tabular-nums">
-                    <ClaimAmount amount={claim.laborCost} currencyCode={currencyCode} krwPerUsd={krwPerUsd} />
-                  </p>
-                </div>
-              )}
-              {claim.paintingCost != null && (
-                <div>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{t("insurance_claim_painting_cost")}</p>
-                  <p className="text-[11px] font-medium tabular-nums">
-                    <ClaimAmount amount={claim.paintingCost} currencyCode={currencyCode} krwPerUsd={krwPerUsd} />
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-          {displayDescription && !hasBreakdown && (
-            <p className="text-[11px] text-muted-foreground pt-0.5 leading-snug">{displayDescription}</p>
+    <div className={cn("border-b border-[#00a5fd]/10 px-1 py-3 last:border-b-0", index === total - 1 && "pb-0")}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          {displayDate ? (
+            <p className="flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+              <Calendar className="h-3 w-3 shrink-0" />
+              {displayDate}
+            </p>
+          ) : null}
+          {typeLabel && (
+            <p className="mt-1 text-sm font-semibold leading-snug text-[#071018]">{typeLabel}</p>
           )}
         </div>
+        {claim.lossAmount != null && (
+          <span className="shrink-0 font-mono text-sm font-bold tabular-nums text-[#071018]">
+            <ClaimAmount amount={claim.lossAmount} currencyCode={currencyCode} krwPerUsd={krwPerUsd} />
+          </span>
+        )}
       </div>
+      {hasBreakdown && (
+        <dl className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-3">
+          {claim.partCost != null && (
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("insurance_claim_part_cost")}</dt>
+              <dd className="text-xs font-semibold tabular-nums">
+                <ClaimAmount amount={claim.partCost} currencyCode={currencyCode} krwPerUsd={krwPerUsd} />
+              </dd>
+            </div>
+          )}
+          {claim.laborCost != null && (
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("insurance_claim_labor_cost")}</dt>
+              <dd className="text-xs font-semibold tabular-nums">
+                <ClaimAmount amount={claim.laborCost} currencyCode={currencyCode} krwPerUsd={krwPerUsd} />
+              </dd>
+            </div>
+          )}
+          {claim.paintingCost != null && (
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("insurance_claim_painting_cost")}</dt>
+              <dd className="text-xs font-semibold tabular-nums">
+                <ClaimAmount amount={claim.paintingCost} currencyCode={currencyCode} krwPerUsd={krwPerUsd} />
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+      {displayDescription && !hasBreakdown && (
+        <p className="mt-1 text-[11px] leading-snug text-slate-500">{displayDescription}</p>
+      )}
     </div>
   );
 }

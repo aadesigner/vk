@@ -13,10 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ArrowLeft, ShieldCheck, AlertTriangle, Car, Wrench, MapPin, Calendar, Gauge,
-  Palette, CheckCircle2, XCircle, Users, Lock,
-  ChevronDown, ChevronLeft, ChevronRight, DollarSign, Fuel, Box,
-  X, Zap, Settings2, Loader2, Gavel,
+  ArrowLeft, ShieldCheck, AlertTriangle, MapPin, Gauge,
+  CheckCircle2, XCircle, Users, Lock,
+  ChevronDown, ChevronLeft, ChevronRight,
+  X, Loader2, Gavel,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ReportReveal } from "@/components/report-reveal";
@@ -93,7 +93,7 @@ import { useReportKrwPerUsd } from "@/hooks/use-report-krw-per-usd";
 import { RegistryHistorySection } from "@/components/registry-history-section";
 import { ServiceHistorySection } from "@/components/service-history-section";
 import { VehicleExtrasSection } from "@/components/vehicle-extras-section";
-import { VehicleSpecsGrid } from "@/components/vehicle-specs-grid";
+import { VehicleIdentitySheet } from "@/components/vehicle-identity-sheet";
 import { OwnerHistoryTimeline } from "@/components/owner-history-timeline";
 import { AuctionHistoryTimeline } from "@/components/auction-history-timeline";
 import { ReportHistoryTimeline } from "@/components/report-history-timeline";
@@ -385,73 +385,80 @@ function MileageTimeline({
           : null;
         return (
           <div key={i} className="relative pl-7">
-            <div className={cn(
-              "absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-background ring-2",
-              col.dot
-            )} />
-            {!isLast && <div className="absolute left-[6px] top-5 bottom-0 w-0.5 bg-border" />}
+            <div
+              className={cn(
+                "absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white ring-2",
+                col.dot,
+              )}
+            />
+            {!isLast && <div className="absolute left-[6px] top-5 bottom-0 w-0.5 bg-[#00a5fd]/20" />}
             <div className={cn("pb-5", isLast && "pb-0")}>
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  {entry.date ? localizeProviderDate(entry.date, language, vehicleYear, vehicleCountry) : null}
-                </p>
-              <div className="flex items-baseline gap-1.5">
-                <span className={cn("font-black tabular-nums", col.text, isFirst ? "text-2xl" : "text-lg")}>
-                  {isFirst ? (
-                    <AnimatedMileageKm value={km} />
-                  ) : (
-                    km.toLocaleString()
-                  )}
-                </span>
-                <span className="text-sm text-muted-foreground">{entry.unit ?? "km"}</span>
-                {isFirst && <Badge variant="secondary" className="text-[10px] ml-1">{t("latest")}</Badge>}
-              </div>
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                {entry.date ? localizeProviderDate(entry.date, language, vehicleYear, vehicleCountry) : null}
+              </p>
+              {isFirst && <Badge variant="secondary" className="text-[10px]">{t("latest")}</Badge>}
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className={cn("font-black tabular-nums", col.text, isFirst ? "text-2xl" : "text-lg")}>
+                {isFirst ? (
+                  <AnimatedMileageKm value={km} />
+                ) : (
+                  km.toLocaleString()
+                )}
+              </span>
+              <span className="text-sm text-muted-foreground">{entry.unit ?? "km"}</span>
+            </div>
+            <dl className="mt-2 space-y-1">
               {entry.auctionPrice != null && (
-                <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-1 mt-1">
-                  <DollarSign className="h-3 w-3 shrink-0" />
-                  {entry.auctionPrice.toLocaleString()}
-                </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("auction_price")}</dt>
+                  <dd className="text-xs font-semibold tabular-nums">${entry.auctionPrice.toLocaleString()}</dd>
+                </div>
               )}
               {locationLabel && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                  <MapPin className="h-3 w-3 shrink-0" />
-                  {locationLabel}
-                </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("registry_field_location")}</dt>
+                  <dd className="text-right text-xs font-semibold">{locationLabel}</dd>
+                </div>
               )}
-              {(cond || primaryDmg || secondaryDmg || status || titleLabel) && (
-                <div className="flex flex-wrap gap-2 mt-1.5">
-                  {cond && (
-                    <span className="text-xs bg-muted rounded-md px-2 py-0.5 text-muted-foreground">
-                      {t("condition")}: {cond}
-                    </span>
-                  )}
-                  {primaryDmg && (
-                    <span className="text-xs bg-muted rounded-md px-2 py-0.5 text-muted-foreground">
-                      {t("primary_damage")}: {primaryDmg}
-                    </span>
-                  )}
-                  {secondaryDmg && (
-                    <span className="text-xs bg-muted rounded-md px-2 py-0.5 text-muted-foreground">
-                      {t("secondary_damage")}: {secondaryDmg}
-                    </span>
-                  )}
-                  {titleLabel && (
-                    <span className="text-xs bg-amber-500/10 text-amber-800 dark:text-amber-300 rounded-md px-2 py-0.5">
-                      {t("mileage_title")}: {titleLabel}
-                    </span>
-                  )}
-                  {status && (
-                    <span className="text-xs bg-muted rounded-md px-2 py-0.5 text-muted-foreground">
-                      {status}
-                    </span>
-                  )}
+              {cond && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("condition")}</dt>
+                  <dd className="text-right text-xs font-semibold">{cond}</dd>
+                </div>
+              )}
+              {primaryDmg && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("primary_damage")}</dt>
+                  <dd className="text-right text-xs font-semibold">{primaryDmg}</dd>
+                </div>
+              )}
+              {secondaryDmg && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("secondary_damage")}</dt>
+                  <dd className="text-right text-xs font-semibold">{secondaryDmg}</dd>
+                </div>
+              )}
+              {titleLabel && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("mileage_title")}</dt>
+                  <dd className="text-right text-xs font-semibold">{titleLabel}</dd>
+                </div>
+              )}
+              {status && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("status")}</dt>
+                  <dd className="text-right text-xs font-semibold">{status}</dd>
                 </div>
               )}
               {servicesNote && (
-                <p className="text-sm text-muted-foreground mt-1.5 leading-snug">
-                  <span className="font-medium text-foreground/80">{t("mileage_description")}: </span>
-                  {servicesNote}
-                </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("mileage_description")}</dt>
+                  <dd className="text-right text-xs font-semibold">{servicesNote}</dd>
+                </div>
               )}
+            </dl>
             </div>
           </div>
         );
@@ -1462,35 +1469,22 @@ export default function VinResult({ params }: Props) {
           {/* Vehicle Info — hidden while manual report is pending */}
           {!isPendingManual ? (
           <ReportReveal delay={0.05} y={16}>
-            <VinReportSection accent="sky">
-              <VinReportSectionHeader icon={Car} accent="sky" title={t("vehicle_info")} />
-            <div className="px-5 py-4">
-              <VehicleSpecsGrid>
-                {[
-                  { icon: Car,       label: t("make"),           value: data?.make,        accent: "text-blue-500",   bg: "bg-blue-500/8" },
-                  { icon: Car,       label: t("model"),          value: data?.model,       accent: "text-blue-500",   bg: "bg-blue-500/8" },
-                  { icon: Calendar,  label: t("year"),           value: data?.year ? String(data.year) : null, accent: "text-purple-500", bg: "bg-purple-500/8" },
-                  { icon: Fuel,      label: t("fuel_type"),      value: translateFuelType(t, data?.fuelType) ?? cleanLabel(data?.fuelType), accent: "text-[#00a5fd]", bg: "bg-[#00a5fd]/8" },
-                  { icon: Settings2, label: t("transmission"),   value: translateValue(data?.transmission, TRANSMISSION_KEYS, t), accent: "text-cyan-500", bg: "bg-cyan-500/8" },
-                  { icon: MapPin,    label: t("country"),        value: fmtCountry(data?.country), accent: "text-orange-500", bg: "bg-orange-500/8" },
-                  { icon: Wrench,    label: t("engine"),         value: data?.engine,      accent: "text-slate-500",  bg: "bg-slate-500/8" },
-                  { icon: Zap,       label: t("hp"),             value: data?.hp ? `${data.hp} hp` : null, accent: "text-yellow-500", bg: "bg-yellow-500/8" },
-                  { icon: Box,       label: t("body_type"),      value: cleanLabel(data?.bodyType) ?? translateValue(data?.bodyType, BODY_KEYS, t), accent: "text-pink-500", bg: "bg-pink-500/8" },
-                  { icon: Palette,   label: t("color"),          value: translateColor(t, data?.color) ?? data?.color, accent: "text-rose-500",   bg: "bg-rose-500/8" },
-                  { icon: Settings2, label: t("cylinders"),      value: data?.cylinders ? `${data.cylinders} cyl` : null, accent: "text-indigo-500", bg: "bg-indigo-500/8" },
-                ].filter(f => f.value).map(({ icon: Icon, label, value, accent, bg }) => (
-                  <div key={label} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-muted/40 min-w-0 h-full">
-                    <div className={`h-7 w-7 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
-                      <Icon className={`h-3.5 w-3.5 ${accent}`} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted-foreground font-medium truncate">{label}</p>
-                      <p className="font-bold text-xs truncate">{value}</p>
-                    </div>
-                  </div>
-                ))}
-              </VehicleSpecsGrid>
-            </div>
+            <VinReportSection accent="sky" className="overflow-hidden">
+              <VehicleIdentitySheet
+                fields={[
+                  { key: "make", label: t("make"), value: data?.make },
+                  { key: "model", label: t("model"), value: data?.model },
+                  { key: "year", label: t("year"), value: data?.year ? String(data.year) : null },
+                  { key: "fuel", label: t("fuel_type"), value: translateFuelType(t, data?.fuelType) ?? cleanLabel(data?.fuelType) },
+                  { key: "transmission", label: t("transmission"), value: translateValue(data?.transmission, TRANSMISSION_KEYS, t) },
+                  { key: "country", label: t("country"), value: fmtCountry(data?.country) },
+                  { key: "engine", label: t("engine"), value: data?.engine },
+                  { key: "hp", label: t("hp"), value: data?.hp ? `${data.hp} hp` : null },
+                  { key: "body", label: t("body_type"), value: cleanLabel(data?.bodyType) ?? translateValue(data?.bodyType, BODY_KEYS, t) },
+                  { key: "color", label: t("color"), value: translateColor(t, data?.color) ?? data?.color },
+                  { key: "cylinders", label: t("cylinders"), value: data?.cylinders ? `${data.cylinders} cyl` : null },
+                ]}
+              />
             </VinReportSection>
           </ReportReveal>
           ) : null}

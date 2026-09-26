@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import { isAllowedImageHost } from "./imageHostAllowlist.js";
 
 function deriveKey(): Buffer {
   const secret = process.env.JWT_SECRET ?? "dev-insecure-secret-change-in-production";
@@ -111,15 +110,29 @@ export function unwrapVinImageProxyUrl(url: string): string {
   return verifyImageToken(token) ?? url;
 }
 
+/** Only Carstat CDN URLs are served through `/api/vin/image`. */
+export function isCarstatImageUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase().replace(/\.$/, "");
+    return host === "carstat.dev" || host.endsWith(".carstat.dev");
+  } catch {
+    return /(?:^|[/.])carstat\.dev(?:[/?#]|$)/i.test(url);
+  }
+}
+
 /**
- * Serve the original photo URL. Provider hosts are no longer rewritten through
- * `/api/vin/image`. Leftover proxy paths are unwrapped when the token is valid.
+ * Proxy Carstat photos only. Encar, Copart, IAAI, admin URLs stay direct.
+ * Leftover proxy tokens for non-Carstat hosts are unwrapped to the original URL.
  */
 export function resolveVinPhotoUrlForClient(
   upstreamUrl: string,
-  _opts?: { baseApiUrl?: string; mediaVersion?: number; width?: number },
+  opts?: { baseApiUrl?: string; mediaVersion?: number; width?: number },
 ): string {
-  return unwrapVinImageProxyUrl(upstreamUrl);
+  const unwrapped = unwrapVinImageProxyUrl(upstreamUrl);
+  if (isCarstatImageUrl(unwrapped)) {
+    return buildImageProxyUrl(unwrapped, opts);
+  }
+  return unwrapped;
 }
 
 export function proxyPhotos(
@@ -144,7 +157,7 @@ export function transformVinPhotoData(
   if (Array.isArray(record.photos)) {
     result.photos = (record.photos as unknown[])
       .filter((p): p is string => typeof p === "string" && p.length > 0)
-      .map((p) => resolveVinPhotoUrlForClient(p, { mediaVersion }));
+      .map((p) => resolveVinPhotoUrlForClient(p, { mediaVersion, width: VIN_IMAGE_CARD_WIDTH }));
   }
   if (Array.isArray(record.photosHd)) {
     result.photosHd = (record.photosHd as unknown[])
@@ -162,12 +175,15 @@ export function transformVinPhotoData(
       .map((p) => resolveVinPhotoUrlForClient(p, { mediaVersion }));
   }
   if (typeof record.thumbnailUrl === "string" && record.thumbnailUrl) {
-    result.thumbnailUrl = resolveVinPhotoUrlForClient(record.thumbnailUrl, { mediaVersion });
+    result.thumbnailUrl = resolveVinPhotoUrlForClient(record.thumbnailUrl, {
+      mediaVersion,
+      width: VIN_IMAGE_CARD_WIDTH,
+    });
   }
   if (Array.isArray(record.photoAlternates)) {
     result.photoAlternates = (record.photoAlternates as unknown[]).map((p) => {
       if (typeof p !== "string" || !p) return null;
-      return resolveVinPhotoUrlForClient(p, { mediaVersion });
+      return resolveVinPhotoUrlForClient(p, { mediaVersion, width: VIN_IMAGE_CARD_WIDTH });
     });
   }
   return result;

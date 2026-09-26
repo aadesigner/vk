@@ -289,7 +289,7 @@ function ReportCard({
           ) : null}
 
           <div className="min-w-0 flex-1 space-y-1.5">
-            <VinCaseId vin={lookup.vin} size="sm" oneLine className="w-full" />
+            <VinCaseId vin={lookup.vin} size="sm" oneLine />
             <p className="truncate text-xs font-semibold text-muted-foreground sm:text-[13px]">
               {vehicleName ?? t("dashboard_subject_unknown")}
             </p>

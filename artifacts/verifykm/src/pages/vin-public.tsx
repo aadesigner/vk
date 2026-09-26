@@ -11,9 +11,9 @@ import { ReportReveal } from "@/components/report-reveal";
 import {
   Lock, Car, ArrowLeft,
   CheckCircle2, XCircle, Users, Gauge,
-  Wrench, Palette, MapPin, Calendar,
+  MapPin,
   ShieldCheck, ShieldAlert, ChevronRight, AlertTriangle,
-  Zap, Settings2, TrendingUp, DollarSign, Fuel, Box,
+  TrendingUp,
   X, ChevronLeft, ChevronDown, FileText, ClipboardList, Droplets, Gavel,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -91,7 +91,7 @@ import { useDisplayPrice } from "@/hooks/use-display-price";
 import { RegistryHistorySection } from "@/components/registry-history-section";
 import { ServiceHistorySection } from "@/components/service-history-section";
 import { VehicleExtrasSection } from "@/components/vehicle-extras-section";
-import { VehicleSpecsGrid } from "@/components/vehicle-specs-grid";
+import { VehicleIdentitySheet } from "@/components/vehicle-identity-sheet";
 import { OwnerHistoryTimeline } from "@/components/owner-history-timeline";
 import { AuctionHistoryTimeline } from "@/components/auction-history-timeline";
 import { ReportHistoryTimeline } from "@/components/report-history-timeline";
@@ -278,29 +278,6 @@ function PassPill({ ok, labelOk, labelFail }: { ok: boolean; labelOk: string; la
 }
 
 
-function SpecRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string | null | undefined;
-}) {
-  if (!value) return null;
-  return (
-    <div className="flex items-center gap-3">
-      <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] text-muted-foreground uppercase tracking-wide leading-tight">{label}</p>
-        <p className="text-sm font-semibold truncate">{value}</p>
-      </div>
-    </div>
-  );
-}
-
 // ── Sanitize display strings — reject empty / placeholder provider values ──
 function cleanStr(v: string | null | undefined): string | null {
   return cleanDisplayStr(v);
@@ -363,70 +340,80 @@ function MileageTimeline({
           : null;
         return (
           <div key={i} className="relative pl-7">
-            <div className={cn("absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-background ring-2", col.dot)} />
-            {!isLast && <div className="absolute left-[6px] top-5 bottom-0 w-0.5 bg-border" />}
+            <div
+              className={cn(
+                "absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white ring-2",
+                col.dot,
+              )}
+            />
+            {!isLast && <div className="absolute left-[6px] top-5 bottom-0 w-0.5 bg-[#00a5fd]/20" />}
             <div className={cn("pb-5", isLast && "pb-0")}>
-              <p className="text-xs text-muted-foreground mb-0.5">
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                 {entry.date ? localizeProviderDate(entry.date, language, vehicleYear, vehicleCountry) : null}
               </p>
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className={cn("font-black tabular-nums", col.text, isFirst ? "text-2xl" : "text-lg")}>
-                  {isFirst ? (
-                    <AnimatedMileageKm value={km} />
-                  ) : (
-                    km.toLocaleString()
-                  )}
-                </span>
-                <span className="text-sm text-muted-foreground">{entry.unit ?? "km"}</span>
-                {isFirst && <Badge variant="secondary" className="text-[10px] ml-1">{t("latest")}</Badge>}
-              </div>
+              {isFirst && <Badge variant="secondary" className="text-[10px]">{t("latest")}</Badge>}
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className={cn("font-black tabular-nums", col.text, isFirst ? "text-2xl" : "text-lg")}>
+                {isFirst ? (
+                  <AnimatedMileageKm value={km} />
+                ) : (
+                  km.toLocaleString()
+                )}
+              </span>
+              <span className="text-sm text-muted-foreground">{entry.unit ?? "km"}</span>
+            </div>
+            <dl className="mt-2 space-y-1">
               {entry.auctionPrice != null && (
-                <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-1 mt-1">
-                  <DollarSign className="h-3 w-3 shrink-0" />
-                  {entry.auctionPrice.toLocaleString()}
-                </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("auction_price")}</dt>
+                  <dd className="text-xs font-semibold tabular-nums">${entry.auctionPrice.toLocaleString()}</dd>
+                </div>
               )}
               {locationLabel && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                  <MapPin className="h-3 w-3 shrink-0" />
-                  {locationLabel}
-                </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("registry_field_location")}</dt>
+                  <dd className="text-right text-xs font-semibold">{locationLabel}</dd>
+                </div>
               )}
-              {(cond || primaryDmg || secondaryDmg || status || titleLabel) && (
-                <div className="flex flex-wrap gap-2 mt-1.5">
-                  {cond && (
-                    <span className="text-xs bg-muted rounded-md px-2 py-0.5 text-muted-foreground">
-                      {t("condition")}: {cond}
-                    </span>
-                  )}
-                  {primaryDmg && (
-                    <span className="text-xs bg-muted rounded-md px-2 py-0.5 text-muted-foreground">
-                      {t("primary_damage")}: {primaryDmg}
-                    </span>
-                  )}
-                  {secondaryDmg && (
-                    <span className="text-xs bg-muted rounded-md px-2 py-0.5 text-muted-foreground">
-                      {t("secondary_damage")}: {secondaryDmg}
-                    </span>
-                  )}
-                  {titleLabel && (
-                    <span className="text-xs bg-amber-500/10 text-amber-800 dark:text-amber-300 rounded-md px-2 py-0.5">
-                      {t("mileage_title")}: {titleLabel}
-                    </span>
-                  )}
-                  {status && (
-                    <span className="text-xs bg-muted rounded-md px-2 py-0.5 text-muted-foreground">
-                      {status}
-                    </span>
-                  )}
+              {cond && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("condition")}</dt>
+                  <dd className="text-right text-xs font-semibold">{cond}</dd>
+                </div>
+              )}
+              {primaryDmg && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("primary_damage")}</dt>
+                  <dd className="text-right text-xs font-semibold">{primaryDmg}</dd>
+                </div>
+              )}
+              {secondaryDmg && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("secondary_damage")}</dt>
+                  <dd className="text-right text-xs font-semibold">{secondaryDmg}</dd>
+                </div>
+              )}
+              {titleLabel && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("mileage_title")}</dt>
+                  <dd className="text-right text-xs font-semibold">{titleLabel}</dd>
+                </div>
+              )}
+              {status && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("status")}</dt>
+                  <dd className="text-right text-xs font-semibold">{status}</dd>
                 </div>
               )}
               {servicesNote && (
-                <p className="text-sm text-muted-foreground mt-1.5 leading-snug">
-                  <span className="font-medium text-foreground/80">{t("mileage_description")}: </span>
-                  {servicesNote}
-                </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{t("mileage_description")}</dt>
+                  <dd className="text-right text-xs font-semibold">{servicesNote}</dd>
+                </div>
               )}
+            </dl>
             </div>
           </div>
         );
@@ -776,23 +763,24 @@ export default function VinPublic({ params }: Props) {
     t("vin_public_found_count").replace("{count}", String(count));
 
   const vehicleSpecFields = [
-    { icon: Car, label: t("free_decoder_field_make"), value: data.make },
-    { icon: Car, label: t("free_decoder_field_model"), value: data.model },
-    { icon: Calendar, label: t("free_decoder_field_year"), value: data.year ? String(data.year) : null },
+    { key: "make", label: t("free_decoder_field_make"), value: data.make },
+    { key: "model", label: t("free_decoder_field_model"), value: data.model },
+    { key: "year", label: t("free_decoder_field_year"), value: data.year ? String(data.year) : null },
     ...(data.isUnlocked && data.trim
-      ? [{ icon: Car, label: t("free_decoder_field_trim"), value: data.trim }]
+      ? [{ key: "trim", label: t("free_decoder_field_trim"), value: data.trim }]
       : []),
     ...(data.isUnlocked
-      ? [{ icon: Fuel, label: t("free_decoder_field_fuel_type"), value: translateFuelType(t, data.fuelType) ?? cleanLabel(data.fuelType) }]
+      ? [{ key: "fuel", label: t("free_decoder_field_fuel_type"), value: translateFuelType(t, data.fuelType) ?? cleanLabel(data.fuelType) }]
       : []),
-    { icon: Gauge, label: t("free_decoder_field_transmission"), value: translateValue(data.transmission, TRANSMISSION_KEYS, t) },
-    { icon: Wrench, label: t("free_decoder_field_engine"), value: data.engine },
-    { icon: Palette, label: t("color"), value: translateColor(t, data.color) ?? data.color },
+    { key: "transmission", label: t("free_decoder_field_transmission"), value: translateValue(data.transmission, TRANSMISSION_KEYS, t) },
+    { key: "country", label: t("country"), value: fmtCountry(data.country) },
+    { key: "engine", label: t("free_decoder_field_engine"), value: data.engine },
+    { key: "color", label: t("color"), value: translateColor(t, data.color) ?? data.color },
     ...(data.isUnlocked
       ? [
-          { icon: Box, label: t("free_decoder_field_body_type"), value: translateValue(data.bodyType, BODY_KEYS, t) ?? cleanLabel(data.bodyType) },
-          { icon: Zap, label: t("hp"), value: data.hp ? `${data.hp} hp` : null },
-          { icon: Settings2, label: t("cylinders"), value: data.cylinders ? String(data.cylinders) : null },
+          { key: "body", label: t("free_decoder_field_body_type"), value: translateValue(data.bodyType, BODY_KEYS, t) ?? cleanLabel(data.bodyType) },
+          { key: "hp", label: t("hp"), value: data.hp ? `${data.hp} hp` : null },
+          { key: "cylinders", label: t("cylinders"), value: data.cylinders ? String(data.cylinders) : null },
         ]
       : []),
   ].filter((field) => field.value);
@@ -1415,20 +1403,8 @@ export default function VinPublic({ params }: Props) {
 
             {/* Vehicle Specs */}
             <ReportReveal delay={0.1} y={12}>
-              <VinReportSection accent="sky">
-                <VinReportSectionHeader
-                  variant="public"
-                  icon={Car}
-                  accent="sky"
-                  title={t("report_specs")}
-                />
-                <div className="px-6 py-5">
-                  <VehicleSpecsGrid>
-                    {vehicleSpecFields.map(({ icon, label, value }) => (
-                      <SpecRow key={label} icon={icon} label={label} value={value} />
-                    ))}
-                  </VehicleSpecsGrid>
-                </div>
+              <VinReportSection accent="sky" className="overflow-hidden">
+                <VehicleIdentitySheet fields={vehicleSpecFields} />
               </VinReportSection>
             </ReportReveal>
 

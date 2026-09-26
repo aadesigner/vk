@@ -214,43 +214,34 @@ function RegistryEventCard({
   const recallStatus = isRecall ? getRecallCompletionStatus(event) : null;
 
   return (
-    <div className="relative pl-5">
-      <div
-        className={cn(
-          "absolute left-0 top-3.5 h-2.5 w-2.5 rounded-full border-2 border-background ring-2",
-          visual.dot,
-          visual.ring,
-        )}
-      />
-      {!isLast && <div className="absolute left-[4.5px] top-6 bottom-0 w-px bg-border" />}
-
+    <div className={cn("border-b border-[#00a5fd]/10 last:border-b-0", isLast && "border-b-0")}>
       <div className={cn("pb-3", isLast && "pb-0")}>
-        <div className="relative rounded-lg border border-border/70 bg-muted/15 overflow-hidden">
+        <div className="relative overflow-hidden">
           <button
             type="button"
             className={cn(
-              "w-full text-left px-3 py-2.5 transition-colors",
-              hasDetails && "hover:bg-muted/35 cursor-pointer",
+              "w-full px-1 py-3 text-left transition-colors",
+              hasDetails && "cursor-pointer hover:bg-[#f7fbfe]",
               !hasDetails && "cursor-default",
             )}
             onClick={() => hasDetails && setOpen((v) => !v)}
             disabled={!hasDetails}
             aria-expanded={hasDetails ? open : undefined}
           >
-            <div className="flex items-start gap-2.5">
-              <div className={cn("h-7 w-7 rounded-md flex items-center justify-center shrink-0", visual.badge)}>
+            <div className="flex items-start gap-3">
+              <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[#00a5fd]/15 bg-[#eef8fd]", visual.badge)}>
                 <TypeIcon className="h-3.5 w-3.5" />
               </div>
-              <div className="flex-1 min-w-0 space-y-1">
+              <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 space-y-0.5">
                     {date && (
-                      <p className="text-[10px] font-normal text-muted-foreground flex items-center gap-1">
+                      <p className="flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
                         <Calendar className="h-3 w-3 shrink-0" />
                         {date}
                       </p>
                     )}
-                    <p className="text-xs font-medium text-foreground leading-snug">{typeLabel}</p>
+                    <p className="text-sm font-semibold leading-snug text-[#071018]">{typeLabel}</p>
                     {recallStatus === "done" && (
                       <Badge
                         className="mt-1 max-w-full border-0 bg-[#00a5fd]/15 text-[#006aa8] dark:text-[#33bbfd] text-[10px] px-1.5 py-0.5 font-medium leading-tight whitespace-normal text-left"

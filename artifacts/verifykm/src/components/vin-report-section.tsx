@@ -131,12 +131,12 @@ export function VinReportSectionHeader({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 border-b border-[#00a5fd]/10 px-4 py-3.5 sm:px-6",
-        "bg-[#f7fbfe]",
+        "flex items-center justify-between gap-3 border-b border-border/60 px-4 py-2.5 sm:px-5 sm:py-3.5",
+        ACCENT_HEADER_WASH[accent],
         className,
       )}
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex min-w-0 items-center gap-2.5">
         {Icon ? (
           <span className={cn("inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", ACCENT_CHIP[accent], ACCENT_ICON[accent])}>
             <Icon className="h-4 w-4" />
@@ -144,20 +144,20 @@ export function VinReportSectionHeader({
         ) : null}
         <div className="min-w-0">
           {variant === "public" ? (
-            <h2 className="truncate font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500 sm:text-xs">
+            <h2 className="truncate text-[11px] font-bold uppercase tracking-widest text-muted-foreground sm:text-xs">
               {title}
             </h2>
           ) : (
-            <h2 className="truncate font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#071018] sm:text-[12px]">{title}</h2>
+            <h2 className="truncate text-sm font-bold leading-tight text-[#071018]">{title}</h2>
           )}
           {subtitle ? (
-            <div className="text-[10px] sm:text-[11px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">
+            <div className="mt-0.5 line-clamp-2 text-[10px] leading-tight text-muted-foreground sm:text-[11px]">
               {subtitle}
             </div>
           ) : null}
         </div>
       </div>
-      {trailing ? <div className="shrink-0 flex items-center gap-2">{trailing}</div> : null}
+      {trailing ? <div className="flex shrink-0 items-center gap-2">{trailing}</div> : null}
     </div>
   );
 }

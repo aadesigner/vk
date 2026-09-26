@@ -7,7 +7,6 @@ import {
   User,
   HelpCircle,
   ShoppingBag,
-  Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useGetUserStats } from "@workspace/api-client-react";
@@ -45,50 +44,60 @@ function ClientAreaUserStats({
   credits,
   reports,
   compact = false,
+  onLight = false,
 }: {
   credits: number;
   reports: number | undefined;
   compact?: boolean;
+  onLight?: boolean;
 }) {
   const { t } = useTranslation();
   const showCredits = credits > 0;
   if (!showCredits && reports == null) return null;
 
-  const creditBlock = showCredits ? (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5",
-        compact ? "text-[11px] text-[#7dd3fc]" : "rounded-xl bg-[#00a5fd]/15 px-3 py-2 text-white",
-      )}
-      title={t("dashboard_stat_credits_tooltip")}
-    >
-      <Wallet className={cn("shrink-0", compact ? "h-3 w-3" : "h-3.5 w-3.5 text-[#7dd3fc]")} />
-      <span className="tabular-nums font-semibold">{credits}</span>
-      <span className={cn(compact ? "font-medium" : "text-[11px] font-medium text-white/60")}>
-        {t("dashboard_stat_credits")}
-      </span>
-    </span>
-  ) : null;
-
-  const reportBlock = reports != null ? (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5",
-        compact ? "text-[11px] text-white/55" : "rounded-xl bg-white/[0.06] px-3 py-2 text-white",
-      )}
-    >
-      <FileText className={cn("shrink-0", compact ? "h-3 w-3" : "h-3.5 w-3.5 text-white/45")} />
-      <span className="tabular-nums font-semibold">{reports}</span>
-      <span className={cn(compact ? "font-medium" : "text-[11px] font-medium text-white/50")}>
-        {t("dashboard_stat_total_reports")}
-      </span>
-    </span>
-  ) : null;
+  const tileClass = onLight
+    ? "min-w-0 rounded-lg border px-2.5 py-1.5"
+    : compact
+      ? "min-w-0 rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1.5"
+      : "min-w-0 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5";
 
   return (
-    <div className={cn(compact ? "flex flex-wrap items-center gap-x-3 gap-y-1" : "grid gap-2")}>
-      {creditBlock}
-      {reportBlock}
+    <div className={cn("grid gap-1.5", showCredits && reports != null ? "grid-cols-2" : "grid-cols-1")}>
+      {showCredits ? (
+        <div
+          className={cn(tileClass, onLight ? "border-[#00a5fd]/20 bg-[#eef8fd]" : "border-[#00a5fd]/30 bg-[#00a5fd]/12")}
+          title={t("dashboard_stat_credits_tooltip")}
+        >
+          <p className={cn(
+            "font-black tabular-nums leading-none",
+            onLight ? "text-base text-[#071018]" : compact ? "text-lg text-white" : "text-[1.65rem] text-white",
+          )}>
+            {credits}
+          </p>
+          <p className={cn(
+            "mt-0.5 font-semibold uppercase tracking-[0.12em]",
+            onLight ? "text-[9px] text-[#0088d4]" : compact ? "text-[9px] text-[#7dd3fc]" : "text-[10px] text-[#7dd3fc]",
+          )}>
+            {t("dashboard_stat_credits_ready")}
+          </p>
+        </div>
+      ) : null}
+      {reports != null ? (
+        <div className={cn(tileClass, onLight && "border-slate-200 bg-slate-50")}>
+          <p className={cn(
+            "font-black tabular-nums leading-none",
+            onLight ? "text-base text-[#071018]" : compact ? "text-lg text-white" : "text-[1.65rem] text-white",
+          )}>
+            {reports}
+          </p>
+          <p className={cn(
+            "mt-0.5 font-semibold uppercase tracking-[0.12em]",
+            onLight ? "text-[9px] text-slate-500" : compact ? "text-[9px] text-white/45" : "text-[10px] text-white/45",
+          )}>
+            {t("dashboard_stat_dossiers")}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -120,22 +129,7 @@ export function ClientAreaLayout({ children, heading, before, className }: Props
       {before}
 
       <div className="bg-[#071018] text-white md:hidden">
-        <div className="flex items-center gap-3 px-4 pb-3 pt-4">
-          <Avatar className="h-9 w-9 ring-1 ring-white/15">
-            <AvatarImage src={user?.avatarUrl ?? undefined} alt={user?.name || ""} />
-            <AvatarFallback className="bg-white/10 text-white">
-              <User className="h-4 w-4" />
-            </AvatarFallback>
-          </Avatar>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold">{displayName}</span>
-            {user?.email ? (
-              <span className="block truncate text-[11px] text-white/45">{user.email}</span>
-            ) : null}
-            <ClientAreaUserStats credits={creditBalance} reports={totalReports} compact />
-          </span>
-        </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 scrollbar-none" aria-label={t("account")}>
+        <nav className="flex gap-1 overflow-x-auto px-3 py-3 scrollbar-none" aria-label={t("account")}>
           {navItems.map(({ id, icon: Icon, label, href }) => {
             const isActive = activeSection === id;
             return (
@@ -157,7 +151,10 @@ export function ClientAreaLayout({ children, heading, before, className }: Props
 
       <div className="mx-auto w-full max-w-6xl md:px-8 md:pt-10">
         {heading ? (
-          <div className="px-4 pb-1 pt-5 text-left md:px-0 md:pb-7 md:pt-0">
+          <div className="px-4 pb-1 pt-4 text-left md:px-0 md:pb-7 md:pt-0">
+            <div className="mb-3 md:hidden">
+              <ClientAreaUserStats credits={creditBalance} reports={totalReports} compact onLight />
+            </div>
             {heading}
           </div>
         ) : null}

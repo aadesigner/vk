@@ -218,20 +218,22 @@ function StatCell({
     >
       {isMain ? (
         <div className="md:hidden">
-          <div className="flex items-start justify-between gap-1.5 min-w-0">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-lg font-bold tabular-nums leading-none">{value}</span>
-                <TrendBadge value={trend ?? null} compact />
-              </div>
-              {renderSourceBreakdown({ className: "mt-1.5" })}
-              <p className="text-[11px] text-muted-foreground mt-1.5 truncate leading-tight">{label}</p>
-              {compareLabel && trend != null && (
-                <p className="text-[10px] text-muted-foreground/80 mt-0.5 truncate">{compareLabel}</p>
-              )}
+          <div className="min-w-0">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-lg font-bold tabular-nums leading-none">{value}</span>
+              <TrendBadge value={trend ?? null} compact />
             </div>
-            {Icon && <Icon className="h-3.5 w-3.5 text-primary/70 shrink-0 mt-0.5" />}
+            {renderSourceBreakdown({ className: "mt-1.5" })}
+            <p className="text-[11px] text-muted-foreground mt-1.5 truncate leading-tight">{label}</p>
+            {compareLabel && trend != null && (
+              <p className="text-[10px] text-muted-foreground/80 mt-0.5 truncate">{compareLabel}</p>
+            )}
           </div>
+          {Icon ? (
+            <div className="mt-2 flex justify-end">
+              <Icon className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+            </div>
+          ) : null}
         </div>
       ) : null}
 

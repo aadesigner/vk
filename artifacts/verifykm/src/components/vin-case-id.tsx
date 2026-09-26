@@ -19,8 +19,8 @@ export function VinCaseId({
   const chars = String(vin || "").toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, "").slice(0, 17);
   const sizeCls = oneLine
     ? size === "sm"
-      ? "h-6 min-w-0 flex-1 basis-0 px-0 text-[10px] leading-none sm:h-7 sm:text-xs"
-      : "h-8 min-w-0 flex-1 basis-0 px-0 text-xs leading-none sm:h-9 sm:text-sm"
+      ? "h-5 w-[0.92rem] shrink-0 px-0 text-[9px] leading-none sm:h-6 sm:w-[1rem] sm:text-[10px]"
+      : "h-6 w-[1.05rem] shrink-0 px-0 text-[10px] leading-none sm:h-7 sm:w-[1.15rem] sm:text-xs"
     : size === "lg"
       ? "h-9 min-w-[1.65rem] text-sm sm:h-10 sm:min-w-[1.85rem] sm:text-base"
       : size === "sm"
@@ -32,7 +32,7 @@ export function VinCaseId({
       <div
         className={cn(
           "items-center",
-          oneLine ? "flex w-full max-w-full flex-nowrap gap-px sm:gap-0.5" : "inline-flex flex-wrap gap-0.5 sm:gap-1",
+          oneLine ? "inline-flex max-w-full flex-nowrap gap-px" : "inline-flex flex-wrap gap-0.5 sm:gap-1",
         )}
         aria-hidden
       >
