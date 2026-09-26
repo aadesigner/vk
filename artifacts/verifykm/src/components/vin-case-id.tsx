@@ -18,7 +18,9 @@ export function VinCaseId({
 }) {
   const chars = String(vin || "").toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, "").slice(0, 17);
   const sizeCls = oneLine
-    ? "h-8 min-w-0 flex-1 basis-0 px-0 text-xs leading-none sm:h-9 sm:text-sm"
+    ? size === "sm"
+      ? "h-6 min-w-0 flex-1 basis-0 px-0 text-[10px] leading-none sm:h-7 sm:text-xs"
+      : "h-8 min-w-0 flex-1 basis-0 px-0 text-xs leading-none sm:h-9 sm:text-sm"
     : size === "lg"
       ? "h-9 min-w-[1.65rem] text-sm sm:h-10 sm:min-w-[1.85rem] sm:text-base"
       : size === "sm"
