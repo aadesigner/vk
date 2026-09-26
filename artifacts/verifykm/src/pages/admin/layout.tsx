@@ -127,16 +127,14 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const SidebarContent = ({ mobile }: { mobile?: boolean }) => (
     <>
       <div className={cn("px-5 py-4 border-b border-border/60", mobile && "pr-12")}>
-        {mobile ? null : (
-          <Link href="/en" className="flex items-center">
-            <VerifyKMLogo
-              className="h-8 w-auto"
-              variant="dark"
-              syncDecode
-            />
-          </Link>
-        )}
-        <div className={cn("flex items-center gap-1.5", !mobile && "mt-2")}>
+        <Link href="/en" className="flex items-center">
+          <VerifyKMLogo
+            className={cn("w-auto max-w-full", mobile ? "h-7" : "h-8")}
+            variant="dark"
+            syncDecode
+          />
+        </Link>
+        <div className="mt-2 flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
           <span className="text-xs font-medium text-muted-foreground">Admin Panel</span>
         </div>
