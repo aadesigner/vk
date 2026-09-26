@@ -7,8 +7,11 @@ import {
   User,
   HelpCircle,
   ShoppingBag,
+  Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useGetUserStats } from "@workspace/api-client-react";
+import type { UserStats } from "@workspace/api-client-react";
 import { useTranslation } from "@/i18n/context";
 import { useAuth } from "@/lib/auth-context";
 import { useClientAreaLiveRefresh } from "@/hooks/use-client-area-live-refresh";
@@ -20,6 +23,7 @@ import {
   parseClientAreaSection,
   type ClientAreaSection,
 } from "@/lib/dashboard-nav";
+import { CLIENT_AREA_QUERY_OPTIONS, orvalQuery } from "@/lib/query-options";
 
 type NavItem = {
   id: ClientAreaSection;
@@ -37,13 +41,70 @@ type Props = {
   className?: string;
 };
 
+function ClientAreaUserStats({
+  credits,
+  reports,
+  compact = false,
+}: {
+  credits: number;
+  reports: number | undefined;
+  compact?: boolean;
+}) {
+  const { t } = useTranslation();
+  const showCredits = credits > 0;
+  if (!showCredits && reports == null) return null;
+
+  const creditBlock = showCredits ? (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5",
+        compact ? "text-[11px] text-[#7dd3fc]" : "rounded-xl bg-[#00a5fd]/15 px-3 py-2 text-white",
+      )}
+      title={t("dashboard_stat_credits_tooltip")}
+    >
+      <Wallet className={cn("shrink-0", compact ? "h-3 w-3" : "h-3.5 w-3.5 text-[#7dd3fc]")} />
+      <span className="tabular-nums font-semibold">{credits}</span>
+      <span className={cn(compact ? "font-medium" : "text-[11px] font-medium text-white/60")}>
+        {t("dashboard_stat_credits")}
+      </span>
+    </span>
+  ) : null;
+
+  const reportBlock = reports != null ? (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5",
+        compact ? "text-[11px] text-white/55" : "rounded-xl bg-white/[0.06] px-3 py-2 text-white",
+      )}
+    >
+      <FileText className={cn("shrink-0", compact ? "h-3 w-3" : "h-3.5 w-3.5 text-white/45")} />
+      <span className="tabular-nums font-semibold">{reports}</span>
+      <span className={cn(compact ? "font-medium" : "text-[11px] font-medium text-white/50")}>
+        {t("dashboard_stat_total_reports")}
+      </span>
+    </span>
+  ) : null;
+
+  return (
+    <div className={cn(compact ? "flex flex-wrap items-center gap-x-3 gap-y-1" : "grid gap-2")}>
+      {creditBlock}
+      {reportBlock}
+    </div>
+  );
+}
+
 export function ClientAreaLayout({ children, heading, before, className }: Props) {
   const { t, language } = useTranslation();
-  const { user } = useAuth();
+  const { user, isSignedIn } = useAuth();
   const [location] = useLocation();
   const activeSection = parseClientAreaSection(location, language);
+  const { data: stats } = useGetUserStats({
+    query: { enabled: Boolean(isSignedIn), ...orvalQuery<UserStats>(CLIENT_AREA_QUERY_OPTIONS) },
+  });
 
   useClientAreaLiveRefresh();
+  const creditBalance = user?.creditBalance ?? 0;
+  const totalReports = stats?.totalChecks;
 
   const navItems: NavItem[] = [
     { id: "reports", icon: FileText, label: t("my_reports"), href: dashboardPath(language, "reports") },
@@ -71,6 +132,7 @@ export function ClientAreaLayout({ children, heading, before, className }: Props
             {user?.email ? (
               <span className="block truncate text-[11px] text-white/45">{user.email}</span>
             ) : null}
+            <ClientAreaUserStats credits={creditBalance} reports={totalReports} compact />
           </span>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 scrollbar-none" aria-label={t("account")}>
@@ -122,6 +184,10 @@ export function ClientAreaLayout({ children, heading, before, className }: Props
               ) : null}
             </span>
           </Link>
+
+          <div className="px-3 pb-3">
+            <ClientAreaUserStats credits={creditBalance} reports={totalReports} />
+          </div>
 
           <nav className="flex flex-col gap-0.5 px-2 pb-2" aria-label={t("account")}>
             {navItems.map(({ id, icon: Icon, label, href }) => {

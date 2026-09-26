@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, Users, Search, Server, Settings, LogOut, CreditCard, Activity, Tag, Menu, X, Mail, Database, ReceiptText, ShieldAlert, Megaphone, Clock, Puzzle, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VerifyKMLogo } from "@/components/logo";
 import { SEOHead } from "@/components/seo";
 import { AdminPinGate } from "@/components/admin-pin-gate";
 import { AdminThemeProvider, useAdminTheme, useAdminThemeDocumentSync } from "@/components/admin/admin-theme-provider";
@@ -126,7 +127,16 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const SidebarContent = ({ mobile }: { mobile?: boolean }) => (
     <>
       <div className={cn("px-5 py-4 border-b border-border/60", mobile && "pr-12")}>
-        <div className="flex items-center gap-1.5">
+        {mobile ? null : (
+          <Link href="/en" className="flex items-center">
+            <VerifyKMLogo
+              className="h-8 w-auto"
+              variant="dark"
+              syncDecode
+            />
+          </Link>
+        )}
+        <div className={cn("flex items-center gap-1.5", !mobile && "mt-2")}>
           <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
           <span className="text-xs font-medium text-muted-foreground">Admin Panel</span>
         </div>

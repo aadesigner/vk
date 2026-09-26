@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldAlert, Loader2 } from "lucide-react";
+import { VerifyKMLogo } from "@/components/logo";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -97,6 +98,7 @@ export function AdminPinGate({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-md rounded-2xl border bg-background p-6 shadow-sm space-y-5">
         <div className="flex flex-col items-center text-center gap-3">
+          <VerifyKMLogo className="hidden h-8 w-auto md:block" variant="dark" />
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
             <ShieldAlert className="h-6 w-6" />
           </div>
