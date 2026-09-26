@@ -155,6 +155,7 @@ export const ACQUISITION_CHANNEL_SHORT: Record<string, string> = {
   instagram_ads: "Insta ads",
   facebook_social: "FB social",
   instagram_social: "Insta social",
+  meta_social: "Meta social",
   tiktok_ads: "TikTok ads",
   tiktok_social: "TikTok",
   google_ads: "Google ads",

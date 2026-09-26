@@ -2,13 +2,42 @@ import { describe, expect, it } from "vitest";
 import { classifyAcquisition } from "./acquisition";
 
 describe("classifyAcquisition", () => {
-  it("maps fbclid to meta paid ads", () => {
+  it("does not treat a bare fbclid as a paid ad", () => {
     const r = classifyAcquisition(
       "https://verifykm.com/sq/?fbclid=abc123",
       "",
     );
+    expect(r.bucket).toBe("organic_social");
+    expect(r.channel).toBe("meta_social");
+    expect(r.clickId).toBe("abc123");
+  });
+
+  it("maps instagram referrer plus fbclid to organic instagram", () => {
+    const r = classifyAcquisition(
+      "https://verifykm.com/sq/?fbclid=abc123",
+      "https://l.instagram.com/",
+    );
+    expect(r.bucket).toBe("organic_social");
+    expect(r.channel).toBe("instagram_social");
+    expect(r.clickId).toBe("abc123");
+  });
+
+  it("maps instagram share params to organic instagram when referrer is stripped", () => {
+    const r = classifyAcquisition(
+      "https://verifykm.com/en/?igshid=MzRlODBiNWFlZA==",
+      "",
+    );
+    expect(r.bucket).toBe("organic_social");
+    expect(r.channel).toBe("instagram_social");
+  });
+
+  it("still maps paid utm plus fbclid to meta ads", () => {
+    const r = classifyAcquisition(
+      "https://verifykm.com/sq/?utm_source=instagram&utm_medium=paid&fbclid=abc123",
+      "",
+    );
     expect(r.bucket).toBe("paid_ads");
-    expect(r.channel).toBe("meta_ads");
+    expect(r.channel).toBe("instagram_ads");
     expect(r.clickId).toBe("abc123");
   });
 

@@ -113,11 +113,13 @@ export function classifyAcquisition(
   const gclid = param(sp, "gclid");
   const ttclid = param(sp, "ttclid");
   const msclkid = param(sp, "msclkid");
+  const igShare = param(sp, "igshid") ?? param(sp, "igsh");
   const referrer = hostOnly(referrerUrl);
   const extReferrer = isSelfHost(referrer) ? null : referrer;
   const brand = sourceBrand(source);
   const social = socialKind(extReferrer);
   const capturedAt = new Date().toISOString();
+  const metaClickId = fbclid;
 
   const base = {
     source,
@@ -127,10 +129,8 @@ export function classifyAcquisition(
     capturedAt,
   };
 
-  // Paid click ids first
-  if (fbclid) {
-    return { ...base, bucket: "paid_ads", channel: brand === "instagram" ? "instagram_ads" : "meta_ads", clickId: fbclid };
-  }
+  // Ad-specific click ids only. fbclid is NOT ad-specific — Instagram and
+  // Facebook append it to bio, story, post, and DM links as well as ads.
   if (gclid) {
     return { ...base, bucket: "paid_ads", channel: "google_ads", clickId: gclid };
   }
@@ -141,7 +141,7 @@ export function classifyAcquisition(
     return { ...base, bucket: "paid_ads", channel: "bing_ads", clickId: msclkid };
   }
 
-  // Paid UTMs
+  // Paid UTMs — required to count Meta / Instagram as ads
   if (isPaidMedium(medium) || medium?.toLowerCase() === "paid_social") {
     let channel = "paid_ads";
     if (brand === "meta" || brand === "facebook") channel = "meta_ads";
@@ -151,10 +151,10 @@ export function classifyAcquisition(
     else if (brand === "x") channel = "x_ads";
     else if (brand === "linkedin") channel = "linkedin_ads";
     else if (source) channel = `${source.slice(0, 24)}_ads`;
-    return { ...base, bucket: "paid_ads", channel, clickId: null };
+    return { ...base, bucket: "paid_ads", channel, clickId: metaClickId };
   }
 
-  // Organic social referrer
+  // Organic social referrer (Instagram in-app often still sends l.instagram.com)
   if (social) {
     const channel =
       social === "instagram" ? "instagram_social"
@@ -162,7 +162,18 @@ export function classifyAcquisition(
           : social === "tiktok" ? "tiktok_social"
             : social === "x" ? "x_social"
               : "linkedin_social";
-    return { ...base, bucket: "organic_social", channel, clickId: null };
+    return { ...base, bucket: "organic_social", channel, clickId: metaClickId };
+  }
+
+  // Instagram share links (in-app browser often strips the referrer)
+  if (igShare || brand === "instagram") {
+    return { ...base, bucket: "organic_social", channel: "instagram_social", clickId: metaClickId };
+  }
+
+  // Bare fbclid = Meta organic click, not an ad
+  if (fbclid) {
+    const channel = brand === "meta" || brand === "facebook" ? "facebook_social" : "meta_social";
+    return { ...base, bucket: "organic_social", channel, clickId: fbclid };
   }
 
   // Google organic (referrer or utm without paid)

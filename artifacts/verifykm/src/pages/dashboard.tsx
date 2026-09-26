@@ -414,27 +414,31 @@ export default function Dashboard() {
   };
 
   const pendingBanner = showPendingBanner && pendingVin ? (
-    <div className="w-full border-b border-[#00a5fd]/25 bg-[#071018] text-white">
-      <div className="flex w-full flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
-        <div className="flex min-w-0 items-start gap-3 text-left sm:items-center">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#00a5fd] text-white sm:mt-0">
-            <AlertCircle className="h-4 w-4" aria-hidden />
-          </span>
-          <div className="min-w-0 space-y-1.5">
-            <p className="text-sm font-semibold leading-snug">{t("pending_vin_banner")}</p>
-            <span className="inline-flex max-w-full items-center truncate rounded-lg border border-[#00a5fd]/30 bg-[#0c1524] px-2.5 py-1 font-mono text-[12px] tracking-[0.14em] text-[#7dd3fc]">
-              {pendingVin}
+    <div className="w-full border-b border-[#00a5fd]/20 bg-[#030712] text-white">
+      <div className="mx-auto w-full max-w-[1400px] px-5 py-3.5">
+        <div className="flex flex-col gap-3 rounded-2xl border border-[#00a5fd]/25 bg-[#071018] px-4 py-3.5 shadow-[0_16px_40px_-28px_rgba(0,165,253,0.55)] sm:flex-row sm:items-center sm:justify-between sm:gap-5 sm:px-5">
+          <div className="flex min-w-0 items-start gap-3 text-left sm:items-center">
+            <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#00a5fd] to-[#0077c8] text-white shadow-[0_8px_20px_-10px_rgba(0,165,253,0.9)] sm:mt-0">
+              <AlertCircle className="h-4 w-4" aria-hidden />
             </span>
+            <div className="min-w-0 space-y-1.5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7dd3fc]">
+                {t("pending_vin_banner")}
+              </p>
+              <span className="inline-flex max-w-full items-center truncate rounded-lg border border-[#00a5fd]/30 bg-[#0c1524] px-2.5 py-1 font-mono text-[13px] tracking-[0.16em] text-white">
+                {pendingVin}
+              </span>
+            </div>
           </div>
+          <Button
+            size="sm"
+            className="h-10 w-full shrink-0 gap-1.5 rounded-xl px-4 font-semibold sm:h-10 sm:w-auto"
+            onClick={handlePendingVinCheckout}
+          >
+            <Zap className="h-3.5 w-3.5" />
+            {t("complete_purchase")}
+          </Button>
         </div>
-        <Button
-          size="sm"
-          className="h-10 w-full shrink-0 gap-1.5 rounded-xl sm:h-9 sm:w-auto"
-          onClick={handlePendingVinCheckout}
-        >
-          <Zap className="h-3.5 w-3.5" />
-          {t("complete_purchase")}
-        </Button>
       </div>
     </div>
   ) : null;
