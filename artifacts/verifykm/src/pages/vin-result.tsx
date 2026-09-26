@@ -754,7 +754,7 @@ export default function VinResult({ params }: Props) {
 
   const vehicleTitle = data?.make
     ? [data.year ? String(data.year) : null, data.make, data.model ?? null].filter(Boolean).join(" ")
-    : `${t("report_for")} ${lookup.vin}`;
+    : t("vin_report_untitled");
 
   const pendingHeroTitle = (() => {
     if (data?.year && data?.make) return `${data.make} ${data.year}`;
@@ -764,7 +764,7 @@ export default function VinResult({ params }: Props) {
   })();
 
   const displayVehicleTitle = isPendingManual
-    ? (pendingHeroTitle ?? `${t("report_for")} ${lookup.vin}`)
+    ? (pendingHeroTitle ?? t("vin_report_untitled"))
     : vehicleTitle;
 
   const hasSalvageData = data?.isSalvage !== undefined && data?.isSalvage !== null;

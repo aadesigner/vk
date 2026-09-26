@@ -1883,6 +1883,7 @@
   "view_dossier": "Zobacz raport",
   "dashboard_case_file": "Teczka",
   "vin_case_id_label": "ID sprawy · VIN",
+  "vin_report_untitled": "Raport pojazdu",
   "dashboard_file_no": "Nr akt",
   "dashboard_opened": "Otwarte",
   "dashboard_odometer": "Licznik",

@@ -261,8 +261,6 @@ export default function Purchases({ params }: { params: { lang: string; [key: st
   const limit = data?.limit ?? 20;
   const totalPages = Math.ceil(total / limit);
   const completedCount = paymentStats?.completedPayments ?? 0;
-  const totalSpent = paymentStats?.totalSpent ?? 0;
-  const summaryCurrency = paymentStats?.paymentCurrency ?? items[0]?.currency ?? "";
   const hasPaymentsData = data != null;
   const summaryLoading = (isLoading && !hasPaymentsData) || (statsLoading && stats == null);
   const paymentsLoadError = isError ? error : statsError ? statsErr : null;
@@ -310,16 +308,11 @@ export default function Purchases({ params }: { params: { lang: string; [key: st
         initial="hidden"
         animate="show"
         custom={1}
-        className="grid grid-cols-3 gap-2 sm:gap-4"
+        className="grid grid-cols-2 gap-2 sm:gap-4"
       >
         {[
           { label: t("payments"), value: summaryLoading ? "—" : String(total), cls: "text-primary" },
           { label: t("completed"), value: summaryLoading ? "—" : String(completedCount), cls: "text-[#0088d4]" },
-          {
-            label: t("total"),
-            value: summaryLoading ? "—" : formatMoney(summaryCurrency, totalSpent),
-            cls: "text-foreground",
-          },
         ].map(({ label, value, cls }) => (
           <div key={label} className="min-w-0 rounded-xl border bg-background p-3 sm:p-5 shadow-sm">
             <p className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground font-medium leading-tight break-words">

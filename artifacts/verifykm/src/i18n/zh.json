@@ -1883,6 +1883,7 @@
   "view_dossier": "查看报告",
   "dashboard_case_file": "案件",
   "vin_case_id_label": "案件编号 · VIN",
+  "vin_report_untitled": "车辆报告",
   "dashboard_file_no": "档案号",
   "dashboard_opened": "开立时间",
   "dashboard_odometer": "里程表",

@@ -1883,6 +1883,7 @@
   "view_dossier": "عرض التقرير",
   "dashboard_case_file": "ملف القضية",
   "vin_case_id_label": "معرّف القضية · VIN",
+  "vin_report_untitled": "تقرير المركبة",
   "dashboard_file_no": "رقم الملف",
   "dashboard_opened": "تاريخ الفتح",
   "dashboard_odometer": "عدّاد المسافة",

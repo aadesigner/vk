@@ -50,19 +50,7 @@ export function VinCaseId({
           </span>
         ))}
       </div>
-      <p
-        className={cn(
-          "font-mono font-semibold tracking-[0.12em] break-all select-all",
-          oneLine
-            ? cn(
-                "mt-2 text-sm sm:text-[15px]",
-                onDark ? "text-white/90 print:text-slate-900" : "text-foreground",
-              )
-            : "sr-only",
-        )}
-      >
-        {chars}
-      </p>
+      <p className="sr-only">{chars}</p>
     </div>
   );
 }

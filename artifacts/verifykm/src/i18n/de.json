@@ -1883,6 +1883,7 @@
   "view_dossier": "Bericht ansehen",
   "dashboard_case_file": "Akte",
   "vin_case_id_label": "Akten-ID · VIN",
+  "vin_report_untitled": "Fahrzeugbericht",
   "dashboard_file_no": "Akten-Nr.",
   "dashboard_opened": "Angelegt",
   "dashboard_odometer": "Kilometerstand",

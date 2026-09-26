@@ -563,7 +563,7 @@ export default function VinPublic({ params }: Props) {
 
   const vehicleTitle = data?.make
     ? [data.year ? String(data.year) : null, data.make, data.model ?? null].filter(Boolean).join(" ")
-    : `VIN ${vin}`;
+    : t("vin_report_untitled");
 
   useEffect(() => {
     if (forbidden) {

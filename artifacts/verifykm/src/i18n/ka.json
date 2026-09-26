@@ -1883,6 +1883,7 @@
   "view_dossier": "ანგარიშის ნახვა",
   "dashboard_case_file": "საქმე",
   "vin_case_id_label": "საქმის ID · VIN",
+  "vin_report_untitled": "ავტომობილის ანგარიში",
   "dashboard_file_no": "საქმე №",
   "dashboard_opened": "გახსნილი",
   "dashboard_odometer": "ოდომეტრი",

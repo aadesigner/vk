@@ -1883,6 +1883,7 @@
   "view_dossier": "Open dossier",
   "dashboard_case_file": "Case file",
   "vin_case_id_label": "Case ID · VIN",
+  "vin_report_untitled": "Vehicle report",
   "dashboard_file_no": "File no.",
   "dashboard_opened": "Opened",
   "dashboard_odometer": "Odometer",

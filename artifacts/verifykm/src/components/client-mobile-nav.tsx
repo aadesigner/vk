@@ -49,7 +49,7 @@ export function useShowClientMobileNav(): boolean {
 }
 
 /** Space for the bottom client bar. */
-export const CLIENT_MOBILE_NAV_PADDING = "pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]";
+export const CLIENT_MOBILE_NAV_PADDING = "pb-[calc(3.75rem+env(safe-area-inset-bottom,0px))]";
 
 type NavItem = {
   id: string;
@@ -134,7 +134,7 @@ export function ClientMobileNav() {
       )}
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="relative mx-auto flex h-[4.25rem] max-w-lg items-stretch px-1">
+      <div className="relative mx-auto flex h-[3.75rem] max-w-lg items-stretch px-1">
         {items.map(({ id, icon: Icon, label, href, active }) => {
           const isCheckVin = id === "check-vin";
 
@@ -145,7 +145,7 @@ export function ClientMobileNav() {
               aria-current={active ? "page" : undefined}
               aria-label={label}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-0.5",
+                "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5",
                 "touch-manipulation select-none",
                 isCheckVin
                   ? "text-white"
@@ -162,12 +162,12 @@ export function ClientMobileNav() {
                 className={cn(
                   "flex items-center justify-center rounded-full",
                   isCheckVin
-                    ? "h-10 w-10 bg-[#00a5fd] text-white shadow-[0_8px_16px_-8px_rgba(0,165,253,0.9)]"
-                    : cn("h-7 w-7", active && "bg-[#00a5fd]/20"),
+                    ? "h-8 w-8 bg-[#00a5fd] text-white shadow-[0_8px_16px_-8px_rgba(0,165,253,0.9)]"
+                    : cn("h-6 w-6", active && "bg-[#00a5fd]/20"),
                 )}
               >
                 <Icon
-                  className={cn("shrink-0 pointer-events-none", isCheckVin ? "h-5 w-5" : "h-[18px] w-[18px]")}
+                  className={cn("shrink-0 pointer-events-none", isCheckVin ? "h-4 w-4" : "h-4 w-4")}
                   strokeWidth={isCheckVin || active ? 2.25 : 1.75}
                 />
               </span>

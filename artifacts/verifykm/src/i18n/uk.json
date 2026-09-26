@@ -1883,6 +1883,7 @@
   "view_dossier": "Дивитися звіт",
   "dashboard_case_file": "Справа",
   "vin_case_id_label": "ID справи · VIN",
+  "vin_report_untitled": "Звіт про автомобіль",
   "dashboard_file_no": "Справа №",
   "dashboard_opened": "Відкрито",
   "dashboard_odometer": "Одометр",

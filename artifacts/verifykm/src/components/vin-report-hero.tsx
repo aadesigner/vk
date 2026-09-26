@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   Car, ChevronLeft, ChevronRight, Lock, MapPin, ImageOff,
   CheckCircle2, XCircle, Gauge, ShieldCheck, ShieldAlert,
+  Copy, Check,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,6 @@ import {
   warmVinImageNeighbors,
 } from "@/lib/vin-image-cache";
 import { firstAvailablePhotoIndex, nextAvailablePhotoIndex } from "@/lib/report-photos";
-import { VinCaseId } from "@/components/vin-case-id";
 
 export type VinHeroScore = {
   score: string;
@@ -340,7 +340,7 @@ function HeroPhotoGallery({
   const emptyCompact = photos.length === 0 && !pendingPhotoScan;
   const photoFrameClass = emptyCompact
     ? "aspect-[5/3] max-h-[8.5rem] lg:max-h-none lg:h-full"
-    : "aspect-[4/3] max-h-[11rem] lg:aspect-auto lg:h-full lg:max-h-[17rem]";
+    : "aspect-[16/10] max-h-[14.5rem] sm:max-h-[16.5rem] lg:aspect-auto lg:h-full lg:min-h-[20rem] lg:max-h-[22.5rem]";
   const bufferIndices = useMemo(() => {
     const n = photos.length;
     if (n === 0) return [];
@@ -598,6 +598,43 @@ function HeroPhotoGallery({
   );
 }
 
+function HeroVinChip({ vin }: { vin: string }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  const clean = String(vin || "").toUpperCase();
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(clean);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  return (
+    <div className="mt-5">
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7dd3fc] print:text-[#0088d4]">
+        {t("vin")}
+      </p>
+      <button
+        type="button"
+        onClick={() => void copy()}
+        className="mt-1.5 inline-flex max-w-full items-center gap-2 rounded-lg border border-white/15 bg-white/[0.07] px-3 py-2 text-left transition-colors hover:bg-white/12 print:border-slate-300 print:bg-slate-50"
+        aria-label={`${t("vin")} ${clean}`}
+      >
+        <span className="truncate font-mono text-[13px] font-semibold tracking-[0.14em] text-white print:text-slate-900 sm:text-sm">
+          {clean}
+        </span>
+        <span className="shrink-0 text-white/50 print:hidden">
+          {copied ? <Check className="h-3.5 w-3.5 text-[#7dd3fc]" /> : <Copy className="h-3.5 w-3.5" />}
+        </span>
+      </button>
+    </div>
+  );
+}
+
 export function VinReportHero({
   vehicleTitle,
   vin,
@@ -651,65 +688,61 @@ export function VinReportHero({
       ) : null}
 
       <div className="relative z-[2] bg-[#071018] text-white print:bg-white print:text-foreground">
-        <div className="grid lg:grid-cols-2 lg:items-stretch">
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2.5 sm:px-6 print:border-slate-200">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-[#7dd3fc] print:text-[#0088d4]">
+            VerifyKM
+          </p>
+          {unlockedLabel && !locked ? (
+            <Badge
+              variant="outline"
+              className="border-[#00a5fd]/35 bg-[#00a5fd]/10 text-[10px] font-semibold text-[#7dd3fc] print:hidden"
+            >
+              {unlockedLabel}
+            </Badge>
+          ) : null}
+        </div>
+
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-stretch">
           <div className="order-2 flex min-w-0 flex-col justify-between px-4 py-5 sm:px-6 sm:py-6 lg:order-1 print:px-3 print:py-3">
             <div>
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.32em] text-[#7dd3fc] print:text-[#0088d4]">
-                  VerifyKM
-                </p>
-                {unlockedLabel && !locked ? (
-                  <Badge
-                    variant="outline"
-                    className="border-[#00a5fd]/35 bg-[#00a5fd]/10 text-[10px] font-semibold text-[#7dd3fc] print:hidden"
-                  >
-                    {unlockedLabel}
-                  </Badge>
-                ) : null}
-              </div>
-              <h1 className="text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl lg:text-[2.15rem]">
+              <h1 className="text-[1.7rem] font-extrabold leading-[1.12] tracking-tight text-balance sm:text-3xl lg:text-[2.35rem]">
                 {vehicleTitle}
               </h1>
-              {displayCountry ? (
-                <p className="mt-2 flex items-center gap-1.5 text-xs text-white/55 print:text-muted-foreground sm:text-sm">
-                  <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" />
-                  {displayCountry}
+              {displayCountry || trim ? (
+                <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/60 print:text-muted-foreground">
+                  {displayCountry ? (
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                      {displayCountry}
+                    </span>
+                  ) : null}
+                  {displayCountry && trim ? <span className="text-white/25 print:text-slate-300">·</span> : null}
+                  {trim ? <span className="text-white/75 print:text-slate-700">{trim}</span> : null}
                 </p>
               ) : null}
-              {trim ? (
-                <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7dd3fc] print:text-[#0088d4]">
-                  {t("trim_generation")}
-                  <span className="ml-2 font-semibold normal-case tracking-normal text-white/70 print:text-slate-600">{trim}</span>
-                </p>
-              ) : null}
-              <div className="mt-4 space-y-1.5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#00a5fd]">
-                  {t("vin_case_id_label")}
-                </p>
-                <VinCaseId vin={vin} size="md" oneLine onDark className="select-all" />
-              </div>
+              {!pendingEta ? <HeroVinChip vin={vin} /> : null}
             </div>
             {(scoreData || accidentCount > 0) && (
-              <div className="mt-6 flex flex-wrap items-end gap-6 border-t border-white/10 pt-4 print:border-slate-200">
+              <div className={cn("mt-6 grid gap-2.5", scoreData && accidentCount > 0 ? "grid-cols-2" : "grid-cols-1")}>
                 {scoreData ? (
-                  <div>
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-white/40 print:text-slate-500">
+                  <div className="rounded-xl border border-white/10 bg-white/[0.06] px-3 py-3 print:border-slate-200 print:bg-slate-50">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-white/40 print:text-slate-500">
                       {scoreData.label}
                     </p>
-                    <p className="mt-1 text-3xl font-black tabular-nums leading-none text-white print:text-slate-950">
+                    <p className="mt-1 text-[1.75rem] font-black tabular-nums leading-none text-white print:text-slate-950">
                       {scoreData.score}
-                      <span className="ml-1 text-sm font-semibold text-white/40 print:text-slate-400">/10</span>
+                      <span className="ml-0.5 text-sm font-semibold text-white/35 print:text-slate-400">/10</span>
                     </p>
                   </div>
                 ) : null}
                 {accidentCount > 0 ? (
-                  <div>
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-orange-200/70 print:text-orange-700">
+                  <div className="rounded-xl border border-orange-300/20 bg-orange-400/10 px-3 py-3 print:border-orange-200 print:bg-orange-50">
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-orange-200/70 print:text-orange-700">
                       {t(accidentCount === 1 ? "accident_count_one" : "accidents_count")
                         .replace("{count}", "")
                         .trim()}
                     </p>
-                    <p className="mt-1 text-3xl font-black tabular-nums leading-none text-orange-200 print:text-orange-700">
+                    <p className="mt-1 text-[1.75rem] font-black tabular-nums leading-none text-orange-100 print:text-orange-700">
                       {accidentCount}
                     </p>
                   </div>
@@ -718,7 +751,7 @@ export function VinReportHero({
             )}
           </div>
 
-          <div className="order-1 border-b border-white/10 p-3 lg:order-2 lg:border-b-0 lg:border-l lg:border-white/10 print:border-slate-200">
+          <div className="order-1 border-b border-white/10 lg:order-2 lg:border-b-0 lg:border-l lg:border-white/10 print:border-slate-200">
             <HeroPhotoGallery
               photos={photos}
               photoAlternates={photoAlternates}

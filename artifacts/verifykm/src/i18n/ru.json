@@ -1883,6 +1883,7 @@
   "view_dossier": "Смотреть отчёт",
   "dashboard_case_file": "Дело",
   "vin_case_id_label": "ID дела · VIN",
+  "vin_report_untitled": "Отчёт по автомобилю",
   "dashboard_file_no": "Дело №",
   "dashboard_opened": "Открыто",
   "dashboard_odometer": "Одометр",
