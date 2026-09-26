@@ -2198,9 +2198,9 @@ html.dark.admin-theme-active[data-admin-theme="orbit"] .admin-mood-gauge__amount
       height: min(22rem, 45vh);
       border-radius: 1.5rem;
       background: radial-gradient(
-        ellipse 75% 65% at 50% 0%,
-        hsl(var(--primary) / 0.05),
-        transparent 60%
+        ellipse 80% 70% at 50% 0%,
+        rgba(0, 165, 253, 0.1),
+        transparent 62%
       );
       z-index: 0;
     }

@@ -119,16 +119,16 @@ function HeroSummaryList({ items }: { items: VinHeroSummaryItem[] }) {
           <li
             key={item.kind}
             className={cn(
-              "flex items-start gap-2 border-l-2 bg-transparent px-3 py-1.5 text-sm font-medium",
+              "flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-medium",
               item.tone === "negative"
-                ? "border-red-500"
+                ? "border-red-200 bg-red-50/70"
                 : item.tone === "positive"
-                  ? "border-[#00a5fd]"
-                  : "border-slate-300",
+                  ? "border-[#00a5fd]/20 bg-[#eef8fd]"
+                  : "border-slate-200 bg-[#f7fbfe]",
               tone.row,
             )}
           >
-            <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", tone.icon)} aria-hidden />
+            <Icon className={cn("h-4 w-4 shrink-0", tone.icon)} aria-hidden />
             <span className="leading-snug">{item.label}</span>
           </li>
         );
@@ -672,8 +672,8 @@ export function VinReportHero({
   return (
     <div
       className={cn(
-        "vin-report-hero relative overflow-hidden border border-[#071018] bg-white",
-        "print:border-slate-300",
+        "vin-report-hero relative overflow-hidden rounded-2xl border border-[#071018] bg-white",
+        "shadow-[0_24px_50px_-32px_rgba(7,16,24,0.55)] print:border-slate-300 print:rounded-none print:shadow-none",
       )}
     >
       {showScoreAccent ? (
@@ -770,7 +770,7 @@ export function VinReportHero({
         </div>
       </div>
 
-      <div className="relative z-[2] bg-white px-4 py-4 sm:px-6 sm:py-5 print:px-3 print:py-2">
+      <div className="relative z-[2] bg-[#f7fbfe] px-4 py-4 sm:px-6 sm:py-5 print:bg-white print:px-3 print:py-2">
         {pendingEta ? (
           <div className="mb-4 max-w-xl">
             <div className="border border-[#00a5fd]/25 bg-[#071018] px-3.5 py-3 text-white">
@@ -792,7 +792,7 @@ export function VinReportHero({
       {!useLockedPanel && showStatsRow ? (
         <div
           className={cn(
-            "vin-hero-stats flex flex-wrap content-start justify-start gap-2 border-t border-slate-200 bg-[#f6f9fb] px-4 py-3.5 sm:gap-2.5 sm:px-6",
+            "vin-hero-stats flex flex-wrap content-start justify-start gap-2 border-t border-[#00a5fd]/10 bg-white px-4 py-3.5 sm:gap-2.5 sm:px-6",
             "print:flex print:flex-wrap print:justify-start print:gap-1.5 print:bg-white print:px-2 print:py-1.5",
             showDesktopSummary && !locked && "sm:hidden print:flex",
           )}

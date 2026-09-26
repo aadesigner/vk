@@ -76,7 +76,7 @@ export function VinReportDataDisclaimer({ className }: { className?: string }) {
   const { t } = useTranslation();
   return (
     <p
-      className={cn("text-xs leading-relaxed text-slate-500 sm:text-[13px]", className)}
+      className={cn("text-xs leading-relaxed sm:text-[13px]", className)}
       role="note"
     >
       {t("vin_report_data_disclaimer")}
@@ -204,94 +204,79 @@ export function VinReportShareActions({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <button
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+        <Button
           type="button"
+          className="h-11 gap-2 rounded-xl font-semibold"
           disabled={disabled || downloading}
           onClick={() => void handleDownloadPdf()}
-          className="flex min-h-[6.5rem] flex-col items-start justify-between rounded-lg border border-slate-200 bg-white px-4 py-4 text-left shadow-[0_16px_36px_-30px_rgba(7,16,24,0.45)] transition-colors hover:border-[#00a5fd]/40 hover:bg-[#f7fbfe] disabled:opacity-50"
         >
-          {downloading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[#0088d4]" />
-          ) : (
-            <FileDown className="h-5 w-5 text-[#0088d4]" />
-          )}
-          <span className="text-[15px] font-bold tracking-tight text-slate-950">
-            {t("vin_result_download_pdf")}
-          </span>
-        </button>
-        <button
+          {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+          {t("vin_result_download_pdf")}
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          className="h-11 gap-2 rounded-xl border-white/20 bg-white/5 font-semibold text-white hover:bg-white/10 hover:text-white"
           disabled={disabled || sharing}
           onClick={() => void handleSharePdf()}
-          className="flex min-h-[6.5rem] flex-col items-start justify-between rounded-lg border border-slate-200 bg-white px-4 py-4 text-left shadow-[0_16px_36px_-30px_rgba(7,16,24,0.45)] transition-colors hover:border-[#00a5fd]/40 hover:bg-[#f7fbfe] disabled:opacity-50"
         >
-          {sharing ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[#0088d4]" />
-          ) : (
-            <Share2 className="h-5 w-5 text-[#0088d4]" />
-          )}
-          <span className="text-[15px] font-bold tracking-tight text-slate-950">
-            {t("vin_result_share_pdf")}
-          </span>
+          {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+          {t("vin_result_share_pdf")}
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-1.5">
+        <Link2 className="h-3.5 w-3.5 shrink-0 text-[#7dd3fc]" />
+        <Input
+          readOnly
+          value={linkLoading ? t("vin_share_preparing") : (shareUrl ?? "")}
+          className="h-9 min-w-0 flex-1 border-0 bg-transparent px-0 font-mono text-xs text-white/80 shadow-none focus-visible:ring-0"
+          onFocus={(e) => e.target.select()}
+          aria-label={t("vin_share_link_label")}
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-8 shrink-0 gap-1.5 px-2.5 text-xs text-white hover:bg-white/10 hover:text-white"
+          disabled={disabled || linkLoading || !shareUrl || copying}
+          onClick={() => void handleCopyLink()}
+        >
+          {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
+          {t("vin_share_copy_link")}
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="mr-1 text-[11px] font-medium text-white/40">{t("vin_share_social_label")}</span>
+        <button
+          type="button"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-40"
+          disabled={disabled || !shareUrl}
+          onClick={() => openSocial("whatsapp")}
+        >
+          <WhatsAppIcon className="h-3.5 w-3.5" />
+          {t("vin_share_whatsapp")}
         </button>
         <button
           type="button"
-          disabled={disabled || linkLoading || !shareUrl || copying}
-          onClick={() => void handleCopyLink()}
-          className="flex min-h-[6.5rem] flex-col items-start justify-between rounded-lg border border-slate-200 bg-white px-4 py-4 text-left shadow-[0_16px_36px_-30px_rgba(7,16,24,0.45)] transition-colors hover:border-[#00a5fd]/40 hover:bg-[#f7fbfe] disabled:opacity-50"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-40"
+          disabled={disabled || !shareUrl}
+          onClick={() => openSocial("telegram")}
         >
-          {copying ? (
-            <Loader2 className="h-5 w-5 animate-spin text-[#0088d4]" />
-          ) : (
-            <Copy className="h-5 w-5 text-[#0088d4]" />
-          )}
-          <span className="text-[15px] font-bold tracking-tight text-slate-950">
-            {t("vin_share_copy_link")}
-          </span>
+          <TelegramIcon className="h-3.5 w-3.5" />
+          {t("vin_share_telegram")}
         </button>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 flex-1 items-center gap-2 border-b border-slate-200 pb-2 sm:pb-1.5">
-          <Link2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-          <Input
-            readOnly
-            value={linkLoading ? t("vin_share_preparing") : (shareUrl ?? "")}
-            className="h-8 border-0 bg-transparent px-0 font-mono text-xs text-slate-600 shadow-none focus-visible:ring-0"
-            onFocus={(e) => e.target.select()}
-            aria-label={t("vin_share_link_label")}
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-950 disabled:opacity-40"
-            disabled={disabled || !shareUrl}
-            onClick={() => openSocial("whatsapp")}
-          >
-            <WhatsAppIcon className="h-3.5 w-3.5" />
-            {t("vin_share_whatsapp")}
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-950 disabled:opacity-40"
-            disabled={disabled || !shareUrl}
-            onClick={() => openSocial("telegram")}
-          >
-            <TelegramIcon className="h-3.5 w-3.5" />
-            {t("vin_share_telegram")}
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-950 disabled:opacity-40"
-            disabled={disabled || !shareUrl}
-            onClick={() => openSocial("email")}
-          >
-            <Mail className="h-3.5 w-3.5" />
-            {t("vin_share_email")}
-          </button>
-        </div>
+        <button
+          type="button"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.05] px-2.5 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-40"
+          disabled={disabled || !shareUrl}
+          onClick={() => openSocial("email")}
+        >
+          <Mail className="h-3.5 w-3.5" />
+          {t("vin_share_email")}
+        </button>
       </div>
     </div>
   );

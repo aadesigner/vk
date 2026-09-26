@@ -6,15 +6,16 @@ import { cn } from "@/lib/utils";
  * Decorations (hairline + soft wash) live in CSS ::before/::after — no extra DOM per card.
  * Print flattens via .vin-report-section rules in index.css.
  */
-export const VIN_REPORT_PAGE_FIELD = "bg-[#edf1f4] print:bg-white";
+export const VIN_REPORT_PAGE_FIELD = "bg-[#e8eef3] print:bg-white";
 export const VIN_REPORT_PAGE_SHELL = cn(
-  "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-7 sm:py-12",
-  "print:px-0 print:py-0 space-y-5 sm:space-y-7 print:space-y-2 vin-report-print",
+  "mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-10",
+  "print:px-0 print:py-0 space-y-5 sm:space-y-6 print:space-y-2 vin-report-print",
 );
 
 export const VIN_REPORT_SECTION_SURFACE = cn(
-  "vin-report-section relative overflow-hidden border border-slate-200/80 bg-white",
-  "print:shadow-none print:border-slate-300",
+  "vin-report-section relative overflow-hidden rounded-2xl border border-[#00a5fd]/12 bg-white",
+  "shadow-[0_18px_40px_-32px_rgba(7,16,24,0.38)]",
+  "print:shadow-none print:border-slate-300 print:rounded-none",
 );
 
 /** @deprecated Prefer CSS on .vin-report-section — kept for timeline one-off. */
@@ -42,6 +43,17 @@ const ACCENT_ICON: Record<VinReportSectionAccent, string> = {
   rose: "text-rose-500",
   amber: "text-amber-500",
   slate: "text-slate-500",
+};
+
+const ACCENT_CHIP: Record<VinReportSectionAccent, string> = {
+  primary: "bg-primary/10",
+  orange: "bg-orange-500/10",
+  sky: "bg-sky-500/10",
+  purple: "bg-purple-500/10",
+  emerald: "bg-[#00a5fd]/10",
+  rose: "bg-rose-500/10",
+  amber: "bg-amber-500/10",
+  slate: "bg-slate-500/10",
 };
 
 export const ACCENT_HEADER_WASH: Record<VinReportSectionAccent, string> = {
@@ -119,22 +131,24 @@ export function VinReportSectionHeader({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 border-b border-slate-200/70 px-5 py-3 sm:px-6",
-        "bg-white",
+        "flex items-center justify-between gap-3 border-b border-[#00a5fd]/10 px-4 py-3.5 sm:px-6",
+        "bg-[#f7fbfe]",
         className,
       )}
     >
-      <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex items-center gap-3 min-w-0">
         {Icon ? (
-          <Icon className={cn("h-4 w-4 shrink-0", ACCENT_ICON[accent])} />
+          <span className={cn("inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", ACCENT_CHIP[accent], ACCENT_ICON[accent])}>
+            <Icon className="h-4 w-4" />
+          </span>
         ) : null}
         <div className="min-w-0">
           {variant === "public" ? (
-            <h2 className="truncate font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-xs">
+            <h2 className="truncate font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500 sm:text-xs">
               {title}
             </h2>
           ) : (
-            <h2 className="truncate font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-slate-800 sm:text-[13px]">{title}</h2>
+            <h2 className="truncate font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#071018] sm:text-[12px]">{title}</h2>
           )}
           {subtitle ? (
             <div className="text-[10px] sm:text-[11px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">

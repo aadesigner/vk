@@ -7,34 +7,33 @@ import {
 
 export function VinReportShareCard(props: VinShareActionsProps) {
   const { t } = useTranslation();
-  const { vehicleTitle, vin } = props;
 
   return (
     <section
-      className="print:hidden mt-10 sm:mt-12"
+      className="print:hidden mt-8 sm:mt-10"
       aria-labelledby="vin-share-section-title"
     >
-      <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
-        <div className="min-w-0">
+      <div className="overflow-hidden rounded-2xl border border-[#071018] bg-[#071018] text-white">
+        <div className="px-4 py-5 sm:px-6 sm:py-6">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#7dd3fc]">
+            {t("vin_share_panel_badge")}
+          </p>
           <h2
             id="vin-share-section-title"
-            className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-slate-800 sm:text-sm"
+            className="mt-1.5 text-lg font-extrabold tracking-tight sm:text-xl"
           >
             {t("vin_result_share_title")}
           </h2>
-          <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-slate-500">
+          <p className="mt-1.5 max-w-lg text-sm leading-relaxed text-white/55">
             {t("vin_share_panel_desc")}
           </p>
-        </div>
-        <p className="truncate font-mono text-[12px] text-slate-400">
-          <span className="text-slate-600">{vehicleTitle}</span>
-          <span className="mx-2 text-slate-300">·</span>
-          <span className="tracking-wide">{vin}</span>
-        </p>
-      </div>
 
-      <VinReportShareActions {...props} disabled={props.disabled} className="mt-6" />
-      <VinReportDataDisclaimer className="mt-5" />
+          <VinReportShareActions {...props} disabled={props.disabled} className="mt-5" />
+        </div>
+        <div className="border-t border-white/10 px-4 py-3 sm:px-6">
+          <VinReportDataDisclaimer className="text-white/40" />
+        </div>
+      </div>
     </section>
   );
 }

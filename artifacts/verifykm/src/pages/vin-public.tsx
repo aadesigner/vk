@@ -846,7 +846,7 @@ export default function VinPublic({ params }: Props) {
 
         {/* Back — signed-in users only */}
         {isSignedIn && (
-          <Button variant="ghost" size="sm" asChild className="-ml-2 print:hidden">
+          <Button variant="ghost" size="sm" asChild className="-ml-2 h-9 rounded-xl text-slate-600 hover:bg-white/70 hover:text-[#071018] print:hidden">
             <Link href={pathFor(language, "dashboard")}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               {t("back_to_dashboard")}
@@ -988,7 +988,7 @@ export default function VinPublic({ params }: Props) {
           />
         ) : null}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start print-two-col min-w-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-start print-two-col min-w-0">
 
           {/* RIGHT COLUMN — accidents, safety, mileage, owners */}
           <div className="space-y-4 sm:space-y-6 min-w-0 order-2 lg:order-2 print:order-2">
