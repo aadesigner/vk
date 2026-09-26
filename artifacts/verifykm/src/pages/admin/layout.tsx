@@ -127,14 +127,16 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const SidebarContent = ({ mobile }: { mobile?: boolean }) => (
     <>
       <div className={cn("px-5 py-4 border-b border-border/60", mobile && "pr-12")}>
-        <Link href="/en" className="flex items-center">
-          <VerifyKMLogo
-            className="h-8"
-            variant="dark"
-            syncDecode
-          />
-        </Link>
-        <div className="flex items-center gap-1.5 mt-2">
+        {mobile ? null : (
+          <Link href="/en" className="flex items-center">
+            <VerifyKMLogo
+              className="h-8"
+              variant="dark"
+              syncDecode
+            />
+          </Link>
+        )}
+        <div className={cn("flex items-center gap-1.5", !mobile && "mt-2")}>
           <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
           <span className="text-xs font-medium text-muted-foreground">Admin Panel</span>
         </div>
@@ -238,10 +240,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="flex min-w-0 items-center gap-2.5">
-            <VerifyKMLogo variant="dark" className="h-8" syncDecode />
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#7dd3fc]">Admin</span>
-          </div>
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-[#7dd3fc]">Admin</span>
         </header>
 
         <main className="admin-main flex-1 min-w-0 overflow-y-auto overflow-x-clip pb-[4.5rem] md:pb-0">
