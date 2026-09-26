@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/generate-favicons.mjs && node scripts/generate-country-favicons.mjs && pnpm exec tsx scripts/build-b2b-seo-data.ts && pnpm exec tsx scripts/build-marketing-ssr-data.ts && node scripts/generate-seo-bootstrap.mjs && vite --config vite.config.ts --host 0.0.0.0",
-    "build": "node scripts/generate-favicons.mjs && node scripts/generate-country-favicons.mjs && node scripts/generate-robots.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-vin-sitemap.mjs && pnpm exec tsx scripts/build-b2b-seo-data.ts && pnpm exec tsx scripts/build-marketing-ssr-data.ts && node scripts/generate-seo-bootstrap.mjs && node scripts/fetch-demo-car-photos.mjs && vite build --config vite.config.ts && node scripts/generate-prerender-html.mjs && node scripts/minify-dist.mjs && node scripts/verify-prerender-html.mjs",
+    "build": "node scripts/generate-favicons.mjs && node scripts/generate-country-favicons.mjs && node scripts/generate-robots.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-vin-sitemap.mjs && pnpm exec tsx scripts/build-b2b-seo-data.ts && pnpm exec tsx scripts/build-marketing-ssr-data.ts && node scripts/generate-seo-bootstrap.mjs && node scripts/fetch-demo-car-photos.mjs && node scripts/optimize-demo-car-photos.mjs && vite build --config vite.config.ts && node scripts/generate-prerender-html.mjs && node scripts/minify-dist.mjs && node scripts/verify-prerender-html.mjs",
     "i18n:de-fr-bg": "node scripts/build-de-fr-bg-i18n.mjs",
     "i18n:zh": "node scripts/build-zh-i18n.mjs",
     "seo:add-de-fr-bg": "node scripts/add-de-fr-bg-seo-data.mjs",
@@ -17,7 +17,8 @@
     "qa:seo-keywords": "node scripts/qa-seo-keywords.mjs",
     "seo:capture-screenshots": "node scripts/capture-seo-screenshots.mjs",
     "seo:optimize-og": "node scripts/optimize-seo-og.mjs",
-    "flags:fetch": "node scripts/fetch-flag-icons.mjs"
+    "flags:fetch": "node scripts/fetch-flag-icons.mjs",
+    "photos:optimize": "node scripts/optimize-demo-car-photos.mjs"
   },
   "devDependencies": {
     "@fontsource-variable/inter": "^5.2.8",

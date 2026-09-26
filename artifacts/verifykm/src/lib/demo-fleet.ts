@@ -17,7 +17,7 @@ export interface DemoCar {
   condition: "CLEAN" | "CAUTION" | "RISK";
 }
 
-// Photos: JPEGs in public/demo-cars (served as /demo-cars/*; refreshed on build).
+// Photos: card-sized JPEG+WebP in public/demo-cars (served as /demo-cars/*).
 // Manual refresh: node artifacts/verifykm/scripts/fetch-demo-car-photos.mjs
 export const ALL_CARS: DemoCar[] = [
   /* Korea */

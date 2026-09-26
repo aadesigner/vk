@@ -5,7 +5,7 @@
 import { mkdirSync, writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { optimizeDemoCarJpeg } from "./optimize-demo-car-photos.mjs";
+import { optimizeDemoCarVariants } from "./optimize-demo-car-photos.mjs";
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "assets", "demo-cars");
 const OUT_PUBLIC = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "demo-cars");
@@ -196,7 +196,7 @@ async function wikiThumbUrl(fileName) {
     titles: title,
     prop: "imageinfo",
     iiprop: "url",
-    iiurlwidth: "960",
+    iiurlwidth: "720",
     format: "json",
     origin: "*",
   });
@@ -234,10 +234,13 @@ for (const car of CARS) {
       await sleep(1200);
       const url = await wikiThumbUrl(wiki);
       const raw = await download(url);
-      const buf = await optimizeDemoCarJpeg(raw);
-      writeFileSync(join(OUT, car.out), buf);
-      writeFileSync(join(OUT_PUBLIC, car.out), buf);
-      console.log(`ok (${Math.round(buf.length / 1024)} KB) ← ${wiki}`);
+      const { jpg, webp } = await optimizeDemoCarVariants(raw);
+      const webpName = car.out.replace(/\.jpg$/i, ".webp");
+      writeFileSync(join(OUT, car.out), jpg);
+      writeFileSync(join(OUT, webpName), webp);
+      writeFileSync(join(OUT_PUBLIC, car.out), jpg);
+      writeFileSync(join(OUT_PUBLIC, webpName), webp);
+      console.log(`ok (jpg ${Math.round(jpg.length / 1024)} KB / webp ${Math.round(webp.length / 1024)} KB) ← ${wiki}`);
       ok = true;
       break;
     } catch (err) {

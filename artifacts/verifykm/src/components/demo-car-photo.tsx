@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Car } from "lucide-react";
+import { demoCarPhotoWebpUrl } from "@/lib/demo-car-photos";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -12,6 +13,11 @@ type Props = {
 };
 
 const MAX_RETRIES = 2;
+
+function withRetry(url: string, retry: number): string {
+  if (retry <= 0) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}r=${retry}`;
+}
 
 /**
  * Demo car image with per-URL failure tracking (avoids carousel stale onError bugs).
@@ -50,16 +56,20 @@ export function DemoCarPhoto({
     );
   }
 
-  const imgSrc = retry > 0 ? `${src}${src.includes("?") ? "&" : "?"}r=${retry}` : src;
+  const imgSrc = withRetry(src, retry);
+  const webp = demoCarPhotoWebpUrl(src);
+  const imgClass = cn(
+    "h-full w-full min-h-full min-w-full object-cover object-[center_58%]",
+    className,
+  );
 
-  return (
+  const img = (
     <img
       src={imgSrc}
       alt={alt}
-      className={cn(
-        "h-full w-full min-h-full min-w-full object-cover object-[center_58%]",
-        className,
-      )}
+      width={720}
+      height={405}
+      className={imgClass}
       loading={eager ? "eager" : "lazy"}
       decoding="async"
       fetchPriority={eager ? "high" : "auto"}
@@ -69,8 +79,8 @@ export function DemoCarPhoto({
       }}
       onError={(e) => {
         if (!mountedRef.current) return;
-        const img = e.currentTarget;
-        if (img.naturalWidth > 0) return;
+        const imgEl = e.currentTarget;
+        if (imgEl.naturalWidth > 0) return;
         if (retry < MAX_RETRIES) {
           setRetry((n) => n + 1);
           return;
@@ -79,14 +89,23 @@ export function DemoCarPhoto({
       }}
     />
   );
+
+  if (!webp) return img;
+
+  return (
+    <picture className="block h-full w-full">
+      <source type="image/webp" srcSet={withRetry(webp, retry)} />
+      {img}
+    </picture>
+  );
 }
 
-/** Warm the browser cache for a list of demo photo URLs. */
+/** Warm the browser cache for a list of demo photo URLs (prefers WebP). */
 export function preloadDemoCarPhotos(urls: string[]) {
   for (const url of urls) {
     if (!url?.trim()) continue;
     const img = new Image();
     img.decoding = "async";
-    img.src = url;
+    img.src = demoCarPhotoWebpUrl(url) ?? url;
   }
 }
