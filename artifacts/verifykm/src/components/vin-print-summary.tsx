@@ -401,7 +401,7 @@ export function VinPrintSummary({
         <div className="print-hero-layout grid grid-cols-2 gap-2 mt-2">
           {heroPhoto ? (
             <div className="print-hero-photo-wrap rounded-md border border-border/50 overflow-hidden shadow-sm">
-              <img src={heroPhoto} alt="" loading="eager" decoding="async" className="print-hero-photo-main w-full h-full object-cover" />
+              <img src={heroPhoto} alt="" loading="eager" decoding="async" referrerPolicy="no-referrer" className="print-hero-photo-main w-full h-full object-cover" />
             </div>
           ) : (
             <div className="print-hero-photo-wrap rounded-md border border-dashed border-border/45 flex items-center justify-center bg-muted/15">
@@ -443,7 +443,7 @@ export function VinPrintSummary({
             <div className="grid grid-cols-4 gap-1 print-photo-grid">
               {galleryPhotos.map((src, i) => (
                 <div key={i} className="print-gallery-cell rounded border border-border/40 overflow-hidden aspect-[4/3]">
-                  <img src={src} alt="" loading="eager" decoding="async" className="w-full h-full object-cover" />
+                  <img src={src} alt="" loading="eager" decoding="async" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>

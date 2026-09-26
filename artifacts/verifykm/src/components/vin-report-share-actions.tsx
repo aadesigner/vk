@@ -354,6 +354,7 @@ export function VinReportPdfPreview({
                   className="absolute inset-0 h-full w-full object-cover"
                   loading="lazy"
                   decoding="async"
+                  referrerPolicy="no-referrer"
                 />
                 <div
                   className="pointer-events-none absolute inset-0 opacity-[0.1] dark:opacity-[0.07] bg-[linear-gradient(180deg,transparent_0%,rgba(255,255,255,0.4)_48%,transparent_100%)] bg-[length:100%_200%] animate-[demo-scan_4.5s_ease-in-out_infinite]"

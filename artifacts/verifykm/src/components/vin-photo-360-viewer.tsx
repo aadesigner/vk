@@ -230,6 +230,7 @@ export function VinPhoto360Viewer({
               src={currentUrl}
               alt=""
               draggable={false}
+              referrerPolicy="no-referrer"
               className={cn(
                 "absolute inset-0 h-full w-full object-contain transition-[opacity,transform] duration-150",
                 imgReady ? "opacity-100" : "opacity-0",

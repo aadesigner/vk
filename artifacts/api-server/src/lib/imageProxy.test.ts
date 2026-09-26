@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
-  parseVinImageWidth,
+  buildImageProxyUrl,
   resolveVinPhotoUrlForClient,
   transformVinPhotoData,
+  unwrapVinImageProxyUrl,
   withVinImageDisplayWidth,
 } from "./imageProxy.js";
 
 describe("resolveVinPhotoUrlForClient", () => {
-  it("proxies allowlisted provider hosts", () => {
-    const out = resolveVinPhotoUrlForClient("https://img.encar.com/cars/1.jpg");
-    expect(out).toMatch(/^\/api\/vin\/image\?token=/);
+  it("passes provider URLs through without proxying", () => {
+    const url = "https://img.encar.com/cars/1.jpg";
+    expect(resolveVinPhotoUrlForClient(url)).toBe(url);
   });
 
   it("passes through non-allowlisted admin URLs unchanged", () => {
@@ -17,31 +18,30 @@ describe("resolveVinPhotoUrlForClient", () => {
     expect(resolveVinPhotoUrlForClient(url)).toBe(url);
   });
 
-  it("keeps existing proxy paths", () => {
-    const path = "/api/vin/image?token=abc";
-    expect(resolveVinPhotoUrlForClient(path)).toBe(path);
+  it("unwraps leftover proxy paths to the original URL", () => {
+    const original = "https://img.encar.com/cars/1.jpg";
+    const proxied = buildImageProxyUrl(original);
+    expect(proxied).toMatch(/^\/api\/vin\/image\?token=/);
+    expect(unwrapVinImageProxyUrl(proxied)).toBe(original);
+    expect(resolveVinPhotoUrlForClient(proxied)).toBe(original);
   });
 });
 
-describe("vin image display width", () => {
-  it("only allows card widths", () => {
-    expect(parseVinImageWidth("960")).toBe(960);
-    expect(parseVinImageWidth("100")).toBeNull();
-    expect(parseVinImageWidth("abc")).toBeNull();
-  });
-
-  it("appends w= once", () => {
+describe("legacy proxy helpers", () => {
+  it("appends w= once on leftover proxy URLs", () => {
     const once = withVinImageDisplayWidth("/api/vin/image?token=abc");
     expect(once).toBe("/api/vin/image?token=abc&w=960");
     expect(withVinImageDisplayWidth(once)).toBe(once);
   });
 
-  it("sizes hero photos but not HD lightbox photos", () => {
+  it("does not rewrite report photos through the proxy", () => {
+    const photo = "https://img.encar.com/cars/1.jpg";
+    const hd = "https://img.encar.com/cars/1-hd.jpg";
     const out = transformVinPhotoData({
-      photos: ["https://img.encar.com/cars/1.jpg"],
-      photosHd: ["https://img.encar.com/cars/1-hd.jpg"],
+      photos: [photo],
+      photosHd: [hd],
     }) as { photos: string[]; photosHd: string[] };
-    expect(out.photos[0]).toContain("&w=960");
-    expect(out.photosHd[0]).not.toContain("&w=");
+    expect(out.photos[0]).toBe(photo);
+    expect(out.photosHd[0]).toBe(hd);
   });
 });

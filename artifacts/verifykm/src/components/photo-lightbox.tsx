@@ -519,6 +519,7 @@ export function PhotoLightbox({ photos, index, onClose, onNav }: PhotoLightboxPr
               }
               draggable={false}
               decoding="async"
+              referrerPolicy="no-referrer"
               loading={isActive || i === (index + 1) % photos.length ? "eager" : "lazy"}
               fetchPriority={isActive ? "high" : "low"}
               onLoad={() => {

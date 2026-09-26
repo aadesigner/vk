@@ -22,8 +22,8 @@ import { logger } from "../lib/logger.js";
 import { decodeVin, decodeCountry, resolveCheckDigitValid, decodeVinDiagnostics, isVehicleTooOldForLookup } from "@workspace/vin-decode";
 import { decodeFreeVin } from "../lib/vinDecodeFree.js";
 import { decodeVinPeek } from "../lib/vinDecodePreview.js";
-import { verifyImageToken, buildImageProxyUrl, transformVinPhotoData, resolveVinPhotoUrlForClient, parseVinImageWidth, VIN_IMAGE_CARD_WIDTH } from "../lib/imageProxy.js";
-import { getOrFetchVinImage, getMemoryCachedVinImage, resolveVinImageDiskHit, getVinImageDiskHit, mediaVersionFromUpdatedAt, withVinImageUpstreamSlot, vinImageCacheKey } from "../lib/vinImageCache.js";
+import { verifyImageToken, transformVinPhotoData, resolveVinPhotoUrlForClient, parseVinImageWidth } from "../lib/imageProxy.js";
+import { getOrFetchVinImage, getMemoryCachedVinImage, resolveVinImageDiskHit, getVinImageDiskHit, withVinImageUpstreamSlot, vinImageCacheKey } from "../lib/vinImageCache.js";
 import { resizeVinImageForDisplay } from "../lib/vinImageResize.js";
 import { signVinShareToken, verifyVinShareToken } from "../lib/vinShareToken.js";
 import { getSettings } from "../lib/settingsCache.js";
@@ -1464,7 +1464,6 @@ router.get("/vin/preview/:vin", publicVinLimiter, optionalAuth, async (req, res)
     return;
   }
 
-  const mediaVersion = mediaVersionFromUpdatedAt(cached.updatedAt);
   const firstPhoto = cached.firstPhoto;
   res.json({
     vin,
@@ -1472,7 +1471,7 @@ router.get("/vin/preview/:vin", publicVinLimiter, optionalAuth, async (req, res)
     model: cached.model ?? null,
     year: cached.year ?? null,
     country: cached.country ?? null,
-    thumbnailUrl: firstPhoto ? buildImageProxyUrl(firstPhoto, { mediaVersion, width: VIN_IMAGE_CARD_WIDTH }) : null,
+    thumbnailUrl: firstPhoto ? resolveVinPhotoUrlForClient(firstPhoto) : null,
   });
 });
 

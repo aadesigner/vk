@@ -305,6 +305,7 @@ function HeroPhotoFrame({
       alt={alt}
       loading={priority ? "eager" : "lazy"}
       decoding="async"
+      referrerPolicy="no-referrer"
       fetchPriority={priority ? "high" : "auto"}
       className={cn(
         "absolute inset-0 w-full h-full object-cover object-[center_62%] transition-opacity duration-150",

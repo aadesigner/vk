@@ -6,12 +6,12 @@ function deriveKey(): Buffer {
   return crypto.createHash("sha256").update(secret).digest();
 }
 
-/** Stable IV per URL so proxy URLs stay cacheable across API responses. */
+/** Stable IV per URL so legacy proxy URLs stay cacheable. */
 function ivForUrl(url: string): Buffer {
   return crypto.createHash("sha256").update(`vin-img:${url}`).digest().subarray(0, 12);
 }
 
-/** Tokens valid through end of tomorrow UTC — stable within a calendar day per upstream URL. */
+/** Tokens valid through end of tomorrow UTC — used only by leftover `/api/vin/image` links. */
 function tokenExpirySec(): number {
   const now = Math.floor(Date.now() / 1000);
   const dayStart = Math.floor(now / 86400) * 86400;
@@ -56,7 +56,7 @@ export function verifyImageToken(token: string): string | null {
   }
 }
 
-/** Card / hero display width — enough for 2–3× retina, not full provider originals. */
+/** Card / hero display width — used only by leftover proxied `/api/vin/image?w=` links. */
 export const VIN_IMAGE_CARD_WIDTH = 960;
 export const VIN_IMAGE_DISPLAY_WIDTHS = [480, 720, 960, 1280] as const;
 
@@ -65,7 +65,7 @@ export function parseVinImageWidth(raw: unknown): number | null {
   return (VIN_IMAGE_DISPLAY_WIDTHS as readonly number[]).includes(n) ? n : null;
 }
 
-/** Append ?w= to a proxied VIN image URL (idempotent). */
+/** Append ?w= to a leftover proxied VIN image URL (idempotent). */
 export function withVinImageDisplayWidth(url: string, width = VIN_IMAGE_CARD_WIDTH): string {
   if (!url.includes("/api/vin/image")) return url;
   if (/[?&]w=\d+/.test(url)) return url;
@@ -74,6 +74,7 @@ export function withVinImageDisplayWidth(url: string, width = VIN_IMAGE_CARD_WID
   return `${url}${url.includes("?") ? "&" : "?"}w=${parsed}`;
 }
 
+/** Kept for old bookmarks / OG tags that still hit `/api/vin/image`. */
 export function buildImageProxyUrl(
   upstreamUrl: string,
   opts?: { baseApiUrl?: string; mediaVersion?: number; width?: number },
@@ -89,24 +90,36 @@ export function buildImageProxyUrl(
   return url;
 }
 
-/** Proxy known CDNs; pass through admin-pasted URLs so reports can use any public HTTPS image. */
+function proxyTokenFromUrl(url: string): string | null {
+  try {
+    if (url.startsWith("/api/vin/image")) {
+      const query = url.includes("?") ? url.slice(url.indexOf("?") + 1) : "";
+      return new URLSearchParams(query).get("token");
+    }
+    const parsed = new URL(url);
+    if (!parsed.pathname.endsWith("/api/vin/image")) return null;
+    return parsed.searchParams.get("token");
+  } catch {
+    return null;
+  }
+}
+
+/** Decode leftover proxy URLs; otherwise return the stored provider/admin URL. */
+export function unwrapVinImageProxyUrl(url: string): string {
+  const token = proxyTokenFromUrl(url);
+  if (!token) return url;
+  return verifyImageToken(token) ?? url;
+}
+
+/**
+ * Serve the original photo URL. Provider hosts are no longer rewritten through
+ * `/api/vin/image`. Leftover proxy paths are unwrapped when the token is valid.
+ */
 export function resolveVinPhotoUrlForClient(
   upstreamUrl: string,
-  opts?: { baseApiUrl?: string; mediaVersion?: number; width?: number },
+  _opts?: { baseApiUrl?: string; mediaVersion?: number; width?: number },
 ): string {
-  if (upstreamUrl.startsWith("/api/vin/image")) {
-    return opts?.width ? withVinImageDisplayWidth(upstreamUrl, opts.width) : upstreamUrl;
-  }
-  try {
-    const parsed = new URL(upstreamUrl);
-    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return upstreamUrl;
-    if (isAllowedImageHost(parsed.hostname)) {
-      return buildImageProxyUrl(upstreamUrl, opts);
-    }
-  } catch {
-    return upstreamUrl;
-  }
-  return upstreamUrl;
+  return unwrapVinImageProxyUrl(upstreamUrl);
 }
 
 export function proxyPhotos(
@@ -131,7 +144,7 @@ export function transformVinPhotoData(
   if (Array.isArray(record.photos)) {
     result.photos = (record.photos as unknown[])
       .filter((p): p is string => typeof p === "string" && p.length > 0)
-      .map((p) => resolveVinPhotoUrlForClient(p, { mediaVersion, width: VIN_IMAGE_CARD_WIDTH }));
+      .map((p) => resolveVinPhotoUrlForClient(p, { mediaVersion }));
   }
   if (Array.isArray(record.photosHd)) {
     result.photosHd = (record.photosHd as unknown[])
@@ -149,15 +162,12 @@ export function transformVinPhotoData(
       .map((p) => resolveVinPhotoUrlForClient(p, { mediaVersion }));
   }
   if (typeof record.thumbnailUrl === "string" && record.thumbnailUrl) {
-    result.thumbnailUrl = resolveVinPhotoUrlForClient(record.thumbnailUrl, {
-      mediaVersion,
-      width: VIN_IMAGE_CARD_WIDTH,
-    });
+    result.thumbnailUrl = resolveVinPhotoUrlForClient(record.thumbnailUrl, { mediaVersion });
   }
   if (Array.isArray(record.photoAlternates)) {
     result.photoAlternates = (record.photoAlternates as unknown[]).map((p) => {
       if (typeof p !== "string" || !p) return null;
-      return resolveVinPhotoUrlForClient(p, { mediaVersion, width: VIN_IMAGE_CARD_WIDTH });
+      return resolveVinPhotoUrlForClient(p, { mediaVersion });
     });
   }
   return result;
