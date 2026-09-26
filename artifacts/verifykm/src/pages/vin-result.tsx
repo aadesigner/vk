@@ -226,6 +226,7 @@ type LookupData = {
   fuelType?: string;
   bodyType?: string;
   color?: string;
+  driveType?: string;
   country?: string;
   hp?: number | null;
   cylinders?: number | null;
@@ -1475,8 +1476,10 @@ export default function VinResult({ params }: Props) {
                   { key: "make", label: t("make"), value: data?.make },
                   { key: "model", label: t("model"), value: data?.model },
                   { key: "year", label: t("year"), value: data?.year ? String(data.year) : null },
+                  { key: "trim", label: t("free_decoder_field_trim"), value: data?.trim },
                   { key: "fuel", label: t("fuel_type"), value: translateFuelType(t, data?.fuelType) ?? cleanLabel(data?.fuelType) },
                   { key: "transmission", label: t("transmission"), value: translateValue(data?.transmission, TRANSMISSION_KEYS, t) },
+                  { key: "drive", label: t("free_decoder_field_drive"), value: cleanLabel(data?.driveType) },
                   { key: "country", label: t("country"), value: fmtCountry(data?.country) },
                   { key: "engine", label: t("engine"), value: data?.engine },
                   { key: "hp", label: t("hp"), value: data?.hp ? `${data.hp} hp` : null },

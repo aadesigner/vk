@@ -86,6 +86,7 @@ export interface NormalizedVinData {
   fuelType?: string | null;
   bodyType?: string | null;
   color?: string | null;
+  driveType?: string | null;
   country?: string | null;
   odometer?: number | null;
   accidentCount?: number | null;

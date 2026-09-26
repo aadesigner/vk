@@ -17,10 +17,12 @@ const FEATURED_KEYS = new Set(["make", "model", "year"]);
 
 function formatSpecValue(key: string, value: string) {
   const raw = value.trim();
-  if (key === "engine" && /^\d{3,5}$/.test(raw)) {
-    return `${Number(raw).toLocaleString()} cc`;
-  }
-  return raw;
+  if (key !== "engine") return raw;
+  const ccMatch = raw.replace(/,/g, "").match(/^(\d{3,5})(?:\s*cc)?$/i);
+  if (!ccMatch) return raw;
+  const cc = Number(ccMatch[1]);
+  if (!Number.isFinite(cc) || cc < 200 || cc > 12000) return raw;
+  return `${(cc / 1000).toFixed(1)}L (${cc.toLocaleString()} cc)`;
 }
 
 function fieldValue(fields: VehicleIdentityField[], key: string) {

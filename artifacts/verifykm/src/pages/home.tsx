@@ -126,14 +126,14 @@ export default function Home() {
 
       {/* ── HERO ── */}
       <section className="relative overflow-hidden bg-white px-4 pb-10 pt-9 text-slate-950 md:pb-14 md:pt-12 lg:pt-14">
-        <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(23rem,27rem)] lg:items-center lg:gap-14">
+        <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,23.5rem)] lg:items-center lg:gap-14">
           <EnterReveal y={12} className="relative text-center lg:self-center lg:translate-y-8 lg:text-left">
             <span
               aria-hidden
               className="pointer-events-none absolute -left-3 -top-10 hidden select-none font-black uppercase leading-none tracking-[-0.08em] text-[#00a5fd]/[0.09] lg:block"
               style={{ fontSize: compactHeroH1 ? "6.4rem" : "7.4rem" }}
             >
-              {t("hero_headline_lead")}
+              {t("hero_headline_stamp")}
             </span>
             <h1
               className={cn(
@@ -176,10 +176,10 @@ export default function Home() {
             </div>
           </EnterReveal>
 
-          <HeroReportPreview className="mx-auto w-full max-w-md lg:mx-0 lg:max-w-none" />
+          <HeroReportPreview className="mx-auto w-full max-w-sm lg:mx-0 lg:max-w-none" />
         </div>
 
-        <div className="relative z-10 mx-auto mt-14 hidden max-w-6xl lg:mt-20 lg:block">
+        <div className="relative z-10 mx-auto mt-10 max-w-6xl md:mt-14 lg:mt-16">
           <HomeStatsStrip />
         </div>
       </section>

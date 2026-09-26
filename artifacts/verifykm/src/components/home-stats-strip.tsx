@@ -12,8 +12,15 @@ export function HomeStatsStrip({ className, onDark = false }: { className?: stri
 
   return (
     <div className={cn("home-stats-strip relative z-[1]", className)}>
-      <span className="sr-only">{t("home_stats_from")}</span>
-      <ul className="grid grid-cols-6 items-center gap-2" role="list">
+      <p
+        className={cn(
+          "text-center font-mono text-[10px] font-bold uppercase tracking-[0.2em]",
+          onDark ? "text-white/40" : "text-slate-400",
+        )}
+      >
+        {t("home_stats_from")}
+      </p>
+      <ul className="mt-4 flex flex-wrap items-center justify-center gap-2" role="list">
         {stats.map((stat) => {
           const name = t(stat.nameKey);
           return (
@@ -21,21 +28,28 @@ export function HomeStatsStrip({ className, onDark = false }: { className?: stri
               <PrefetchLink
                 href={pathForCountry(language, stat.id)}
                 aria-label={name}
-                className="group flex min-w-0 items-center justify-center gap-2 outline-none opacity-45 transition-opacity duration-150 hover:opacity-100 focus-visible:opacity-100"
+                className={cn(
+                  "group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 outline-none transition-colors duration-150",
+                  onDark
+                    ? "border-white/15 bg-white/5 hover:border-[#00a5fd]/45 hover:bg-white/10"
+                    : "border-[#00a5fd]/15 bg-[#f7fbfe] hover:border-[#00a5fd]/40 hover:bg-white",
+                )}
               >
                 <FlagImg
                   code={stat.flag}
                   variant="nav"
-                  size={22}
-                  className="home-stats-flag shrink-0 rounded-md shadow-md ring-1 ring-black/10 transition-transform duration-150 group-hover:-translate-y-0.5"
+                  size={18}
+                  className="home-stats-flag shrink-0 rounded-[3px] ring-1 ring-black/10"
                   alt={formatImageFlagAlt(stat.label, t)}
                 />
-                <span className={cn(
-                  "min-w-0 truncate text-[13px] font-semibold transition-colors",
-                  onDark
-                    ? "text-[#e7eef6] group-hover:text-[#7dd3fc]"
-                    : "text-slate-800 group-hover:text-[#0088d4]",
-                )}>
+                <span
+                  className={cn(
+                    "text-[13px] font-semibold leading-none",
+                    onDark
+                      ? "text-[#e7eef6] group-hover:text-[#7dd3fc]"
+                      : "text-slate-800 group-hover:text-[#0088d4]",
+                  )}
+                >
                   {stat.label}
                 </span>
               </PrefetchLink>

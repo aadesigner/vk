@@ -188,6 +188,7 @@ type VinPublicReport = {
   engine: string | null;
   transmission: string | null;
   color: string | null;
+  driveType?: string | null;
   country: string | null;
   thumbnailUrl: string | null;
   providerName: string | null;
@@ -773,6 +774,9 @@ export default function VinPublic({ params }: Props) {
       ? [{ key: "fuel", label: t("free_decoder_field_fuel_type"), value: translateFuelType(t, data.fuelType) ?? cleanLabel(data.fuelType) }]
       : []),
     { key: "transmission", label: t("free_decoder_field_transmission"), value: translateValue(data.transmission, TRANSMISSION_KEYS, t) },
+    ...(data.isUnlocked && data.driveType
+      ? [{ key: "drive", label: t("free_decoder_field_drive"), value: data.driveType }]
+      : []),
     { key: "country", label: t("country"), value: fmtCountry(data.country) },
     { key: "engine", label: t("free_decoder_field_engine"), value: data.engine },
     { key: "color", label: t("color"), value: translateColor(t, data.color) ?? data.color },

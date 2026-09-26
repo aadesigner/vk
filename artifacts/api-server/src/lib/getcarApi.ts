@@ -50,30 +50,172 @@ function bearerHeaders(apiKey: string): HeadersInit {
 
 const COUNTRY_SLUG_TO_CODE: Record<string, string> = {
   south_korea: "kr",
+  republic_of_korea: "kr",
   korea: "kr",
   kr: "kr",
+  kor: "kr",
   united_states: "us",
+  united_states_of_america: "us",
   usa: "us",
   us: "us",
   canada: "ca",
   ca: "ca",
+  can: "ca",
   dubai: "ae",
+  united_arab_emirates: "ae",
   uae: "ae",
   ae: "ae",
+  are: "ae",
   europe: "eu",
   eu: "eu",
   china: "cn",
   cn: "cn",
+  chn: "cn",
   japan: "jp",
   jp: "jp",
+  jpn: "jp",
   mexico: "mx",
   mx: "mx",
+  mex: "mx",
+  germany: "de",
+  de: "de",
+  deu: "de",
+  finland: "fi",
+  fi: "fi",
+  fin: "fi",
+  sweden: "se",
+  se: "se",
+  swe: "se",
+  norway: "no",
+  no: "no",
+  nor: "no",
+  denmark: "dk",
+  dk: "dk",
+  dnk: "dk",
+  france: "fr",
+  fr: "fr",
+  fra: "fr",
+  italy: "it",
+  it: "it",
+  ita: "it",
+  spain: "es",
+  es: "es",
+  esp: "es",
+  netherlands: "nl",
+  nl: "nl",
+  nld: "nl",
+  poland: "pl",
+  pl: "pl",
+  pol: "pl",
+  united_kingdom: "gb",
+  great_britain: "gb",
+  uk: "gb",
+  gb: "gb",
+  england: "gb",
+  austria: "at",
+  at: "at",
+  belgium: "be",
+  be: "be",
+  switzerland: "ch",
+  ch: "ch",
+  portugal: "pt",
+  pt: "pt",
+  greece: "gr",
+  gr: "gr",
+  czechia: "cz",
+  czech_republic: "cz",
+  cz: "cz",
+  slovakia: "sk",
+  sk: "sk",
+  hungary: "hu",
+  hu: "hu",
+  romania: "ro",
+  ro: "ro",
+  bulgaria: "bg",
+  bg: "bg",
+  croatia: "hr",
+  hr: "hr",
+  slovenia: "si",
+  si: "si",
+  serbia: "rs",
+  rs: "rs",
+  ireland: "ie",
+  ie: "ie",
+  australia: "au",
+  au: "au",
+  new_zealand: "nz",
+  nz: "nz",
+  brazil: "br",
+  br: "br",
+  turkey: "tr",
+  türkiye: "tr",
+  tr: "tr",
+  ukraine: "ua",
+  ua: "ua",
+  russia: "ru",
+  ru: "ru",
+  india: "in",
+  in: "in",
+  thailand: "th",
+  th: "th",
+  taiwan: "tw",
+  tw: "tw",
+  south_africa: "za",
+  za: "za",
 };
+
+const GENERIC_MARKET_COUNTRY = new Set(["eu"]);
 
 export function mapGetCarApiCountry(slug: string | null | undefined): string | null {
   if (!slug) return null;
-  const key = slug.trim().toLowerCase().replace(/\s+/g, "_");
-  return COUNTRY_SLUG_TO_CODE[key] ?? (key.length <= 3 ? key : null);
+  const key = slug.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (!key) return null;
+  if (COUNTRY_SLUG_TO_CODE[key]) return COUNTRY_SLUG_TO_CODE[key];
+  if (/^[a-z]{2}$/.test(key)) return key;
+  // Keep a real country name so the report can still localize it (e.g. "Finland").
+  if (/^[a-z]{3,}$/.test(key) && !/_/.test(key)) return slug.trim();
+  return null;
+}
+
+function countryFromUnknown(value: unknown): string | null {
+  if (value == null) return null;
+  if (typeof value === "object" && !Array.isArray(value)) {
+    const o = value as Record<string, unknown>;
+    return (
+      mapGetCarApiCountry(str(o.iso))
+      ?? mapGetCarApiCountry(str(o.code))
+      ?? mapGetCarApiCountry(str(o.slug))
+      ?? mapGetCarApiCountry(str(o.name))
+      ?? mapGetCarApiCountry(str(o.country))
+    );
+  }
+  return mapGetCarApiCountry(str(value));
+}
+
+function pickGetCarApiCountry(
+  rawCountry: unknown,
+  vehicleCountry: unknown,
+  extras: Array<{ key?: string | null; label: string; value: string }>,
+  fallbacks: Array<string | null | undefined>,
+): string | null {
+  const fromVehicle = countryFromUnknown(vehicleCountry);
+  const fromRaw = countryFromUnknown(rawCountry);
+  const specific = (code: string | null) => (code && !GENERIC_MARKET_COUNTRY.has(code) ? code : null);
+  const fromExtras = extras
+    .filter((row) => /^(country|nation|origin)$/i.test(row.label) || /^(country|nation|origin)$/i.test(row.key ?? ""))
+    .map((row) => mapGetCarApiCountry(row.value))
+    .find(Boolean) ?? null;
+
+  return (
+    specific(fromVehicle)
+    ?? specific(fromRaw)
+    ?? specific(fromExtras)
+    ?? fromVehicle
+    ?? fromRaw
+    ?? fromExtras
+    ?? fallbacks.map((text) => inferCountryFromText(text)).find(Boolean)
+    ?? null
+  );
 }
 
 function inferCountryFromText(text: string | null | undefined): string | null {
@@ -86,7 +228,129 @@ function inferCountryFromText(text: string | null | undefined): string | null {
   if (/\bjapan\b/.test(t)) return "jp";
   if (/\bmexico\b/.test(t)) return "mx";
   if (/\buae\b|\bdubai\b/.test(t)) return "ae";
+  if (/\bfinland\b|\bsuomi\b/.test(t)) return "fi";
+  if (/\bgermany\b|\bdeutschland\b/.test(t)) return "de";
+  if (/\bsweden\b/.test(t)) return "se";
+  if (/\bnorway\b/.test(t)) return "no";
+  if (/\bdenmark\b/.test(t)) return "dk";
   return null;
+}
+
+function formatEngineFromCc(cc: number): string {
+  const liters = (cc / 1000).toFixed(1);
+  return `${liters}L (${cc.toLocaleString("en-US")} cc)`;
+}
+
+/** Prefer GetCarAPI's labeled engine; otherwise turn 1500 into "1.5L (1,500 cc)". */
+export function formatGetCarApiEngine(vehicle: Record<string, unknown>): string | null {
+  const engineObj = vehicle.engine && typeof vehicle.engine === "object" && !Array.isArray(vehicle.engine)
+    ? vehicle.engine as Record<string, unknown>
+    : null;
+  const labeled = str(vehicle.engine)
+    ?? str(engineObj?.label)
+    ?? str(engineObj?.name)
+    ?? str(engineObj?.text)
+    ?? str(vehicle.engineName)
+    ?? str(vehicle.engineLabel);
+  if (labeled && /[a-z]/i.test(labeled) && !/^\d{3,5}$/.test(labeled)) return labeled;
+  const cc = num(
+    vehicle.engineDisplacementCc
+    ?? vehicle.displacementCc
+    ?? vehicle.engineDisplacement
+    ?? engineObj?.cc
+    ?? engineObj?.displacement
+    ?? (labeled && /^\d{3,5}$/.test(labeled) ? labeled : null),
+  );
+  if (cc != null && cc >= 200 && cc <= 12000) return formatEngineFromCc(Math.round(cc));
+  return labeled;
+}
+
+const IDENTITY_SPEC_LABELS: Record<string, string> = {
+  make: "make",
+  model: "model",
+  year: "year",
+  trim: "trim",
+  "body type": "bodyType",
+  body: "bodyType",
+  "fuel type": "fuelType",
+  fuel: "fuelType",
+  transmission: "transmission",
+  "drive type": "driveType",
+  drivetrain: "driveType",
+  drive: "driveType",
+  engine: "engine",
+  "engine displacement": "engine",
+  color: "color",
+  colour: "color",
+  country: "country",
+  "current mileage": "odometer",
+  mileage: "odometer",
+  odometer: "odometer",
+};
+
+function normalizeSpecLabel(label: string): string {
+  return label.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function parseSpecMileage(raw: string): number | null {
+  const km = raw.match(/([\d.,]+)\s*km/i);
+  const n = Number((km?.[1] ?? raw).replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function flattenSpecObject(
+  base: Record<string, unknown>,
+  spec: unknown,
+): Record<string, unknown> {
+  if (!spec || typeof spec !== "object" || Array.isArray(spec)) return base;
+  return { ...(spec as Record<string, unknown>), ...base };
+}
+
+function collectLabeledSpecRows(
+  ...lists: unknown[]
+): Array<{ key?: string | null; label: string; value: string }> {
+  const out: Array<{ key?: string | null; label: string; value: string }> = [];
+  const seen = new Set<string>();
+  for (const list of lists) {
+    if (!Array.isArray(list)) continue;
+    for (const item of list.slice(0, 80)) {
+      if (!item || typeof item !== "object") continue;
+      const o = item as Record<string, unknown>;
+      const label = str(o.label) ?? humanizeToken(str(o.key)) ?? str(o.key);
+      const value = str(o.value) ?? str(o.text) ?? str(o.info);
+      if (!label || !value) continue;
+      const dedupe = `${label.toLowerCase()}|${value.toLowerCase()}`;
+      if (seen.has(dedupe)) continue;
+      seen.add(dedupe);
+      out.push({ key: str(o.key), label, value });
+    }
+  }
+  return out;
+}
+
+function applyLabeledIdentitySpecs(
+  vehicle: Record<string, unknown>,
+  rows: Array<{ key?: string | null; label: string; value: string }>,
+): Record<string, unknown> {
+  const next = { ...vehicle };
+  for (const row of rows) {
+    const field = IDENTITY_SPEC_LABELS[normalizeSpecLabel(row.label)]
+      ?? IDENTITY_SPEC_LABELS[normalizeSpecLabel(row.key ?? "")];
+    if (!field) continue;
+    if (field === "odometer") {
+      if (next.currentKnownMileageKm == null && next.odometer == null) {
+        const parsed = parseSpecMileage(row.value);
+        if (parsed != null) next.currentKnownMileageKm = parsed;
+      }
+      continue;
+    }
+    if (field === "year") {
+      if (next.year == null) next.year = num(row.value) ?? row.value;
+      continue;
+    }
+    if (next[field] == null || next[field] === "") next[field] = row.value;
+  }
+  return next;
 }
 
 function str(v: unknown): string | null {
@@ -620,19 +884,33 @@ export function collectGetCarApiPhotos(raw: Record<string, unknown>): {
  * Never pass this JSON through normalizeCarstatResponse.
  */
 export function normalizeGetCarApiResponse(raw: Record<string, unknown>): NormalizedVinData {
-  const vehicle = (raw.vehicle && typeof raw.vehicle === "object"
+  const rawVehicle = (raw.vehicle && typeof raw.vehicle === "object"
     ? raw.vehicle
     : {}) as Record<string, unknown>;
+  const specRows = collectLabeledSpecRows(
+    raw.specifications,
+    raw.specs,
+    rawVehicle.specifications,
+    rawVehicle.specs,
+    raw.extra,
+  );
+  const vehicle = applyLabeledIdentitySpecs(
+    flattenSpecObject(flattenSpecObject(rawVehicle, raw.specifications), rawVehicle.specifications),
+    specRows,
+  );
 
   const make = str(vehicle.make);
   const model = str(vehicle.model);
   const year = num(vehicle.year);
   const trim = str(vehicle.trim);
-  const engine = str(vehicle.engineDisplacement ?? vehicle.engine);
+  const engine = formatGetCarApiEngine(vehicle);
   const transmission = str(vehicle.transmission);
   const fuelType = str(vehicle.fuelType);
   const bodyType = str(vehicle.bodyType);
   const color = str(vehicle.color);
+  const driveType = str(
+    vehicle.driveType ?? vehicle.drivetrain ?? vehicle.drive ?? vehicle.drivenWheels,
+  );
   const odometer = num(
     vehicle.currentKnownMileageKm
     ?? vehicle.currentKnownMileage
@@ -643,12 +921,13 @@ export function normalizeGetCarApiResponse(raw: Record<string, unknown>): Normal
   const listings = Array.isArray(raw.listings) ? raw.listings as Record<string, unknown>[] : [];
   const listingLocations = listings.map((l) => str(l.location)).filter(Boolean) as string[];
 
-  const country =
-    mapGetCarApiCountry(str(raw.country))
-    ?? mapGetCarApiCountry(str(vehicle.country))
-    ?? inferCountryFromText(str(vehicle.trim))
-    ?? inferCountryFromText(listingLocations[0])
-    ?? null;
+  const vehicleExtras = collectGetCarApiExtras(raw);
+  const country = pickGetCarApiCountry(
+    raw.country,
+    vehicle.country,
+    vehicleExtras,
+    [str(vehicle.trim), listingLocations[0]],
+  );
 
   const { photos, photoAlternates } = collectGetCarApiPhotos(raw);
   const hasPhotoAlternates = photoAlternates.some((u) => !!u);
@@ -984,9 +1263,6 @@ export function normalizeGetCarApiResponse(raw: Record<string, unknown>): Normal
       ? "KRW"
       : (listingMarket?.currency === "KRW" ? "KRW" : "USD");
 
-  // GetCarAPI "Extra" tab — key/value attribute cards (doors, stock #, …). Own section, never Events.
-  const vehicleExtras = collectGetCarApiExtras(raw);
-
   return {
     dataSource: GETCARAPI_DATA_SOURCE,
     make,
@@ -998,6 +1274,7 @@ export function normalizeGetCarApiResponse(raw: Record<string, unknown>): Normal
     fuelType,
     bodyType,
     color,
+    driveType,
     country,
     odometer,
     accidentCount: accidents.length,

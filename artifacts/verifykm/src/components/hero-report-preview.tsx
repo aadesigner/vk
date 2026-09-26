@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useReducedMotion } from "framer-motion";
 import { useTranslation } from "@/i18n/context";
 import { FlagImg } from "@/components/flag-img";
 import { DemoCarPhoto, preloadDemoCarPhotos } from "@/components/demo-car-photo";
@@ -47,8 +48,16 @@ const ORIGIN_LABEL: Record<DemoCar["origin"], string> = {
   UAE: "demo_card_origin_uae",
 };
 
+/** Almost-flat 3/4 — small rest angle, tiny pointer follow. */
+const CARD_BASE = { x: 2.5, y: -5 };
+
 function pickFrozenCar(pool: DemoCar[]): DemoCar {
   return pool.find((c) => c.condition === "CLEAN") ?? pool[0]!;
+}
+
+function paintCard(plate: HTMLDivElement | null, x: number, y: number) {
+  if (!plate) return;
+  plate.style.transform = `rotateX(${x}deg) rotateY(${y}deg) translateZ(8px)`;
 }
 
 /** Sample report. Homepage cycles five danger cars; country pages cycle that market. */
@@ -64,22 +73,70 @@ export function HeroReportPreview({
 }) {
   const { t } = useTranslation();
   const lightMotion = useLightMotion();
+  const reduceMotion = useReducedMotion();
   const pool = useMemo(() => (country ? carsForCountry(country) : HOME_SAMPLES), [country]);
   const cars = country && lightMotion ? [pickFrozenCar(pool)] : pool;
 
   const [idx, setIdx] = useState(0);
+  const [holding, setHolding] = useState(false);
+  const stageRef = useRef<HTMLElement>(null);
+  const plateRef = useRef<HTMLDivElement>(null);
+  const interactingRef = useRef(false);
+
+  const followPointer = reduceMotion !== true && !lightMotion;
+
+  const applyPointer = (clientX: number, clientY: number) => {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect || rect.width < 8 || rect.height < 8) return;
+    const px = (clientX - rect.left) / rect.width - 0.5;
+    const py = (clientY - rect.top) / rect.height - 0.5;
+    paintCard(plateRef.current, CARD_BASE.x - py * 3, CARD_BASE.y + px * 5);
+  };
+
+  const setInteracting = (active: boolean) => {
+    if (interactingRef.current === active) return;
+    interactingRef.current = active;
+    setHolding(active);
+  };
 
   useEffect(() => {
     setIdx(0);
   }, [country]);
 
   useEffect(() => {
-    if (cars.length < 2) return;
+    if (!followPointer) {
+      if (plateRef.current) plateRef.current.style.transform = "none";
+      return;
+    }
+    paintCard(plateRef.current, CARD_BASE.x, CARD_BASE.y);
+  }, [followPointer]);
+
+  useEffect(() => {
+    if (!followPointer) return;
+    let frame = 0;
+    const started = performance.now();
+    const tick = (now: number) => {
+      if (!interactingRef.current) {
+        const t = (now - started) / 1000;
+        paintCard(
+          plateRef.current,
+          CARD_BASE.x + Math.sin(t * 0.35) * 0.6,
+          CARD_BASE.y + Math.sin(t * 0.28) * 1.4,
+        );
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [followPointer]);
+
+  useEffect(() => {
+    if (cars.length < 2 || holding) return;
     if (country && lightMotion) return;
     if (!country && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = setInterval(() => setIdx((i) => (i + 1) % cars.length), 5000);
     return () => clearInterval(timer);
-  }, [country, lightMotion, cars.length]);
+  }, [country, lightMotion, cars.length, holding]);
 
   useEffect(() => {
     if (cars.length === 0) return;
@@ -140,14 +197,43 @@ export function HeroReportPreview({
 
   return (
     <aside
+      ref={stageRef}
       className={cn(
         country ? "relative block w-full" : "relative w-full",
+        followPointer && "[perspective:1400px]",
         className,
       )}
       aria-hidden
+      onPointerEnter={() => {
+        if (!followPointer) return;
+        setInteracting(true);
+      }}
+      onPointerMove={(event) => {
+        if (!followPointer) return;
+        if (event.pointerType === "touch") return;
+        setInteracting(true);
+        applyPointer(event.clientX, event.clientY);
+      }}
+      onPointerLeave={() => {
+        if (!followPointer) return;
+        setInteracting(false);
+        paintCard(plateRef.current, CARD_BASE.x, CARD_BASE.y);
+      }}
     >
-      <article className={cn("relative flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white text-slate-950 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.28)]")}>
-        <div className={cn("relative h-48 overflow-hidden sm:h-56", fill && "lg:h-auto lg:min-h-56 lg:flex-1")}>
+      <div
+        ref={plateRef}
+        className={cn(
+          "relative h-full",
+          followPointer && "will-change-transform [transform-style:preserve-3d]",
+        )}
+        style={
+          followPointer
+            ? { transform: `rotateX(${CARD_BASE.x}deg) rotateY(${CARD_BASE.y}deg) translateZ(8px)` }
+            : undefined
+        }
+      >
+      <article className={cn("relative flex h-full flex-col overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white text-slate-950 shadow-[0_22px_50px_-24px_rgba(15,23,42,0.42)]")}>
+        <div className={cn("relative h-40 overflow-hidden sm:h-48", fill && "lg:h-auto lg:min-h-48 lg:flex-1")}>
           {car ? (
             cars.map((slide, slideIdx) => {
               const isActive = slideIdx === idx;
@@ -281,6 +367,7 @@ export function HeroReportPreview({
           </div>
         ) : null}
       </article>
+      </div>
     </aside>
   );
 }

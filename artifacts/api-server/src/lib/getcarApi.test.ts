@@ -16,6 +16,8 @@ describe("mapGetCarApiCountry", () => {
     expect(mapGetCarApiCountry("south_korea")).toBe("kr");
     expect(mapGetCarApiCountry("United States")).toBe("us");
     expect(mapGetCarApiCountry("canada")).toBe("ca");
+    expect(mapGetCarApiCountry("Finland")).toBe("fi");
+    expect(mapGetCarApiCountry("FI")).toBe("fi");
   });
 });
 
@@ -259,6 +261,37 @@ describe("normalizeGetCarApiResponse", () => {
     });
     expect(normalized.accidents?.[0]?.lossAmount).toBe(521630);
     expect(normalized.accidents?.[0]?.currency).toBe("KRW");
+  });
+
+  it("keeps Finland + labeled engine from GetCarAPI specifications (TMBAR8NX3NY017348)", () => {
+    const normalized = normalizeGetCarApiResponse({
+      vin: "TMBAR8NX3NY017348",
+      country: "europe",
+      vehicle: {
+        make: "Skoda",
+        model: "Octavia",
+        year: 2022,
+        trim: "1.5 TSI Style eTEC DSG Autom",
+        bodyType: "Sedan",
+        fuelType: "Gasoline",
+        transmission: "Automatic",
+        engineDisplacement: 1500,
+        color: "Blue",
+        currentKnownMileageKm: 41000,
+      },
+      specifications: [
+        { label: "Drive Type", value: "FWD" },
+        { label: "Engine", value: "1.5L (1,500 cc)" },
+        { label: "Country", value: "Finland" },
+        { label: "Current Mileage", value: "41,000 km (25,476 mi)" },
+      ],
+    });
+
+    expect(normalized.country).toBe("fi");
+    expect(normalized.engine).toBe("1.5L (1,500 cc)");
+    expect(normalized.driveType).toBe("FWD");
+    expect(normalized.trim).toBe("1.5 TSI Style eTEC DSG Autom");
+    expect(normalized.odometer).toBe(41000);
   });
 
   it("maps Extra tab into vehicleExtras, never Events", () => {
