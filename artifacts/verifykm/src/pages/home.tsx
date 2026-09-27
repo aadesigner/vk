@@ -170,7 +170,7 @@ export default function Home() {
                 onSubmit={handleCheck}
                 disabled={vinLookupDisabled}
                 placeholder={language === "sq" ? t("vin_placeholder_chassis") : t("vin_placeholder")}
-                className="mx-auto w-full max-w-xl lg:mx-0 lg:max-w-none"
+                className="mx-auto w-full max-w-lg sm:max-w-lg lg:mx-0"
                 layout="home"
               />
             </div>
