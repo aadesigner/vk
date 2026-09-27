@@ -25,6 +25,7 @@ export type VinScoreInput = {
   ownerCount?: number | null;
   isSalvage?: boolean | null;
   isStolen?: boolean | null;
+  isFlooded?: boolean | null;
   mileageHistory?: VinScoreMileageEntry[] | null;
 };
 
@@ -136,8 +137,23 @@ function isCleanBase(input: VinScoreInput): boolean {
     accidentCount(input) === 0
     && input.isSalvage !== true
     && input.isStolen !== true
+    && input.isFlooded !== true
     && (input.ownerCount == null || input.ownerCount <= 3)
   );
+}
+
+/** Flood is a hard hit: −2.5 unless the car is already in bad shape. */
+export const FLOOD_PENALTY = 2.5;
+const FLOOD_PENALTY_LOW = 1.5;
+const FLOOD_PENALTY_VERY_LOW = 1.0;
+/** Pre-flood score below this is already risk / crushed — don't stack the full 2.5. */
+const FLOOD_LOW_SCORE = 6;
+const FLOOD_VERY_LOW_SCORE = 4;
+
+export function floodScorePenalty(preFloodScore: number): number {
+  if (preFloodScore < FLOOD_VERY_LOW_SCORE) return FLOOD_PENALTY_VERY_LOW;
+  if (preFloodScore < FLOOD_LOW_SCORE) return FLOOD_PENALTY_LOW;
+  return FLOOD_PENALTY;
 }
 
 function singleAccidentPenalty(severity?: string | null): number {
@@ -261,6 +277,7 @@ export function computeVinConditionScore(
   if (input.isSalvage === true) score -= 6;
   if (input.isStolen === true) score -= 3.5;
   if (rollback) score -= 2.5;
+  if (input.isFlooded === true) score -= floodScorePenalty(score);
 
   // Clean 130k–250k: still capped near 9.5; above 250k penalties apply fully
   if (km != null && km >= PERFECT_MAX_KM && km < 250_000 && clean && !rollback) {
@@ -281,6 +298,7 @@ export function scoreInputFromLookup(data: {
   ownerCount?: number | null;
   isSalvage?: boolean | null;
   isStolen?: boolean | null;
+  isFlooded?: boolean | null;
   mileageHistory?: VinScoreMileageEntry[] | null;
 } | null | undefined): VinScoreInput | null {
   if (!data) return null;
@@ -294,6 +312,7 @@ export function scoreInputFromLookup(data: {
     ownerCount: data.ownerCount,
     isSalvage: data.isSalvage,
     isStolen: data.isStolen,
+    isFlooded: data.isFlooded,
     mileageHistory: data.mileageHistory,
   };
 }
@@ -309,6 +328,8 @@ export function scoreInputFromPublic(data: {
   ownerCount?: number | null;
   salvage?: boolean | null;
   stolen?: boolean | null;
+  flooded?: boolean | null;
+  isFlooded?: boolean | null;
   mileageHistory?: VinScoreMileageEntry[] | null;
 } | null | undefined): VinScoreInput | null {
   if (!data) return null;
@@ -322,6 +343,7 @@ export function scoreInputFromPublic(data: {
     ownerCount: data.ownerCount,
     isSalvage: data.salvage,
     isStolen: data.stolen,
+    isFlooded: data.isFlooded === true || data.flooded === true,
     mileageHistory: data.mileageHistory,
   };
 }

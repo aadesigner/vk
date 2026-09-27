@@ -86,6 +86,21 @@ describe("shouldFormatAccidentLossAsKrw", () => {
     })).toBe(true);
   });
 
+  it("does not treat flood as Korean won on USA or Canada cars", () => {
+    expect(resolveAmountDisplayCurrency({
+      vehicleCountry: "us",
+      accidentType: "flood",
+    })).toBe("USD");
+    expect(resolveAmountDisplayCurrency({
+      vehicleCountry: "ca",
+      accidentType: "flood",
+    })).toBe("USD");
+    expect(resolveAmountDisplayCurrency({
+      vehicleCountry: "kr",
+      accidentType: "flood",
+    })).toBe("KRW");
+  });
+
   it("prefers explicit row currency over country heuristics", () => {
     expect(shouldFormatAccidentLossAsKrw({
       currency: "USD",

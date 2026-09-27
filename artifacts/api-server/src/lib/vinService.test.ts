@@ -22,6 +22,7 @@ import {
   textIndicatesFlood,
   accidentIndicatesFlood,
   normalizeCarstatResponse,
+  applyMissingFloodFlagsForServe,
   parseKoreanInspectAccident,
   parseLotOdometerKm,
   resolveLatestOdometerKm,
@@ -577,6 +578,61 @@ describe("normalizeCarstatResponse", () => {
       expect.arrayContaining(["2024-10-14", "2023-06-29"]),
     );
     expect(normalized.isStolen).toBe(false);
+  });
+
+  it("does not apply Korean registry flood flags to USA or Canada cars", () => {
+    const usa = normalizeCarstatResponse({
+      year: 2018,
+      vin: "1HGCM82633A004360",
+      manufacturer: { name: "Honda" },
+      model: { name: "Accord" },
+      lots: [{
+        domain: { name: "copart_com" },
+        location: { country: { iso: "us", name: "United States" } },
+        details: {
+          insurance_v2: {
+            floodTotalLossCnt: 4,
+            floodTotalLossCost: 4_060_218,
+            robberCnt: 0,
+            totalLossCnt: 0,
+          },
+        },
+      }],
+    });
+    expect(usa.country?.toLowerCase()).toMatch(/us|united/);
+    expect(usa.isFlooded ?? null).toBeNull();
+    expect(usa.floodCount ?? null).toBeNull();
+    expect(usa.floodLossAmount ?? null).toBeNull();
+
+    const canada = normalizeCarstatResponse({
+      year: 2017,
+      vin: "1HGCM82633A004361",
+      manufacturer: { name: "Honda" },
+      model: { name: "Civic" },
+      lots: [{
+        domain: { name: "copart_com" },
+        location: { country: { iso: "ca", name: "Canada" } },
+        details: {
+          insurance_v2: {
+            floodTotalLossCnt: 2,
+            floodTotalLossCost: 1_200_000,
+          },
+        },
+      }],
+    });
+    expect(canada.country?.toLowerCase()).toMatch(/ca|canada/);
+    expect(canada.isFlooded ?? null).toBeNull();
+  });
+
+  it("strips cached Korean flood amounts from USA reports on serve", () => {
+    const served = applyMissingFloodFlagsForServe({
+      country: "us",
+      isFlooded: true,
+      floodCount: 4,
+      floodLossAmount: 4_060_218,
+    });
+    expect(served?.isFlooded ?? null).toBeNull();
+    expect(served?.floodLossAmount ?? null).toBeNull();
   });
 
   it("merges ownerChanges from a secondary lot when the richest claim lot lacks them", () => {

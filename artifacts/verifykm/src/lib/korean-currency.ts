@@ -41,8 +41,7 @@ export function isKoreanSourcedAccidentType(type?: string | null): boolean {
   const normalized = type?.toLowerCase();
   return normalized === "insurance"
     || normalized === "registry"
-    || normalized === "inspection"
-    || normalized === "flood";
+    || normalized === "inspection";
 }
 
 /** Normalize admin/provider currency tags to KRW / USD / EUR when recognizable. */

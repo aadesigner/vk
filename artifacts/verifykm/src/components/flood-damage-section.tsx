@@ -1,7 +1,7 @@
 import { AlertTriangle, CheckCircle2, Droplets, ShieldCheck, XCircle } from "lucide-react";
 import { VinReportSection, VinReportSectionHeader, type VinReportSectionAccent } from "@/components/vin-report-section";
 import { KoreanWonAmount } from "@/components/korean-won-amount";
-import { formatAmountPlain, resolveAmountDisplayCurrency } from "@/lib/korean-currency";
+import { formatAmountPlain, isKoreanCountry, resolveAmountDisplayCurrency } from "@/lib/korean-currency";
 import { cn } from "@/lib/utils";
 import type { Language } from "@/i18n/context";
 
@@ -54,9 +54,7 @@ export function FloodDamageSection({
   const accent = floodSectionAccent(flooded);
   const count = floodCount != null && floodCount > 0 ? floodCount : 1;
   const code = resolveAmountDisplayCurrency({
-    currency: "KRW",
     vehicleCountry: country,
-    accidentType: "flood",
   });
 
   return (
@@ -106,7 +104,9 @@ export function FloodDamageSection({
               {flooded ? t("flood_flagged") : t("report_not_flooded")}
             </p>
             <p className="text-xs text-muted-foreground/80 mt-0.5 leading-snug">
-              {flooded ? t("report_flood_body") : t("flood_clear_desc")}
+              {flooded
+                ? t(isKoreanCountry(country) ? "report_flood_body_korea" : "report_flood_body")
+                : t("flood_clear_desc")}
             </p>
             {flooded && floodLossAmount != null && floodLossAmount > 0 ? (
               <p className="mt-2 text-sm font-semibold tabular-nums">

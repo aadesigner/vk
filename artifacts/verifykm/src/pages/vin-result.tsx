@@ -966,7 +966,7 @@ export default function VinResult({ params }: Props) {
           labelOk={t("report_not_stolen")}
           labelFail={t("theft_flagged")}
         />
-        {data?.isFlooded != null || isKoreanCountry(data?.country) || isGetCarApi
+        {data?.isFlooded != null || isKoreanCountry(data?.country)
           ? <PassPill ok={data?.isFlooded !== true} labelOk={t("report_not_flooded")} labelFail={t("flood_flagged")} />
           : null}
         <PassPill ok={data?.isTaxi !== true} labelOk={t("report_not_taxi")} labelFail={t("taxi_flagged")} />

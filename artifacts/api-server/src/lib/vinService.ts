@@ -3501,14 +3501,29 @@ export function readKoreanFloodFlags(insurance: Record<string, unknown> | null |
  * When a stored KR report has insurance/salvage signals but no flood flag yet
  * (pre-flood-mapping cache), treat flood as assessed-clear so the report pill shows.
  */
+export function isKoreanVehicleCountry(country?: string | null): boolean {
+  const c = String(country ?? "").toLowerCase();
+  return c === "kr" || c.includes("korea");
+}
+
 export function applyMissingFloodFlagsForServe(
   data: Record<string, unknown> | null | undefined,
 ): Record<string, unknown> | null {
   if (!data) return null;
-  if (data.isFlooded === true || data.isFlooded === false) return data;
 
-  const country = String(data.country ?? "").toLowerCase();
-  const isKr = country === "kr" || country.includes("korea");
+  const isKr = isKoreanVehicleCountry(typeof data.country === "string" ? data.country : null);
+  // Cached NA reports used to inherit insurance_v2 floodTotalLoss* from Korean lots.
+  // Korean flood always carries a won amount; NA title/auction flood does not.
+  if (!isKr && data.isFlooded === true && data.floodLossAmount != null) {
+    return {
+      ...data,
+      isFlooded: null,
+      floodCount: null,
+      floodLossAmount: null,
+    };
+  }
+
+  if (data.isFlooded === true || data.isFlooded === false) return data;
   const hasKrInsuranceSignal =
     (Array.isArray(data.insuranceClaims) && data.insuranceClaims.length > 0)
     || (Array.isArray(data.registryHistory) && data.registryHistory.length > 0)
@@ -3637,7 +3652,9 @@ export function resolveVinAccidents(input: {
   } = input;
   const totalLoss = Number(insurance.totalLossCnt ?? 0);
   const totalLossDate = str(insurance.totalLossDate);
-  const koreanFlood = readKoreanFloodFlags(insurance);
+  const koreanFlood = isKoreanVehicleCountry(country)
+    ? readKoreanFloodFlags(insurance)
+    : { isFlooded: null, floodCount: null, floodLossAmount: null };
   const rawRecords = Array.isArray(insurance.accidents)
     ? insurance.accidents as Array<Record<string, unknown>>
     : [];
