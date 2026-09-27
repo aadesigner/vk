@@ -37,6 +37,33 @@ export function validateAuthSignupInput(
   return { ok: true };
 }
 
+/** Instagram / Facebook / TikTok in-app — grecaptcha often never loads. */
+const IN_APP_UA =
+  /Instagram|FBAN|FBAV|FB_IAB|FB4A|FBIOS|FB_FW|Messenger|Orca|TikTok|BytedanceWebview|Line\/|Snapchat/i;
+
+export function isAuthRecaptchaOptionalInApp(
+  ua: string = typeof navigator !== "undefined" ? navigator.userAgent : "",
+): boolean {
+  return IN_APP_UA.test(ua);
+}
+
+/** Chrome still requires a token. In-app browsers may submit without one. */
+export function shouldBlockAuthWithoutRecaptcha(
+  enabled: boolean,
+  token: string | null | undefined,
+  inApp = isAuthRecaptchaOptionalInApp(),
+): boolean {
+  return enabled && !token && !inApp;
+}
+
+export function shouldWaitForAuthRecaptcha(
+  enabled: boolean,
+  ready: boolean,
+  inApp = isAuthRecaptchaOptionalInApp(),
+): boolean {
+  return enabled && !ready && !inApp;
+}
+
 /** Resolve a reCAPTCHA token: primed gesture token → quick execute → full wait/load path. */
 export async function resolveAuthRecaptchaToken(opts: {
   enabled: boolean;

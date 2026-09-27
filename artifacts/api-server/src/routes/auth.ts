@@ -6,6 +6,7 @@ import { clearAdminUnlockCookie } from "../lib/adminAreaUnlock.js";
 import { validatePassword } from "../lib/passwordPolicy.js";
 import { logger } from "../lib/logger.js";
 import { isRecaptchaRelaxedForRequest } from "../lib/allowedOrigins.js";
+import { isInAppWebViewUserAgent, requestUserAgent } from "../lib/inAppWebView.js";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { sendEmail, buildPasswordResetEmail, buildWelcomeEmail, isSmtpConfigured } from "../lib/emailService.js";
 import crypto from "crypto";
@@ -224,7 +225,7 @@ const AUTH_RECAPTCHA_OPTS = { minScore: AUTH_RECAPTCHA_MIN_SCORE, acceptSuccessO
 
 async function checkRecaptcha(
   token: string | undefined,
-  req?: { headers?: { host?: string } },
+  req?: { headers?: { host?: string; "user-agent"?: string | string[] } },
   opts?: { minScore?: number; acceptSuccessOnly?: boolean },
 ): Promise<{ blocked: boolean; reason?: string }> {
   try {
@@ -245,6 +246,10 @@ async function checkRecaptcha(
       return { blocked: false };
     }
     if (!token) {
+      if (isInAppWebViewUserAgent(requestUserAgent(req?.headers))) {
+        logger.warn("reCAPTCHA skipped — in-app browser produced no token");
+        return { blocked: false };
+      }
       return { blocked: true, reason: "Security verification is required. Please reload the page and try again." };
     }
 

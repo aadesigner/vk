@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
 import enTranslations from "./en.json";
 import { SUPPORTED_LANGS, type Language } from "@/lib/languages";
+import { isInAppBrowser } from "@/hooks/use-light-motion";
 
 export type { Language };
 export { SUPPORTED_LANGS };
@@ -69,6 +70,7 @@ export async function loadDict(lang: Language): Promise<Translations> {
  */
 export function preloadOtherLocales(active: Language): void {
   if (active === "en") return;
+  if (isInAppBrowser()) return;
   const run = () => {
     void loadDict("en");
   };

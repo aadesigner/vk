@@ -19,6 +19,8 @@ import { PasswordRequirements } from "@/components/password-requirements";
 import {
   readAuthCredentials,
   resolveAuthRecaptchaToken,
+  shouldBlockAuthWithoutRecaptcha,
+  shouldWaitForAuthRecaptcha,
   validateAuthSignupInput,
 } from "@/lib/auth-email-submit";
 import {
@@ -407,7 +409,7 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
 
     setLoading(true);
     try {
-      if (rcEnabled && !rcReady) {
+      if (shouldWaitForAuthRecaptcha(rcEnabled, rcReady)) {
         setError(t("error_recaptcha_loading"));
         return;
       }
@@ -423,7 +425,7 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
         getToken: getRecaptchaToken,
       });
 
-      if (rcEnabled && !recaptchaToken) {
+      if (shouldBlockAuthWithoutRecaptcha(rcEnabled, recaptchaToken)) {
         setError(t("error_recaptcha_failed"));
         return;
       }

@@ -60,7 +60,7 @@ function paintCard(plate: HTMLDivElement | null, x: number, y: number) {
   plate.style.transform = `rotateX(${x}deg) rotateY(${y}deg) translateZ(8px)`;
 }
 
-/** Sample report. Homepage cycles five danger cars; country pages cycle that market. */
+/** Sample report. Desktop homepage cycles five cars; phones/Instagram keep one photo. */
 export function HeroReportPreview({
   className,
   country,
@@ -75,7 +75,8 @@ export function HeroReportPreview({
   const lightMotion = useLightMotion();
   const reduceMotion = useReducedMotion();
   const pool = useMemo(() => (country ? carsForCountry(country) : HOME_SAMPLES), [country]);
-  const cars = country && lightMotion ? [pickFrozenCar(pool)] : pool;
+  /** Phones / Instagram: one photo only — cycling five 720px cards feels like the site never loads. */
+  const cars = lightMotion ? [country ? pickFrozenCar(pool) : pool[0]!] : pool;
 
   const [idx, setIdx] = useState(0);
   const [holding, setHolding] = useState(false);
@@ -131,17 +132,16 @@ export function HeroReportPreview({
   }, [followPointer]);
 
   useEffect(() => {
-    if (cars.length < 2 || holding) return;
-    if (country && lightMotion) return;
-    if (!country && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (lightMotion || cars.length < 2 || holding) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = setInterval(() => setIdx((i) => (i + 1) % cars.length), 5000);
     return () => clearInterval(timer);
   }, [country, lightMotion, cars.length, holding]);
 
   useEffect(() => {
-    if (cars.length === 0) return;
+    if (lightMotion || cars.length === 0) return;
     const urls = [cars[idx]?.photo].filter((u): u is string => Boolean(u));
-    if (!lightMotion && cars.length > 1) {
+    if (cars.length > 1) {
       const next = cars[(idx + 1) % cars.length];
       if (next?.photo) urls.push(next.photo);
     }

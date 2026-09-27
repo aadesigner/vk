@@ -9,6 +9,7 @@ import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
 import { AUTH_ERROR, AUTH_INPUT, AUTH_LABEL, AuthPageShell } from "@/components/auth-page-shell";
 import { SEOHead, usePageSeo } from "@/components/seo";
 import { translateClientError } from "@/lib/translate-client-error";
+import { shouldBlockAuthWithoutRecaptcha, shouldWaitForAuthRecaptcha } from "@/lib/auth-email-submit";
 import { pathFor } from "@/lib/localized-routes";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +29,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
 
-    if (rcEnabled && !rcReady) {
+    if (shouldWaitForAuthRecaptcha(rcEnabled, rcReady)) {
       setError(t("error_recaptcha_loading"));
       return;
     }
@@ -36,7 +37,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       const recaptchaToken = await getToken("forgot_password") ?? undefined;
-      if (rcEnabled && !recaptchaToken) {
+      if (shouldBlockAuthWithoutRecaptcha(rcEnabled, recaptchaToken)) {
         setError(t("error_recaptcha_failed"));
         return;
       }

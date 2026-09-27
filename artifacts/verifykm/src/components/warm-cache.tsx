@@ -7,6 +7,7 @@ import { prefetchNavMenuAssets } from "@/lib/nav-assets";
 import { prefetchVinPageChunk } from "@/lib/prefetch-vin-report";
 import { prefetchPublicSettings } from "@/lib/public-settings";
 import { useAuth } from "@/lib/auth-context";
+import { shouldDeferHeavyClientWarmup } from "@/hooks/use-light-motion";
 
 function prefersReducedNetwork(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -21,7 +22,7 @@ export function WarmCache() {
   const { isSignedIn, isLoaded } = useAuth();
 
   useEffect(() => {
-    if (prefersReducedNetwork()) return;
+    if (prefersReducedNetwork() || shouldDeferHeavyClientWarmup()) return;
 
     // Warm nav icons after first paint so they don't compete with hero decode on iOS.
     let idleId: number | undefined;

@@ -8,6 +8,14 @@ import { useSyncExternalStore } from "react";
 const LIGHT_MQ =
   "(max-width: 767px), (pointer: coarse), (prefers-reduced-motion: reduce)";
 
+/** Instagram / Facebook / TikTok in-app browsers — slow WebViews, no shared cache. */
+export function isInAppBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Instagram|FBAN|FBAV|FB_IAB|TikTok|BytedanceWebview|Line\/|Snapchat/i.test(
+    navigator.userAgent || "",
+  );
+}
+
 function subscribe(onStoreChange: () => void) {
   const mq = window.matchMedia(LIGHT_MQ);
   mq.addEventListener("change", onStoreChange);
@@ -15,7 +23,7 @@ function subscribe(onStoreChange: () => void) {
 }
 
 function getSnapshot() {
-  return window.matchMedia(LIGHT_MQ).matches;
+  return window.matchMedia(LIGHT_MQ).matches || isInAppBrowser();
 }
 
 function getServerSnapshot() {
@@ -29,7 +37,7 @@ export function useLightMotion() {
 /** Sync read for effects outside React (prefetch / warmup gates). */
 export function isLightMotionEnv(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return true;
-  return window.matchMedia(LIGHT_MQ).matches;
+  return window.matchMedia(LIGHT_MQ).matches || isInAppBrowser();
 }
 
 /** Skip decode/prefetch work when the device is weak or Data Saver is on. */

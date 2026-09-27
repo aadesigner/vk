@@ -6,6 +6,9 @@ import {
   readAuthCredentials,
   validateAuthSignupInput,
   resolveAuthRecaptchaToken,
+  isAuthRecaptchaOptionalInApp,
+  shouldBlockAuthWithoutRecaptcha,
+  shouldWaitForAuthRecaptcha,
 } from "./auth-email-submit";
 
 vi.mock("@/hooks/use-recaptcha", () => ({
@@ -92,6 +95,14 @@ describe("resolveAuthRecaptchaToken", () => {
       getToken: async () => "slow-token",
     });
     expect(token).toBe("slow-token");
+  });
+
+  it("treats Instagram as optional recaptcha", () => {
+    expect(isAuthRecaptchaOptionalInApp("Mozilla/5.0 Instagram 1.0")).toBe(true);
+    expect(shouldBlockAuthWithoutRecaptcha(true, null, true)).toBe(false);
+    expect(shouldBlockAuthWithoutRecaptcha(true, null, false)).toBe(true);
+    expect(shouldWaitForAuthRecaptcha(true, false, true)).toBe(false);
+    expect(shouldWaitForAuthRecaptcha(true, false, false)).toBe(true);
   });
 
   it("returns undefined when disabled", async () => {
