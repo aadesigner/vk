@@ -24,15 +24,18 @@ const MobileMenuToggle = forwardRef<
     open: boolean;
     isDarkNav: boolean;
     label: string;
+    compact?: boolean;
   }
->(({ open, isDarkNav, label, className, ...props }, ref) => (
+>(({ open, isDarkNav, label, compact = false, className, ...props }, ref) => (
   <button
     ref={ref}
     type="button"
     aria-label={label}
     aria-expanded={open}
     className={cn(
-      "md:hidden relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full touch-manipulation transition-colors duration-75 active:scale-95",
+      "md:hidden relative inline-flex shrink-0 items-center justify-center rounded-full touch-manipulation active:scale-95",
+      "transition-[width,height,color,background-color] duration-200",
+      compact ? "h-9 w-9" : "h-10 w-10",
       open
         ? "bg-primary/12 text-primary"
         : isDarkNav
@@ -42,22 +45,25 @@ const MobileMenuToggle = forwardRef<
     )}
     {...props}
   >
-    <span className="relative block h-3.5 w-[17px]" aria-hidden>
+    <span className={cn("relative block", compact ? "h-3 w-[15px]" : "h-3.5 w-[17px]")} aria-hidden>
       <span
         className={cn(
-          "absolute left-0 block h-[1.5px] w-[17px] rounded-full bg-current transition-transform duration-100 ease-out",
+          "absolute left-0 block h-[1.5px] rounded-full bg-current transition-transform duration-100 ease-out",
+          compact ? "w-[15px]" : "w-[17px]",
           open ? "top-1/2 -translate-y-1/2 rotate-45" : "top-0",
         )}
       />
       <span
         className={cn(
-          "absolute left-0 top-1/2 block h-[1.5px] w-[17px] -translate-y-1/2 rounded-full bg-current transition-opacity duration-75",
+          "absolute left-0 top-1/2 block h-[1.5px] -translate-y-1/2 rounded-full bg-current transition-opacity duration-75",
+          compact ? "w-[15px]" : "w-[17px]",
           open ? "opacity-0" : "opacity-100",
         )}
       />
       <span
         className={cn(
-          "absolute left-0 block h-[1.5px] w-[17px] rounded-full bg-current transition-transform duration-100 ease-out",
+          "absolute left-0 block h-[1.5px] rounded-full bg-current transition-transform duration-100 ease-out",
+          compact ? "w-[15px]" : "w-[17px]",
           open ? "top-1/2 -translate-y-1/2 -rotate-45" : "bottom-0",
         )}
       />
@@ -106,6 +112,7 @@ type NavbarMobileMenuProps = {
     avatarUrl?: string | null;
   } | null;
   onLogout: () => void;
+  compact?: boolean;
 };
 
 export function NavbarMobileMenu({
@@ -119,6 +126,7 @@ export function NavbarMobileMenu({
   isAdmin,
   user,
   onLogout,
+  compact = false,
 }: NavbarMobileMenuProps) {
   const { t } = useTranslation();
   const [accountOpen, setAccountOpen] = useState(false);
@@ -143,6 +151,7 @@ export function NavbarMobileMenu({
         <MobileMenuToggle
           open={open}
           isDarkNav={isDarkNav}
+          compact={compact}
           label={open ? t("nav_close_menu") : t("nav_open_menu")}
           onPointerDown={prefetchNavMenuAssets}
         />

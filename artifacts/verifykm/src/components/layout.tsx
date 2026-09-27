@@ -122,11 +122,13 @@ function MobileLangPicker({
   onLanguageChange,
   isDarkNav,
   mobileMenuOpen = false,
+  compact = false,
 }: {
   language: string;
   onLanguageChange: (code: string) => void;
   isDarkNav: boolean;
   mobileMenuOpen?: boolean;
+  compact?: boolean;
 }) {
   const { t } = useTranslation();
   const finePointer = useFinePointerHover();
@@ -299,7 +301,8 @@ function MobileLangPicker({
         aria-expanded={open}
         onClick={handleToggle}
         className={cn(
-          "flex items-center gap-1 px-2 font-medium tracking-wide transition-colors duration-75 outline-none h-9 text-[15px]",
+          "flex items-center gap-1 font-medium tracking-wide outline-none transition-[color,height,padding] duration-200",
+          compact ? "h-8 px-1.5 text-[13px] md:h-9 md:px-2 md:text-[15px]" : "h-9 px-2 text-[15px]",
           open
             ? isDarkNav
               ? "text-white"
@@ -309,7 +312,7 @@ function MobileLangPicker({
               : "text-foreground/65 hover:text-foreground",
         )}
       >
-        <FlagImg code={current?.img ?? "gb"} variant="nav" size={18} priority alt={formatImageFlagAlt(current?.label ?? language, t)} />
+        <FlagImg code={current?.img ?? "gb"} variant="nav" size={compact ? 16 : 18} priority alt={formatImageFlagAlt(current?.label ?? language, t)} />
         <ChevronDown
           className={cn(
             "h-3 w-3 transition-transform duration-100",
@@ -540,17 +543,17 @@ export function Navbar({ announcementOffset = 0 }: { announcementOffset?: number
       style={{ top: announcementOffset }}
       className={cn(
       "fixed inset-x-0 z-[100] w-full print:hidden",
-      "md:transition-[border-color,background-color,box-shadow] md:duration-200",
+      "transition-[border-color,background-color,box-shadow] duration-200",
       mobileOpen && "max-md:hidden",
       scrolled
         ? "bg-[#030712]/98 border-b border-[#00a5fd]/20 shadow-[0_8px_32px_-12px_rgba(0,0,0,0.65)] backdrop-blur-xl"
         : "bg-[#030712]/92 border-b border-white/10 backdrop-blur-md",
     )}>
       <div className={cn(
-        "max-w-[1400px] mx-auto px-5 flex justify-between items-center gap-4",
+        "max-w-[1400px] mx-auto flex justify-between items-center gap-4",
         "md:grid md:grid-cols-[auto_1fr_auto] md:gap-6",
-        "h-[4.25rem] md:h-[5.25rem] md:transition-[height] md:duration-200 md:ease-out",
-        scrolled && "md:h-[4.5rem]",
+        "transition-[height,padding] duration-200 ease-out",
+        scrolled ? "h-[3.5rem] px-4 md:h-[4.5rem] md:px-5" : "h-[4.25rem] px-5 md:h-[5.25rem]",
       )}>
 
         {/* ── Logo ── */}
@@ -559,8 +562,8 @@ export function Navbar({ announcementOffset = 0 }: { announcementOffset?: number
             <VerifyKMLogo
               syncDecode
               className={cn(
-                "h-[43px] w-auto",
-                scrolled ? "md:h-[47px]" : "md:h-[55px]",
+                "w-auto transition-[height] duration-200 ease-out",
+                scrolled ? "h-[34px] md:h-[47px]" : "h-[43px] md:h-[55px]",
               )}
             />
           </PrefetchLink>
@@ -634,6 +637,7 @@ export function Navbar({ announcementOffset = 0 }: { announcementOffset?: number
               onLanguageChange={handleLanguageChange}
               isDarkNav={isDarkNav}
               mobileMenuOpen={mobileOpen}
+              compact={scrolled}
             />
           </div>
 
@@ -768,6 +772,7 @@ export function Navbar({ announcementOffset = 0 }: { announcementOffset?: number
               isAdmin={isAdmin}
               user={user}
               onLogout={handleLogout}
+              compact={scrolled}
             />
           </div>
         </div>
