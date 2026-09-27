@@ -125,7 +125,7 @@ function mileageTileClasses(km: number) {
 
 function HeroSummaryList({ items }: { items: VinHeroSummaryItem[] }) {
   return (
-    <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 print:grid">
+    <ul className="grid grid-cols-2 gap-2 print:grid">
       {items.map((item) => {
         const tone = summaryToneClasses(item.tone, item.kind);
         const Icon = item.tone === "positive" || item.tone === "negative" ? tone.Icon : SUMMARY_ICON[item.kind];
@@ -136,7 +136,7 @@ function HeroSummaryList({ items }: { items: VinHeroSummaryItem[] }) {
           <li
             key={item.kind}
             className={cn(
-              "flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-medium",
+              "flex min-w-0 items-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-medium sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-sm",
               mileage
                 ? mileage.tile
                 : item.tone === "negative"
@@ -152,7 +152,7 @@ function HeroSummaryList({ items }: { items: VinHeroSummaryItem[] }) {
             ) : (
               <Icon className={cn("h-4 w-4 shrink-0", tone.icon)} aria-hidden />
             )}
-            <span className="leading-snug tabular-nums">{item.label}</span>
+            <span className="min-w-0 leading-snug tabular-nums">{item.label}</span>
           </li>
         );
       })}
@@ -638,17 +638,17 @@ function HeroVinChip({ vin }: { vin: string }) {
   };
 
   return (
-    <div className="mt-5">
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7dd3fc] print:text-[#0088d4]">
+    <div className="mt-0 shrink-0 text-right lg:mt-5 lg:text-left">
+      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#7dd3fc] lg:text-[10px] print:text-[#0088d4]">
         {t("vin")}
       </p>
       <button
         type="button"
         onClick={() => void copy()}
-        className="mt-1.5 inline-flex max-w-full items-center gap-2 rounded-lg border border-white/15 bg-white/[0.07] px-3 py-2 text-left transition-colors hover:bg-white/12 print:border-slate-300 print:bg-slate-50"
+        className="mt-1 inline-flex max-w-full items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.07] px-2 py-1.5 text-left transition-colors hover:bg-white/12 lg:mt-1.5 lg:gap-2 lg:px-3 lg:py-2 print:border-slate-300 print:bg-slate-50"
         aria-label={`${t("vin")} ${clean}`}
       >
-        <span className="truncate font-mono text-[13px] font-semibold tracking-[0.14em] text-white print:text-slate-900 sm:text-sm">
+        <span className="truncate font-mono text-[11px] font-semibold tracking-[0.08em] text-white print:text-slate-900 sm:text-[13px] lg:tracking-[0.14em] lg:text-sm">
           {clean}
         </span>
         <span className="shrink-0 text-white/50 print:hidden">
@@ -739,22 +739,27 @@ export function VinReportHero({
         <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-stretch">
           <div className="order-2 flex min-w-0 flex-col justify-between px-4 py-5 sm:px-6 sm:py-6 lg:order-1 print:px-3 print:py-3">
             <div>
-              <h1 className="text-[1.7rem] font-extrabold leading-[1.12] tracking-tight text-balance sm:text-3xl lg:text-[2.35rem]">
-                {vehicleTitle}
-              </h1>
-              {displayCountry || trim ? (
-                <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/60 print:text-muted-foreground">
-                  {displayCountry ? (
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" />
-                      {displayCountry}
-                    </span>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-[1.7rem] font-extrabold leading-[1.12] tracking-tight text-balance sm:text-3xl lg:text-[2.35rem]">
+                    {vehicleTitle}
+                  </h1>
+                  {displayCountry || trim ? (
+                    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/60 print:text-muted-foreground">
+                      {displayCountry ? (
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                          {displayCountry}
+                        </span>
+                      ) : null}
+                      {displayCountry && trim ? <span className="text-white/25 print:text-slate-300">·</span> : null}
+                      {trim ? <span className="text-white/75 print:text-slate-700">{trim}</span> : null}
+                    </p>
                   ) : null}
-                  {displayCountry && trim ? <span className="text-white/25 print:text-slate-300">·</span> : null}
-                  {trim ? <span className="text-white/75 print:text-slate-700">{trim}</span> : null}
-                </p>
-              ) : null}
-              {!pendingEta ? <HeroVinChip vin={vin} /> : null}
+                </div>
+                {!pendingEta ? <div className="lg:hidden"><HeroVinChip vin={vin} /></div> : null}
+              </div>
+              {!pendingEta ? <div className="hidden lg:block"><HeroVinChip vin={vin} /></div> : null}
             </div>
             {(scoreData || accidentCount > 0) && (
               <div className={cn("mt-6 grid gap-2.5", scoreData && accidentCount > 0 ? "grid-cols-2" : "grid-cols-1")}>
