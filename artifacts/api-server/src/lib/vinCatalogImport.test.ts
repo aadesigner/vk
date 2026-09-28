@@ -16,6 +16,8 @@ import {
   catalogHasDeliverableReport,
   catalogHasPreviewPhoto,
   catalogIsSeoIndexable,
+  catalogIsReusableWithoutProvider,
+  reportNeedsPhotoBackfill,
   catalogDeliverableFromHint,
   normalizeJsonImportRecord,
   parseCsvBool,
@@ -61,12 +63,47 @@ describe("catalogHasDeliverableReport", () => {
     expect(catalogHasDeliverableReport(withHistoryOnly)).toBe(true);
     expect(catalogHasPreviewPhoto(withHistoryOnly)).toBe(false);
     expect(catalogIsSeoIndexable(withHistoryOnly)).toBe(false);
+    expect(reportNeedsPhotoBackfill(withHistoryOnly)).toBe(false);
+  });
 
-    const withPhoto = {
-      ...withHistoryOnly,
+  it("flags Korean / auction history rows missing galleries for photo backfill", () => {
+    expect(reportNeedsPhotoBackfill({
+      country: "kr",
+      make: "Tesla",
+      model: "Model 3",
+      year: 2022,
+      insuranceClaims: [{ date: "2024-01-01" }],
+      photos: [],
+    })).toBe(true);
+    expect(catalogIsReusableWithoutProvider({
+      country: "kr",
+      insuranceClaims: [{ date: "2024-01-01" }],
+      photos: [],
+    })).toBe(false);
+    expect(reportNeedsPhotoBackfill({
+      country: "us",
+      auctionHistory: [{ date: "2024-01-01" }],
+      photos: [],
+    })).toBe(true);
+    expect(reportNeedsPhotoBackfill({
+      country: "de",
+      make: "BMW",
+      model: "320",
+      year: 2019,
+      photos: [],
+    })).toBe(false);
+    expect(catalogIsReusableWithoutProvider({
+      country: "kr",
+      insuranceClaims: [{ date: "2024-01-01" }],
+      photos: ["https://ci.encar.com/a.jpg"],
+    })).toBe(true);
+    expect(catalogIsSeoIndexable({
+      make: "Hyundai",
+      model: "Elantra",
+      year: 2018,
+      mileageHistory: [{ date: "2020-01-01", odometer: 50000 }],
       photos: ["https://cdn.test/1.jpg"],
-    };
-    expect(catalogIsSeoIndexable(withPhoto)).toBe(true);
+    })).toBe(true);
   });
 
   it("catalogDeliverableFromHint matches full-data helper", () => {

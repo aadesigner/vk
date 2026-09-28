@@ -5,6 +5,7 @@ import { ClientAreaLayout } from "@/components/client-area-layout";
 import { prefetchVinPageChunk, seedVinLookupsFromHistory } from "@/lib/prefetch-vin-report";
 import { warmVinImages } from "@/lib/vin-image-cache";
 import { withVinImageCardSize } from "@/lib/report-photos";
+import { LANG_META } from "@/lib/languages";
 import {
   useGetUserStats,
   useDeleteUserVinLookup,
@@ -498,7 +499,10 @@ export default function Dashboard() {
                     {user?.createdAt && (
                       <p className="text-xs text-white/40">
                         {t("member_since")}{" "}
-                        {new Date(user.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "long" })}
+                        {new Date(user.createdAt).toLocaleDateString(LANG_META[language].intl, {
+                          year: "numeric",
+                          month: "long",
+                        })}
                       </p>
                     )}
                   </div>

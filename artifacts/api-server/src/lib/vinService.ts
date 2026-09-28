@@ -15,6 +15,8 @@ import {
   sanitizeCatalogPayload,
   catalogHasDeliverableReport,
   catalogDeliverableFromHint,
+  catalogIsReusableWithoutProvider,
+  reportNeedsPhotoBackfill,
   preserveAdminTaxiFlag,
   type CatalogDeliverableHint,
 } from "./vinCatalogImport.js";
@@ -930,6 +932,7 @@ export function isStaleCachedReport(
   data: Record<string, unknown> | null | undefined,
 ): boolean {
   if (!data) return false;
+  if (reportNeedsPhotoBackfill(data)) return true;
   if (isPartialCarstatPhotoCache(data)) return true;
   if (isMissingAuction360Media(data)) return true;
   return isStaleKoreanReport(data);
@@ -1205,7 +1208,7 @@ export async function getCachedVin(vin: string) {
       continue;
     }
     const data = row.data as Record<string, unknown> | null;
-    if (!catalogHasDeliverableReport(data)) continue;
+    if (!catalogIsReusableWithoutProvider(data)) continue;
     return row;
   }
 
@@ -1242,7 +1245,7 @@ export async function grantVinReportToUser(
 
   const catalogEntry = await getCatalogVin(normalizedVin);
   const catalogData = (catalogEntry?.data as Record<string, unknown> | null) ?? null;
-  if (catalogEntry && catalogData && catalogHasDeliverableReport(catalogData)) {
+  if (catalogEntry && catalogData && catalogIsReusableWithoutProvider(catalogData)) {
     const currentRate = await getCurrentKrwPerUsd();
     const stamped = applyFrozenKrwPerUsd(catalogData, {
       existingRate: readFrozenKrwPerUsd(catalogData),
@@ -1649,7 +1652,7 @@ export async function fetchFromProvider(
     if (!opts?.force) {
       const catalogEntry = await getCatalogVin(normalized);
       const catalogData = (catalogEntry?.data as Record<string, unknown> | null) ?? null;
-      if (catalogEntry && catalogData && catalogHasDeliverableReport(catalogData)) {
+      if (catalogEntry && catalogData && catalogIsReusableWithoutProvider(catalogData)) {
         // Catalog stores NormalizedVinData (or legacy Carstat raw with lots).
         if (Array.isArray(catalogData.lots)) {
           return normalizeCarstatResponse(catalogData);

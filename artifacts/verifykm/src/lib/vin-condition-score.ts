@@ -33,6 +33,8 @@ export type VinScoreResult = {
   score: string;
   label: string;
   textColor: string;
+  /** Bright text for dark VIN hero panels. */
+  onDarkTextColor: string;
   bgColor: string;
   borderColor: string;
   trackColor: string;
@@ -51,20 +53,22 @@ const MIN_SCORE = 2.0;
 const MAX_SCORE = 9.5;
 const SCORE_REDUCTION = 0.5;
 
-const GREEN = {
+const BLUE = {
   textColor: "text-[#0369a1] dark:text-[#33bbfd]",
+  /** Bright blue for dark hero panels. */
+  onDarkTextColor: "text-[#33bbfd] print:text-[#0369a1]",
   bgColor: "bg-[#e6f6ff] dark:bg-[#003a5c]/40/60",
   borderColor: "border-[#b3e3fe] dark:border-[#006aa8]",
   trackColor: "#00a5fd",
   accentBar: "from-sky-400/55 via-primary/40 to-sky-300/30",
   accentGlow: "from-sky-500/10 via-primary/5 to-transparent",
-  /** Soft hero corner wash (bottom-right) — keep very low opacity. */
   cornerWash:
-    "bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(16,185,129,0.045),transparent_68%)] dark:bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(52,211,153,0.05),transparent_68%)]",
+    "bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(14,165,233,0.05),transparent_68%)] dark:bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(56,189,248,0.05),transparent_68%)]",
 };
 
 const AMBER = {
   textColor: "text-amber-700 dark:text-amber-400",
+  onDarkTextColor: "text-amber-300 print:text-amber-700",
   bgColor: "bg-amber-50 dark:bg-amber-950/60",
   borderColor: "border-amber-200 dark:border-amber-800",
   trackColor: "#d97706",
@@ -74,8 +78,21 @@ const AMBER = {
     "bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(245,158,11,0.04),transparent_68%)] dark:bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(251,191,36,0.045),transparent_68%)]",
 };
 
+const ORANGE = {
+  textColor: "text-orange-700 dark:text-orange-400",
+  onDarkTextColor: "text-orange-300 print:text-orange-700",
+  bgColor: "bg-orange-50 dark:bg-orange-950/60",
+  borderColor: "border-orange-200 dark:border-orange-800",
+  trackColor: "#ea580c",
+  accentBar: "from-orange-500/55 via-orange-400/40 to-amber-400/25",
+  accentGlow: "from-orange-500/10 via-orange-400/5 to-transparent",
+  cornerWash:
+    "bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(249,115,22,0.045),transparent_68%)] dark:bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(251,146,60,0.05),transparent_68%)]",
+};
+
 const RED = {
   textColor: "text-red-700 dark:text-red-400",
+  onDarkTextColor: "text-red-400 print:text-red-700",
   bgColor: "bg-red-50 dark:bg-red-950/60",
   borderColor: "border-red-200 dark:border-red-800",
   trackColor: "#dc2626",
@@ -83,6 +100,19 @@ const RED = {
   accentGlow: "from-red-500/10 via-red-400/5 to-transparent",
   cornerWash:
     "bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(239,68,68,0.04),transparent_68%)] dark:bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(248,113,113,0.045),transparent_68%)]",
+};
+
+/** Deepest red for crushed scores. */
+const DEEP_RED = {
+  textColor: "text-red-800 dark:text-red-300",
+  onDarkTextColor: "text-red-300 print:text-red-800",
+  bgColor: "bg-red-100 dark:bg-red-950/70",
+  borderColor: "border-red-300 dark:border-red-700",
+  trackColor: "#b91c1c",
+  accentBar: "from-red-700/60 via-red-500/50 to-red-400/30",
+  accentGlow: "from-red-700/15 via-red-500/8 to-transparent",
+  cornerWash:
+    "bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(185,28,28,0.055),transparent_68%)] dark:bg-[radial-gradient(ellipse_70%_60%_at_100%_100%,rgba(248,113,113,0.06),transparent_68%)]",
 };
 
 /** Ignore tiny same-year odometer dips (listing republish noise). */
@@ -228,10 +258,23 @@ function ownersPenalty(ownerCount: number | null | undefined): number {
   return Math.min(0.45 + (ownerCount - 5) * 0.12, 0.85);
 }
 
-function labelForScore(final: number, t: (key: string) => string): Pick<VinScoreResult, "label" | "textColor" | "bgColor" | "borderColor" | "trackColor" | "accentBar" | "accentGlow" | "cornerWash"> {
-  if (final >= 8) return { label: t("report_clean"), ...GREEN };
-  if (final >= 6) return { label: t("report_caution"), ...AMBER };
-  return { label: t("report_risk"), ...RED };
+/**
+ * Score color scale: high → blue, mid → amber/orange, low → red (lowest = deepest red).
+ * Labels stay clean / caution / risk at the usual thresholds.
+ */
+function labelForScore(final: number, t: (key: string) => string): Omit<VinScoreResult, "score"> {
+  const label = final >= 8
+    ? t("report_clean")
+    : final >= 6
+      ? t("report_caution")
+      : t("report_risk");
+
+  if (final >= 8) return { label, ...BLUE };
+  if (final >= 7) return { label, ...BLUE };
+  if (final >= 6) return { label, ...AMBER };
+  if (final >= 4.5) return { label, ...ORANGE };
+  if (final >= 3) return { label, ...RED };
+  return { label, ...DEEP_RED };
 }
 
 function finalize(raw: number, t: (key: string) => string): VinScoreResult {

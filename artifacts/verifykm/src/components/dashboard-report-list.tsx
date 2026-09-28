@@ -23,6 +23,7 @@ import {
   markVinImageSessionLoaded,
 } from "@/lib/vin-image-cache";
 import { withVinImageCardSize } from "@/lib/report-photos";
+import { LANG_META, type Language } from "@/lib/languages";
 
 const SORT_OPTIONS: DashboardLookupSort[] = [
   "newest",
@@ -223,11 +224,14 @@ function ReportCard({
   const reportHref = `/${language}/vin/${lookup.vin}`;
   const viewable = isViewableReportStatus(lookup.status);
 
-  const openedOn = new Date(lookup.createdAt).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const openedOn = new Date(lookup.createdAt).toLocaleDateString(
+    LANG_META[(language as Language)]?.intl ?? language,
+    {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    },
+  );
   const findings = hasAccident
     ? formatAccidentCount(t, accidentCount)
     : isSalvage

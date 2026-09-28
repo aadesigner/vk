@@ -1674,13 +1674,33 @@ describe("isPartialCarstatPhotoCache / isStaleCachedReport", () => {
     expect(isStaleCachedReport(row)).toBe(false);
   });
 
+  it("flags Korean rows with zero photos when insurance history exists", () => {
+    const row = {
+      country: "kr",
+      photos: [],
+      insuranceClaims: [{ date: "2024-01-01" }],
+    };
+    expect(isStaleCachedReport(row)).toBe(true);
+  });
+
   it("does not flag full Copart galleries already stored on the row", () => {
+    const row = {
+      country: "us",
+      photos: Array.from({ length: 12 }, (_, i) => `https://cs.copart.com/v1/photo-${i}.jpg`),
+      // Still galleries without 360 are treated as missing auction media — include embed.
+      photos360EmbedUrl: "https://vis.iaai.com/Home/ThreeSixtyView?keys=SID-1~STP-1&iframeview=true",
+    };
+    expect(isPartialCarstatPhotoCache(row)).toBe(false);
+    expect(isStaleCachedReport(row)).toBe(false);
+  });
+
+  it("flags Copart still galleries that are missing 360 media", () => {
     const row = {
       country: "us",
       photos: Array.from({ length: 12 }, (_, i) => `https://cs.copart.com/v1/photo-${i}.jpg`),
     };
     expect(isPartialCarstatPhotoCache(row)).toBe(false);
-    expect(isStaleCachedReport(row)).toBe(false);
+    expect(isStaleCachedReport(row)).toBe(true);
   });
 });
 

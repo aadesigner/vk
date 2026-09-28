@@ -15,7 +15,7 @@ import {
   enrichVinReportDataForServe,
   probeExternalVinAvailability,
 } from "./vinService.js";
-import { catalogHasDeliverableReport } from "./vinCatalogImport.js";
+import { catalogHasDeliverableReport, catalogIsReusableWithoutProvider } from "./vinCatalogImport.js";
 import {
   fulfillManualPendingVinLookup,
   isVinEligibleForManualPending,
@@ -191,8 +191,8 @@ async function runProviderFulfillmentJob(lookupId: number, input: ProviderFulfil
 
       const catalogEntry = await getCatalogVin(normalizedVin);
       const catalogData = (catalogEntry?.data as Record<string, unknown> | null) ?? null;
-      // Local catalog wins — never re-fetch when we already have a deliverable report.
-      if (catalogEntry && catalogData && catalogHasDeliverableReport(catalogData)) {
+      // Local catalog wins unless the gallery is missing (needs photo backfill).
+      if (catalogEntry && catalogData && catalogIsReusableWithoutProvider(catalogData)) {
         await completeLookupFromCatalog(lookupId, input, catalogEntry);
         return;
       }

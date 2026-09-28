@@ -73,6 +73,30 @@ export function catalogHasPreviewPhoto(data: unknown): boolean {
   );
 }
 
+/**
+ * Deliverable history rows that were saved without any gallery.
+ * Encar / auction / KR insurance cars almost always have photos upstream — do not
+ * treat these as a final cache hit or they stay blank forever.
+ */
+export function reportNeedsPhotoBackfill(data: unknown): boolean {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  const d = data as Record<string, unknown>;
+  if (d.fulfillmentPending === true) return false;
+  if (catalogHasPreviewPhoto(d)) return false;
+
+  const country = String(d.country ?? "").toLowerCase();
+  if (country === "kr" || country.includes("korea")) return true;
+  if (Array.isArray(d.auctionHistory) && d.auctionHistory.length > 0) return true;
+  if (Array.isArray(d.registryHistory) && d.registryHistory.length > 0) return true;
+  if (Array.isArray(d.insuranceClaims) && d.insuranceClaims.length > 0) return true;
+  return false;
+}
+
+/** Catalog/cache may be served without calling the provider. */
+export function catalogIsReusableWithoutProvider(data: unknown): boolean {
+  return catalogHasDeliverableReport(data) && !reportNeedsPhotoBackfill(data);
+}
+
 /** Google/sitemap eligibility — deliverable catalog row with a teaser image only. */
 export function catalogIsSeoIndexable(data: unknown): boolean {
   return catalogHasDeliverableReport(data) && catalogHasPreviewPhoto(data);

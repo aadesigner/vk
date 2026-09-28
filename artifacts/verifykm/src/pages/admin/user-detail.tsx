@@ -163,7 +163,7 @@ function VinPhoto({ photos }: { photos?: string[] }) {
 
 function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={cn("rounded-lg md:rounded-xl border border-border/50 bg-card shadow-sm", className)}>
+    <div className={cn("rounded-lg md:rounded-xl border border-border/50 bg-card shadow-sm min-w-0", className)}>
       {children}
     </div>
   );
@@ -633,7 +633,7 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
           {isOnlineNow(user.lastSeenAt) && (
             <p className="text-[11px] font-medium text-[#0088d4] dark:text-[#00a5fd] mt-1">Online now</p>
           )}
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-[11px] text-muted-foreground mt-1 break-words">
             Last sign-in:{" "}
             {user.lastLoginAt
               ? new Date(user.lastLoginAt).toLocaleString(undefined, {
@@ -831,8 +831,8 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
               {(userTransactions?.items?.length ?? 0) === 0 ? (
                 <p className="text-xs md:text-sm text-muted-foreground text-center py-6">No transactions yet</p>
               ) : (
-                <div className="overflow-x-auto rounded-lg border border-border/40">
-                  <table className="w-full text-xs md:text-sm">
+                <div className="admin-table-scroll max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x rounded-lg border border-border/40">
+                  <table className="w-max min-w-full text-xs md:text-sm [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap">
                     <thead>
                       <tr className="border-b border-border/40 bg-muted/30 text-left text-muted-foreground">
                         <th className="px-3 py-2 font-medium">ID</th>
@@ -906,14 +906,14 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
 
         <div className="space-y-3 md:space-y-4">
           <Panel className="overflow-hidden lg:row-span-2">
-            <div className="px-3.5 pt-3.5 pb-2.5 md:px-4 md:pt-4 md:pb-3 border-b border-border/40 flex items-center justify-between gap-3">
+            <div className="px-3.5 pt-3.5 pb-2.5 md:px-4 md:pt-4 md:pb-3 border-b border-border/40 flex items-center justify-between gap-3 min-w-0">
               <h2 className="text-sm md:text-base font-semibold flex items-center gap-2 min-w-0">
                 <Car className="h-4 w-4 text-primary shrink-0" />
                 VIN lookups
                 <span className="text-xs font-normal text-muted-foreground tabular-nums">({lookupsTotal})</span>
               </h2>
               {totalPages > 1 && (
-                <div className="flex items-center gap-0.5 shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0 max-w-[55%] overflow-x-auto">
                   <Button size="icon" variant="ghost" className="h-7 w-7" disabled={lookupsPage <= 1} onClick={() => setLookupsPage(p => p - 1)}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -950,7 +950,7 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
                   <p className="text-xs md:text-sm text-muted-foreground">No VIN lookups yet</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border/40 rounded-lg overflow-hidden border border-border/40">
+                <div className="divide-y divide-border/40 rounded-lg overflow-hidden border border-border/40 min-w-0">
                   {lookups.map(lookup => {
                     const vd = lookup.data;
                     const vehicleName = vd?.make && vd?.model
@@ -960,12 +960,12 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
                     return (
                       <div
                         key={lookup.id}
-                        className="flex items-center gap-3 p-2.5 md:p-3 bg-card hover:bg-muted/30 transition-colors"
+                        className="flex flex-wrap items-center gap-3 p-2.5 md:p-3 bg-card hover:bg-muted/30 transition-colors min-w-0"
                       >
                         <VinPhoto photos={vd?.photos} />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <Link href={`/adminx/vin/${lookup.vin}`}>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Link href={`/adminx/vin/${lookup.vin}`} className="min-w-0 truncate">
                               <span className="font-mono text-xs font-semibold hover:text-primary transition-colors">{lookup.vin}</span>
                             </Link>
                             <Badge
@@ -1001,7 +1001,7 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
                           <Button
                             size="sm"
                             variant="outline"
-                            className="shrink-0 text-orange-600 border-orange-300 hover:bg-orange-50 hover:text-orange-700 dark:hover:bg-orange-950/30 gap-1.5 text-xs h-8"
+                            className="shrink-0 ml-auto text-orange-600 border-orange-300 hover:bg-orange-50 hover:text-orange-700 dark:hover:bg-orange-950/30 gap-1.5 text-xs h-8"
                             onClick={() => handleRevokeAccess(lookup.id)}
                             disabled={revokingId === lookup.id}
                             title="Revoke access — keeps data in DB, removes payment access"
@@ -1026,8 +1026,8 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
               {(creditPurchases?.items?.length ?? 0) === 0 ? (
                 <p className="text-xs md:text-sm text-muted-foreground text-center py-6">No credit pack purchases yet</p>
               ) : (
-                <div className="overflow-x-auto rounded-lg border border-border/40">
-                  <table className="w-full text-xs md:text-sm">
+                <div className="admin-table-scroll max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x rounded-lg border border-border/40">
+                  <table className="w-max min-w-full text-xs md:text-sm [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap">
                     <thead>
                       <tr className="border-b border-border/40 bg-muted/30 text-left text-muted-foreground">
                         <th className="px-3 py-2 font-medium">Date</th>

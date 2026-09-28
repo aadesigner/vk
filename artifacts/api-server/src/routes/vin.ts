@@ -17,7 +17,7 @@ import {
   sanitizeAuctionPanoramaUrl,
   splitAuctionPanoramaUrls,
 } from "../lib/vinService.js";
-import { catalogHasDeliverableReport } from "../lib/vinCatalogImport.js";
+import { catalogHasDeliverableReport, catalogIsReusableWithoutProvider } from "../lib/vinCatalogImport.js";
 import { logger } from "../lib/logger.js";
 import { decodeVin, decodeCountry, resolveCheckDigitValid, decodeVinDiagnostics, isVehicleTooOldForLookup } from "@workspace/vin-decode";
 import { decodeFreeVin } from "../lib/vinDecodeFree.js";
@@ -696,8 +696,8 @@ router.post("/vin/lookup", vinLookupLimiter, vinLookupUserLimiter, requireAuth, 
 
   const catalogEntry = await getCatalogVin(normalizedVin);
   const catalogData = (catalogEntry?.data as Record<string, unknown> | null) ?? null;
-  // Local catalog wins — never re-fetch provider when we already have a deliverable report.
-  if (catalogEntry && catalogData && catalogHasDeliverableReport(catalogData)) {
+  // Local catalog wins unless the gallery is missing (Encar/auction rows need a photo backfill).
+  if (catalogEntry && catalogData && catalogIsReusableWithoutProvider(catalogData)) {
     const racedLookup = await findCompleteUserLookup(userId, normalizedVin);
     if (racedLookup) {
       await sendExistingLookupResponse(res, racedLookup);

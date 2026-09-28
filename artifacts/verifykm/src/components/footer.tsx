@@ -130,7 +130,7 @@ export function Footer() {
       <div className="pointer-events-none absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-[#00a5fd]/[0.05] blur-3xl" />
 
       <div className="relative border-b border-white/8 bg-[#00a5fd]/[0.08]">
-        <div className={cn(shell, "flex flex-col items-start justify-between gap-6 py-9 sm:flex-row sm:items-center sm:py-11")}>
+        <div className={cn(shell, "flex flex-col items-center justify-between gap-6 py-9 text-center sm:flex-row sm:items-center sm:py-11 sm:text-left")}>
           <div className="max-w-3xl space-y-2">
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.28em] text-[#7dd3fc]">
               {t("footer_investigate_label")}

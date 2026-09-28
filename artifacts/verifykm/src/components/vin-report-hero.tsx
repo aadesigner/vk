@@ -21,6 +21,7 @@ export type VinHeroScore = {
   score: string;
   label: string;
   textColor: string;
+  onDarkTextColor?: string;
   bgColor: string;
   borderColor: string;
   accentBar?: string;
@@ -765,12 +766,19 @@ export function VinReportHero({
               <div className={cn("mt-6 grid gap-2.5", scoreData && accidentCount > 0 ? "grid-cols-2" : "grid-cols-1")}>
                 {scoreData ? (
                   <div className="rounded-xl border border-white/10 bg-white/[0.06] px-3 py-3 print:border-slate-200 print:bg-slate-50">
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-white/40 print:text-slate-500">
+                    <p className={cn(
+                      "font-mono text-[10px] font-bold uppercase tracking-[0.16em]",
+                      scoreData.onDarkTextColor ?? scoreData.textColor,
+                      "opacity-90",
+                    )}>
                       {scoreData.label}
                     </p>
-                    <p className="mt-1 text-[1.75rem] font-black tabular-nums leading-none text-white print:text-slate-950">
+                    <p className={cn(
+                      "mt-1 text-[1.75rem] font-black tabular-nums leading-none",
+                      scoreData.onDarkTextColor ?? scoreData.textColor,
+                    )}>
                       {scoreData.score}
-                      <span className="ml-0.5 text-sm font-semibold text-white/35 print:text-slate-400">/10</span>
+                      <span className="ml-0.5 text-sm font-semibold opacity-45">/10</span>
                     </p>
                   </div>
                 ) : null}

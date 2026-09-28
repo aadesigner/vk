@@ -735,6 +735,20 @@ html.admin-theme-active .admin-main table {
   max-width: 100%;
 }
 
+html.admin-theme-active .admin-main .admin-table-scroll {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+html.admin-theme-active .admin-main .admin-table-scroll table {
+  max-width: none;
+  width: max-content;
+  min-width: 100%;
+}
+
 html.admin-theme-active .admin-main img,
 html.admin-theme-active .admin-main video,
 html.admin-theme-active .admin-main iframe {

@@ -239,7 +239,7 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 max-w-full">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Users</h1>
@@ -268,8 +268,8 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-0 w-full sm:min-w-[200px] max-w-sm">
+      <div className="flex flex-col gap-3">
+        <div className="relative w-full min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by email or name..."
@@ -278,11 +278,12 @@ export default function AdminUsers() {
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
+        <div className="grid grid-cols-2 gap-3 min-w-0 sm:flex sm:flex-wrap">
         <Select
           value={statusFilter || "all"}
           onValueChange={(v) => { setStatusFilter(v === "all" ? "" : v as AdminGetUsersStatus); setPage(1); }}
         >
-          <SelectTrigger className="w-full sm:w-[160px]">
+          <SelectTrigger className="w-full min-w-0 sm:w-[160px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -295,7 +296,7 @@ export default function AdminUsers() {
           value={checksFilter || "all"}
           onValueChange={(v) => { setChecksFilter(v === "all" ? "" : v as AdminGetUsersChecks); setPage(1); }}
         >
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger className="w-full min-w-0 sm:w-[180px]">
             <SelectValue placeholder="VIN checks" />
           </SelectTrigger>
           <SelectContent>
@@ -308,7 +309,7 @@ export default function AdminUsers() {
           value={hasPhoneFilter || "all"}
           onValueChange={(v) => { setHasPhoneFilter(v === "all" ? "" : v as AdminGetUsersHasPhone); setPage(1); }}
         >
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger className="w-full min-w-0 sm:w-[180px]">
             <SelectValue placeholder="Phone number" />
           </SelectTrigger>
           <SelectContent>
@@ -321,7 +322,7 @@ export default function AdminUsers() {
           value={emailDomainFilter || "all"}
           onValueChange={(v) => { setEmailDomainFilter(v === "all" ? "" : v); setPage(1); }}
         >
-          <SelectTrigger className="w-full sm:w-[220px]">
+          <SelectTrigger className="w-full min-w-0 sm:w-[220px]">
             <SelectValue placeholder="Email domain" />
           </SelectTrigger>
           <SelectContent className="max-h-72">
@@ -337,7 +338,7 @@ export default function AdminUsers() {
           value={referFilter || "all"}
           onValueChange={(v) => { setReferFilter(v === "all" ? "" : v); setPage(1); }}
         >
-          <SelectTrigger className="w-full sm:w-[220px]">
+          <SelectTrigger className="w-full min-w-0 sm:w-[220px]">
             <SelectValue placeholder="Refer" />
           </SelectTrigger>
           <SelectContent className="max-h-72">
@@ -358,14 +359,15 @@ export default function AdminUsers() {
           allLabel="All countries"
           emptyLabel="No country set"
           emptyValue={COUNTRY_UNSET}
-          className="w-full sm:w-[240px]"
+          className="w-full min-w-0 sm:w-[240px]"
         />
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="shrink-0">
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="col-span-2 w-full sm:w-auto sm:shrink-0">
             <X className="h-4 w-4 mr-1" />
             Clear filters
           </Button>
         )}
+        </div>
       </div>
 
       {hasActiveFilters && (
@@ -411,8 +413,8 @@ export default function AdminUsers() {
         <span className="font-mono">phone_national</span>).
       </p>
 
-      <Card>
-        <CardContent className="p-0">
+      <Card className="min-w-0 overflow-hidden">
+        <CardContent className="p-0 min-w-0">
           {loadError ? (
             <div className="py-12 px-6 text-center space-y-3">
               <AlertCircle className="h-10 w-10 text-destructive mx-auto" />
@@ -429,8 +431,8 @@ export default function AdminUsers() {
           ) : users.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">No users found</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="admin-table-scroll max-w-full min-w-0 overflow-x-auto overscroll-x-contain">
+              <table className="w-max min-w-full text-sm [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap">
                 <thead className="border-b">
                   <tr>
                     <th className="text-left p-4 font-medium text-muted-foreground">Email</th>
