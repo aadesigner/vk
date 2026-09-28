@@ -2286,7 +2286,7 @@ html.dark.admin-theme-active[data-admin-theme="orbit"] .admin-mood-gauge__amount
   }
 }
 
-/* POK GuestCheckout — card-only UI; email/billing prefilled & hidden (still validated by SDK) */
+/* POK GuestCheckout — card + required Country; optional address/phone stay hidden */
 .verifykm-pok-checkout #pok-payment-container {
   max-width: 100%;
 }
@@ -2298,6 +2298,23 @@ html.dark.admin-theme-active[data-admin-theme="orbit"] .admin-mood-gauge__amount
 .verifykm-pok-checkout .pok-payment-button {
   border-radius: 0.75rem;
   font-weight: 700;
+}
+
+/*
+ * City + ZIP share a 2-col grid. POK wraps each field in an extra div, so a hidden
+ * city must collapse the row — otherwise ZIP stays in column 2 with a hole on the left.
+ */
+.verifykm-pok-checkout .pok-payment-input-row:has([data-verifykm-pok-hidden="1"]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.verifykm-pok-checkout .pok-payment-input-row > :has([data-verifykm-pok-hidden="1"]),
+.verifykm-pok-checkout .pok-payment-input-row > [data-verifykm-pok-hidden="1"] {
+  display: none !important;
+}
+
+.verifykm-pok-checkout .pok-payment-input-row:has([data-verifykm-pok-hidden="1"]) > :not(:has([data-verifykm-pok-hidden="1"])):not([data-verifykm-pok-hidden="1"]) {
+  grid-column: 1 / -1;
 }
 
 /* VerifyKM motion — investigative scan (distinct from kmcheck) */

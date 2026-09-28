@@ -172,6 +172,13 @@ const pokCheckoutConfirm = read("src/lib/pok-checkout-confirm.ts");
 mustInclude(pokCheckoutConfirm, "confirmPokOrderWithRetry", "client POK confirm retry");
 mustInclude(pokCheckoutConfirm, "POK_CHECKOUT_SESSION_KEY", "POK session storage key");
 
+const pokGuestCheckout = read("src/components/pok-guest-checkout.tsx");
+mustInclude(pokGuestCheckout, 'countrySelect: "dropdown"', "POK country uses SDK dropdown");
+mustInclude(pokGuestCheckout, "buildPokPaymentInitialState", "POK form sends full initialState");
+const pokGuestFields = read("src/lib/pok-guest-fields.ts");
+mustInclude(pokGuestFields, "countryCode", "POK initial state includes countryCode");
+mustNotInclude(pokGuestFields, 'countryCode: "AL"', "POK must not invent AL when country is unset");
+
 mustInclude(checkoutPage, "confirmPokOrderWithRetry", "checkout uses POK confirm retry");
 mustInclude(checkoutPage, "readPokCheckoutSession", "checkout resumes POK session");
 mustInclude(checkoutPage, "/api/payments/confirm-pok-order", "checkout POK confirm endpoint");
@@ -222,7 +229,7 @@ function runPaymentUnitTests() {
 
   const jsdomRun = spawnSync(
     "pnpm",
-    ["exec", "vitest", "run", "checkout-vin-flow", "pok-checkout-confirm", "--environment", "jsdom"],
+    ["exec", "vitest", "run", "checkout-vin-flow", "pok-checkout-confirm", "pok-guest-fields", "--environment", "jsdom"],
     { cwd: apiRoot, stdio: "inherit", shell: true, env: testEnv },
   );
   if (jsdomRun.status !== 0) {
