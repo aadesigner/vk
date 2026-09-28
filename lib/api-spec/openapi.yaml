@@ -558,6 +558,13 @@ paths:
           description: >
             Filter by email domain (e.g. gmail.com, yahoo.com). Case-insensitive.
             Combines with other filters (AND).
+        - name: refer
+          in: query
+          schema:
+            type: string
+          description: >
+            Filter by first-touch acquisition channel (e.g. instagram_social, google_organic,
+            unknown). Combines with other filters (AND).
       responses:
         "200":
           description: Paginated user list
@@ -565,6 +572,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminUserPage"
+
+  /admin/users/refer-channels:
+    get:
+      operationId: adminGetUserReferChannels
+      tags: [admin]
+      summary: List distinct acquisition / refer channels among users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Channels with user counts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [channels]
+                properties:
+                  channels:
+                    type: array
+                    items:
+                      type: object
+                      required: [channel, count]
+                      properties:
+                        channel:
+                          type: string
+                        count:
+                          type: integer
 
   /admin/users/email-domains:
     get:
@@ -637,6 +671,13 @@ paths:
           description: >
             Filter by email domain (e.g. gmail.com, yahoo.com). Case-insensitive.
             Combines with other filters (AND).
+        - name: refer
+          in: query
+          schema:
+            type: string
+          description: >
+            Filter by first-touch acquisition channel (e.g. instagram_social, google_organic,
+            unknown). Combines with other filters (AND).
       responses:
         "200":
           description: CSV file download

@@ -797,6 +797,23 @@ function normalizeEmailDomain(raw: string): string | null {
   return domain;
 }
 
+/** Coalesced first-touch channel (channel → bucket → unknown), same as admin stats. */
+function userReferChannelSql() {
+  return sql`lower(COALESCE(
+    NULLIF(TRIM(${usersTable.acquisitionChannel}), ''),
+    NULLIF(TRIM(${usersTable.acquisitionBucket}), ''),
+    'unknown'
+  ))`;
+}
+
+function normalizeReferChannel(raw: string): string | null {
+  const key = raw.trim().toLowerCase();
+  if (!key) return null;
+  if (key === "unset" || key === "none" || key === "null" || key === "other") return "unknown";
+  if (!/^[a-z0-9_+-]{1,64}$/.test(key)) return null;
+  return key;
+}
+
 function buildAdminUserWhere(
   searchRaw: string,
   status: string,
@@ -804,6 +821,7 @@ function buildAdminUserWhere(
   countryRaw = "",
   hasPhoneRaw = "",
   emailDomainRaw = "",
+  referRaw = "",
 ) {
   const conditions = [];
   const search = searchRaw.trim();
@@ -851,6 +869,10 @@ function buildAdminUserWhere(
   const emailDomain = normalizeEmailDomain(emailDomainRaw);
   if (emailDomain) {
     conditions.push(sql`lower(split_part(${usersTable.email}, '@', 2)) = ${emailDomain}`);
+  }
+  const refer = normalizeReferChannel(referRaw);
+  if (refer) {
+    conditions.push(sql`${userReferChannelSql()} = ${refer}`);
   }
   return conditions.length > 0 ? and(...conditions) : undefined;
 }
@@ -1013,8 +1035,9 @@ router.get("/admin/users", requireAdmin, async (req, res) => {
     const country = String(req.query.country ?? "");
     const hasPhone = String(req.query.hasPhone ?? "");
     const emailDomain = String(req.query.emailDomain ?? "");
+    const refer = String(req.query.refer ?? "");
 
-    const where = buildAdminUserWhere(search, status, checks, country, hasPhone, emailDomain);
+    const where = buildAdminUserWhere(search, status, checks, country, hasPhone, emailDomain, refer);
 
     const [users, totalRow] = await Promise.all([
       selectAdminUsersPage(where, limit, offset),
@@ -1052,6 +1075,34 @@ router.get("/admin/users", requireAdmin, async (req, res) => {
   }
 });
 
+/** Distinct first-touch refer channels among users (for admin filter dropdown). */
+router.get("/admin/users/refer-channels", requireAdmin, async (_req, res) => {
+  try {
+    const result = await db.execute(sql`
+      SELECT
+        lower(COALESCE(
+          NULLIF(TRIM(acquisition_channel), ''),
+          NULLIF(TRIM(acquisition_bucket), ''),
+          'unknown'
+        )) AS channel,
+        COUNT(*)::int AS count
+      FROM users
+      GROUP BY 1
+      ORDER BY count DESC, channel ASC
+      LIMIT 200
+    `);
+    const list = (result.rows ?? []) as Array<{ channel: string; count: number }>;
+    res.json({
+      channels: list
+        .filter((r) => r.channel)
+        .map((r) => ({ channel: String(r.channel).toLowerCase(), count: Number(r.count) || 0 })),
+    });
+  } catch (err) {
+    logger.warn({ err }, "admin_users_refer_channels_failed");
+    res.json({ channels: [] });
+  }
+});
+
 /** Distinct email domains among users (for admin filter dropdown). */
 router.get("/admin/users/email-domains", requireAdmin, async (_req, res) => {
   try {
@@ -1084,7 +1135,8 @@ router.get("/admin/users/export", requireAdmin, async (req, res) => {
   const country = String(req.query.country ?? "");
   const hasPhone = String(req.query.hasPhone ?? "");
   const emailDomain = String(req.query.emailDomain ?? "");
-  const where = buildAdminUserWhere(search, status, checks, country, hasPhone, emailDomain);
+  const refer = String(req.query.refer ?? "");
+  const where = buildAdminUserWhere(search, status, checks, country, hasPhone, emailDomain, refer);
 
   const users = await (async () => {
     try {
@@ -1125,12 +1177,13 @@ router.get("/admin/users/export", requireAdmin, async (req, res) => {
     return s;
   };
 
-  const header = "id,email,name,country_code,phone_prefix,phone_national,status,created_at,total_checks,total_spent\n";
+  const header = "id,email,name,country_code,phone_prefix,phone_national,status,refer,created_at,total_checks,total_spent\n";
   const csvBody = users
     .map(u => [
       u.id, u.email, u.name ?? "", u.countryCode ?? "",
       u.phonePrefix ?? "", u.phoneNational ?? "",
       u.isBanned ? "banned" : "active",
+      (u.acquisitionChannel || u.acquisitionBucket || "").trim() || "unknown",
       u.createdAt instanceof Date ? u.createdAt.toISOString() : String(u.createdAt ?? ""),
       checksMap.get(u.id) ?? 0,
       spentMap.get(u.id) ?? 0,

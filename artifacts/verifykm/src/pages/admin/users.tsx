@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Search, Ban, CheckCircle2, Settings2, Download, Upload, X, AlertCircle, RefreshCw, AtSign } from "lucide-react";
+import { Search, Ban, CheckCircle2, Settings2, Download, Upload, X, AlertCircle, RefreshCw, AtSign, Megaphone } from "lucide-react";
 import { Link } from "wouter";
 import { adminUsersQuery } from "@/lib/admin-query-options";
 import { AdminQueryFallback } from "@/components/admin-query-fallback";
@@ -29,9 +29,45 @@ import { UserCountrySelect } from "@/components/user-country-select";
 import { FlagImg } from "@/components/flag-img";
 import { formatPhoneDisplay } from "@/lib/user-phone";
 import { AdminUserQuickEdit } from "@/components/admin/admin-user-quick-edit";
+import {
+  acquisitionChannelShortLabel,
+  acquisitionChannelTintClass,
+  isOtherAcquisitionChannel,
+} from "@/lib/admin-dashboard-stats";
 
 function userHasPhone(user: { phonePrefix?: string | null; phoneNational?: string | null }) {
   return Boolean(user.phonePrefix?.trim() && user.phoneNational?.trim());
+}
+
+function userReferKey(user: { acquisitionChannel?: string | null; acquisitionBucket?: string | null }) {
+  const key = (user.acquisitionChannel ?? user.acquisitionBucket ?? "").trim();
+  return key || null;
+}
+
+function UserReferBadge({
+  user,
+}: {
+  user: { acquisitionChannel?: string | null; acquisitionBucket?: string | null; acquisitionReferrer?: string | null };
+}) {
+  const channel = userReferKey(user);
+  if (!channel) return <span className="text-muted-foreground">—</span>;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${acquisitionChannelTintClass(channel)}`}
+      title={user.acquisitionReferrer ? `From ${user.acquisitionReferrer}` : channel}
+    >
+      {acquisitionChannelShortLabel(channel)}
+    </span>
+  );
+}
+
+type ReferChannelRow = { channel: string; count: number };
+
+function sortReferChannels(rows: ReferChannelRow[]): ReferChannelRow[] {
+  const named = rows.filter((r) => !isOtherAcquisitionChannel(r.channel));
+  const other = rows.filter((r) => isOtherAcquisitionChannel(r.channel));
+  named.sort((a, b) => b.count - a.count || a.channel.localeCompare(b.channel));
+  return [...named, ...other];
 }
 
 const COUNTRY_UNSET = "unset";
@@ -46,6 +82,7 @@ export default function AdminUsers() {
   const [countryFilter, setCountryFilter] = useState("");
   const [hasPhoneFilter, setHasPhoneFilter] = useState<"" | AdminGetUsersHasPhone>("");
   const [emailDomainFilter, setEmailDomainFilter] = useState("");
+  const [referFilter, setReferFilter] = useState("");
   const [page, setPage] = useState(1);
   const [importResult, setImportResult] = useState<UserImportResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
@@ -64,6 +101,7 @@ export default function AdminUsers() {
     country: countryFilter || undefined,
     hasPhone: hasPhoneFilter || undefined,
     emailDomain: emailDomainFilter || undefined,
+    refer: referFilter || undefined,
   };
 
   const { data, isLoading, isError, error, refetch, isFetching } = useAdminGetUsers(listParams, {
@@ -82,6 +120,18 @@ export default function AdminUsers() {
   });
   const emailDomains = emailDomainsData ?? [];
 
+  const { data: referChannelsData } = useQuery({
+    queryKey: ["admin", "users", "refer-channels"],
+    queryFn: async (): Promise<ReferChannelRow[]> => {
+      const res = await fetch(`${basePath}/api/admin/users/refer-channels`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to load refer channels");
+      const json = await res.json() as { channels?: ReferChannelRow[] };
+      return Array.isArray(json.channels) ? json.channels : [];
+    },
+    staleTime: 60_000,
+  });
+  const referChannels = sortReferChannels(referChannelsData ?? []);
+
   const banUser = useAdminBanUser({
     mutation: { onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] }) },
   });
@@ -94,6 +144,7 @@ export default function AdminUsers() {
         setImportResult(result);
         queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
         queryClient.invalidateQueries({ queryKey: ["admin", "users", "email-domains"] });
+        queryClient.invalidateQueries({ queryKey: ["admin", "users", "refer-channels"] });
       },
       onError: (err: unknown) => {
         const apiErr = err as ApiError<{ error?: string }>;
@@ -105,7 +156,8 @@ export default function AdminUsers() {
   const users = data?.items ?? [];
   const totalPages = data ? Math.ceil(data.total / limit) : 1;
   const hasActiveFilters = Boolean(search) || Boolean(statusFilter) || Boolean(checksFilter)
-    || Boolean(countryFilter) || Boolean(hasPhoneFilter) || Boolean(emailDomainFilter);
+    || Boolean(countryFilter) || Boolean(hasPhoneFilter) || Boolean(emailDomainFilter)
+    || Boolean(referFilter);
   useQueryRecovery(isError, isFetching, refetch);
   const loadError = showFatalQueryError(isError, isFetching, !!data)
     ? queryErrorMessage(error, "Failed to load users")
@@ -127,6 +179,7 @@ export default function AdminUsers() {
         country: countryFilter || undefined,
         hasPhone: hasPhoneFilter || undefined,
         emailDomain: emailDomainFilter || undefined,
+        refer: referFilter || undefined,
       });
       const blob = new Blob([csv.startsWith("\uFEFF") ? csv : `\uFEFF${csv}`], {
         type: "text/csv;charset=utf-8",
@@ -136,6 +189,7 @@ export default function AdminUsers() {
       a.href = url;
       const parts = ["users"];
       if (emailDomainFilter) parts.push(emailDomainFilter.replace(/\./g, "-"));
+      if (referFilter) parts.push(referFilter.replace(/_/g, "-"));
       if (countryFilter && countryFilter !== COUNTRY_UNSET) parts.push(countryFilter.toLowerCase());
       if (countryFilter === COUNTRY_UNSET) parts.push("no-country");
       if (hasPhoneFilter === "yes") parts.push("has-phone");
@@ -173,6 +227,7 @@ export default function AdminUsers() {
     setCountryFilter("");
     setHasPhoneFilter("");
     setEmailDomainFilter("");
+    setReferFilter("");
     setPage(1);
   }
 
@@ -278,6 +333,22 @@ export default function AdminUsers() {
             ))}
           </SelectContent>
         </Select>
+        <Select
+          value={referFilter || "all"}
+          onValueChange={(v) => { setReferFilter(v === "all" ? "" : v); setPage(1); }}
+        >
+          <SelectTrigger className="w-full sm:w-[220px]">
+            <SelectValue placeholder="Refer" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="all">All refers</SelectItem>
+            {referChannels.map(({ channel, count }) => (
+              <SelectItem key={channel} value={channel}>
+                {acquisitionChannelShortLabel(channel)} ({count})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <UserCountrySelect
           value={countryFilter}
           onValueChange={(v) => {
@@ -317,6 +388,12 @@ export default function AdminUsers() {
               {emailDomainFilter}
             </Badge>
           )}
+          {referFilter && (
+            <Badge variant="secondary" className={`inline-flex items-center gap-1 ${acquisitionChannelTintClass(referFilter)}`}>
+              <Megaphone className="h-3 w-3" />
+              Refer: {acquisitionChannelShortLabel(referFilter)}
+            </Badge>
+          )}
           {countryFilter && (
             <Badge variant="secondary" className="inline-flex items-center gap-1.5">
               <span>Country / Nationality:</span>
@@ -328,6 +405,7 @@ export default function AdminUsers() {
 
       <p className="text-xs text-muted-foreground -mt-2">
         Filters combine (AND). Export CSV uses the same filters — e.g. one email domain, or country + has phone.
+        Refer groups users by first-touch source (Instagram, Google, Direct, …).
         Import needs an <span className="font-mono">email</span> column (optional{" "}
         <span className="font-mono">name</span>, <span className="font-mono">phone_prefix</span>,{" "}
         <span className="font-mono">phone_national</span>).
@@ -356,6 +434,7 @@ export default function AdminUsers() {
                 <thead className="border-b">
                   <tr>
                     <th className="text-left p-4 font-medium text-muted-foreground">Email</th>
+                    <th className="text-left p-4 font-medium text-muted-foreground">Refer</th>
                     <th className="text-left p-4 font-medium text-muted-foreground">Country</th>
                     <th className="text-left p-4 font-medium text-muted-foreground">Phone number</th>
                     <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
@@ -369,6 +448,9 @@ export default function AdminUsers() {
                     <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="p-4">
                         <AdminUserQuickEdit user={user} />
+                      </td>
+                      <td className="p-4">
+                        <UserReferBadge user={user} />
                       </td>
                       <td className="p-4 text-muted-foreground">
                         {user.countryCode ? (

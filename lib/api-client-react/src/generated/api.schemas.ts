@@ -955,6 +955,10 @@ hasPhone?: AdminGetUsersHasPhone;
  * Filter by email domain (e.g. gmail.com). Combines with other filters (AND).
  */
 emailDomain?: string;
+/**
+ * Filter by first-touch acquisition / refer channel (e.g. instagram_social). Combines with other filters (AND).
+ */
+refer?: string;
 };
 
 export type AdminGetUsersStatus = typeof AdminGetUsersStatus[keyof typeof AdminGetUsersStatus];
@@ -998,6 +1002,10 @@ hasPhone?: AdminExportUsersHasPhone;
  * Filter by email domain (e.g. gmail.com). Combines with other filters (AND).
  */
 emailDomain?: string;
+/**
+ * Filter by first-touch acquisition / refer channel (e.g. instagram_social). Combines with other filters (AND).
+ */
+refer?: string;
 };
 
 export type AdminExportUsersStatus = typeof AdminExportUsersStatus[keyof typeof AdminExportUsersStatus];
