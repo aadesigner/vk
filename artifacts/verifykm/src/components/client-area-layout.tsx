@@ -123,6 +123,7 @@ export function ClientAreaLayout({ children, heading, before, className }: Props
   ];
 
   const displayName = user?.name?.trim() || t("account");
+  const showUserStats = activeSection === "reports";
 
   return (
     <div className={cn("w-full min-h-[50vh] pb-12 md:pb-16", className)}>
@@ -152,9 +153,11 @@ export function ClientAreaLayout({ children, heading, before, className }: Props
       <div className="mx-auto w-full max-w-6xl md:px-8 md:pt-10">
         {heading ? (
           <div className="px-4 pb-1 pt-4 text-left md:px-0 md:pb-7 md:pt-0">
-            <div className="mb-3 md:hidden">
-              <ClientAreaUserStats credits={creditBalance} reports={totalReports} compact onLight />
-            </div>
+            {showUserStats ? (
+              <div className="mb-3 md:hidden">
+                <ClientAreaUserStats credits={creditBalance} reports={totalReports} compact onLight />
+              </div>
+            ) : null}
             {heading}
           </div>
         ) : null}
@@ -182,9 +185,11 @@ export function ClientAreaLayout({ children, heading, before, className }: Props
             </span>
           </Link>
 
-          <div className="px-3 pb-3">
-            <ClientAreaUserStats credits={creditBalance} reports={totalReports} />
-          </div>
+          {showUserStats ? (
+            <div className="px-3 pb-3">
+              <ClientAreaUserStats credits={creditBalance} reports={totalReports} />
+            </div>
+          ) : null}
 
           <nav className="flex flex-col gap-0.5 px-2 pb-2" aria-label={t("account")}>
             {navItems.map(({ id, icon: Icon, label, href }) => {
