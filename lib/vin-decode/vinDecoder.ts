@@ -228,8 +228,22 @@ const WMI_ORIGIN_COUNTRY_PREFIXES: readonly { prefix: string; country: string }[
   { prefix: "58A", country: "United States" },
   { prefix: "7SA", country: "United States" },
   { prefix: "7FC", country: "United States" },
+  { prefix: "7PD", country: "United States" },
+  { prefix: "7FA", country: "United States" },
   { prefix: "7MM", country: "United States" },
   { prefix: "7G2", country: "United States" },
+  { prefix: "7UU", country: "United States" },
+  { prefix: "7WA", country: "United States" },
+  { prefix: "7JR", country: "United States" },
+  { prefix: "7JD", country: "United States" },
+  { prefix: "7YA", country: "United States" },
+  { prefix: "7SY", country: "United States" },
+  // Tesla Berlin — X* defaults to Russia in ISO pos.1 map
+  { prefix: "XP7", country: "Germany" },
+  // Kia Žilina — U* defaults to Denmark; NHTSA lists HATCI (US) but plant is Slovakia
+  { prefix: "U5Y", country: "Slovakia" },
+  // Mercedes Sprinter USA MPV — W* defaults to Germany
+  { prefix: "WD8", country: "United States" },
   { prefix: "WZ1", country: "Austria" },
   { prefix: "VF8", country: "France" },
   { prefix: "VF7", country: "France" },
@@ -313,14 +327,21 @@ const WMI_MAP: Record<string, string> = {
   "1GY": "Cadillac",
   "1HG": "Honda", "1HJ": "Honda",
   "19X": "Honda",
+  "19V": "Acura", // NHTSA DecodeWMI / GetWMIsForManufacturer(honda)
   "2HG": "Honda", "2HH": "Honda", "2HK": "Honda", "2HM": "Hyundai",
+  "2HN": "Acura", // Honda Canada MPV — Acura
   "3CZ": "Honda", "3HM": "Honda",
+  "3DH": "Honda", // Honda de México MPV (NHTSA 2024)
+  "3HD": "Honda", // shared Honda/Acura Mexico MPV — default Honda
+  "3HG": "Honda", // Honda de México passenger
+  "7FA": "Honda", // American Honda MPV (NHTSA)
   "1J4": "Jeep", "1J8": "Jeep",
   "1L1": "Lincoln", "1LN": "Lincoln",
   "1ME": "Mercury",
   "1N4": "Nissan", "1N6": "Nissan", "1NX": "Toyota",
   "1P3": "Plymouth",
   "1VW": "Volkswagen", "1V2": "Volkswagen",
+  "1V1": "Volkswagen", // VWGoA truck / Atlas Cross Sport era (NHTSA)
   "1YV": "Mazda",
   "1ZV": "Mustang",
   "2C3": "Chrysler", "2C4": "Chrysler", "2C8": "Chrysler",
@@ -328,12 +349,17 @@ const WMI_MAP: Record<string, string> = {
   "2FA": "Ford", "2FM": "Ford", "2FT": "Ford",
   "2G1": "Chevrolet", "2G4": "Pontiac",
   "2GN": "Chevrolet", "2GK": "GMC",
+  "2LM": "Lincoln", // Ford Canada MPV
+  "2LN": "Lincoln", // Ford Canada passenger
   "2T1": "Toyota", "2T2": "Lexus", "2T3": "Toyota",
   "3FA": "Ford", "3FE": "Ford", "3FM": "Ford", "3FT": "Ford",
   "3GN": "Chevrolet", "3GK": "GMC", "3GC": "Chevrolet", "3GT": "GMC",
   "3GY": "Cadillac",
+  "3LN": "Lincoln", // Ford Mexico passenger
   "3TM": "Toyota", "3MY": "Toyota", "3TY": "Toyota",
   "3N1": "Nissan", "3N6": "Nissan",
+  "3N8": "Nissan", // Nissan Mexicana MPV (NHTSA)
+  "3PC": "Nissan", // shared Nissan/Infiniti Mexico MPV — default Nissan
   "3VW": "Volkswagen", "3VV": "Volkswagen",
   // Kia Mexico — NHTSA DecodeWMI CommonName Kia / GetWMIsForManufacturer(kia)
   "3KP": "Kia", // passenger (Forte, etc.)
@@ -351,11 +377,17 @@ const WMI_MAP: Record<string, string> = {
   "58A": "Lexus",  // TMMK Kentucky — ES
   "JMZ": "Mazda",
   "5FN": "Honda", "5FR": "Honda", "5J6": "Honda", "5J8": "Honda",
+  "5KB": "Honda", // American Honda passenger (NHTSA)
+  "5KC": "Acura", // American Honda passenger — Acura (NHTSA)
   "5L1": "Lincoln",
+  "5LM": "Lincoln", // Ford Motor Company MPV (Navigator era)
   "5NM": "Hyundai", "5NP": "Hyundai", "5NT": "Hyundai", "5N1": "Nissan",
+  "5N3": "Infiniti", // Nissan NA Infiniti MPV (NHTSA)
   // Kia Georgia (KMMG) — NHTSA DecodeWMI / GetWMIsForManufacturer(kia)
   "5XX": "Kia", // passenger (K5 / Optima, etc.)
   "5XY": "Kia", // MPV (Telluride / Sorento, etc.) — was incorrectly Hyundai
+  // Kia Motors Slovakia (Žilina) — NHTSA lists HATCI dual Hyundai/Kia; plant builds Kia
+  "U5Y": "Kia",
   "7YA": "Hyundai",
   "5TD": "Toyota", "5TE": "Toyota", "5TF": "Toyota",
   "5UX": "BMW",
@@ -370,9 +402,10 @@ const WMI_MAP: Record<string, string> = {
   // ── JAPAN ─────────────────────────────────────────────────────────────────
   "JA3": "Mitsubishi", "JA4": "Mitsubishi", "JAB": "Mitsubishi",
   "JF1": "Subaru", "JF2": "Subaru",
-  "JH4": "Acura", "JHM": "Honda",
+  "JH4": "Acura", "JHM": "Honda", "JHL": "Honda",
   "JM1": "Mazda", "JM3": "Mazda", "JMB": "Mitsubishi",
   "JN1": "Nissan", "JN3": "Nissan", "JN8": "Nissan",
+  "JNR": "Infiniti", // Nissan Motor Co. Infiniti MPV (NHTSA)
   "JT": "Toyota",  // 2-char prefix catch-all for Toyota Japan
   "JTD": "Toyota", "JTM": "Toyota", "JTN": "Toyota", "JT1": "Toyota",
   // JTE / JTK / JTJ refined later (Toyota trucks / Lexus)
@@ -390,6 +423,7 @@ const WMI_MAP: Record<string, string> = {
   "KPA": "SsangYong",
   // ── GERMANY ───────────────────────────────────────────────────────────────
   "WAU": "Audi", "WUA": "Audi", "WA1": "Audi",
+  "WU1": "Audi", // Audi Sport GmbH MPV (NHTSA)
   // WAP: NHTSA DecodeWMI → BMW (Alpina / BMW NA), not Porsche (Porsche is WP0/WP1)
   "WAP": "BMW",
   "WBA": "BMW", "WBS": "BMW M", "WBR": "BMW", "WBY": "BMW", "WBX": "BMW",
@@ -401,6 +435,8 @@ const WMI_MAP: Record<string, string> = {
   "W1P": "Mercedes-Benz", "W1R": "Mercedes-Benz", "W1W": "Mercedes-Benz",
   "55S": "Mercedes-Benz", // US passenger
   "WDZ": "Mercedes-Benz", // Sprinter (bus type in NHTSA)
+  "WD4": "Mercedes-Benz", // MB AG MPV / Sprinter-class (NHTSA; also Freightliner-badged)
+  "WD8": "Mercedes-Benz", // US Sprinter MPV
   "4JG": "Mercedes-Benz", "WME": "Smart", "HES": "Smart",
   "WP0": "Porsche", "WP1": "Porsche",
   "WVW": "Volkswagen", "WVG": "Volkswagen", "WV1": "Volkswagen", "WV2": "Volkswagen",
@@ -412,8 +448,12 @@ const WMI_MAP: Record<string, string> = {
   "YAR": "Toyota",
   "WZ1": "Toyota", // Magna Steyr — GR Supra A90 EU
   "SHH": "Honda",
+  "SHS": "Honda", // Honda UK MPV (NHTSA)
+  "SJK": "Nissan", // Nissan UK PC — shared Infiniti; default Nissan (NHTSA)
   // ── Ford Europe ───────────────────────────────────────────────────────────
   "WF0": "Ford", "WF1": "Ford", "8AF": "Ford", "SA1": "Ford", "SFA": "Ford",
+  "NM0": "Ford", // Ford Otosan Turkey truck (Transit) — NHTSA
+  "MAJ": "Ford", // Ford India MPV — NHTSA
   "SCB": "Bentley", "SCC": "Lotus",
   "SDB": "Aston Martin",
   "SFD": "Alexander Dennis",

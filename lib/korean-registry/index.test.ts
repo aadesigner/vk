@@ -82,8 +82,18 @@ describe("parseKoreanListPriceKrw", () => {
     expect(parseKoreanListPriceKrw("136.6 million won")).toBe(136_600_000);
   });
 
-  it("accepts full-scale won strings", () => {
+  it("keeps mid-range million-won MSRPs literal (no 10× inflate)", () => {
+    // KMHJE81CBMU009537-style Encar: real ₩33.5M / ₩35.69M, not ₩335M / ₩356.9M
+    expect(parseKoreanListPriceKrw("33.5 million won")).toBe(33_500_000);
+    expect(parseKoreanListPriceKrw("35.69 million won")).toBe(35_690_000);
+    expect(formatKoreanListPriceAmountText("33.5 million won")).toBe("33,500,000 won");
+    expect(formatKoreanListPriceAmountText("35.69 million won")).toBe("35,690,000 won");
+  });
+
+  it("accepts full-scale won strings including volume-car MSRPs", () => {
     expect(parseKoreanListPriceKrw("135,700,000 won")).toBe(135_700_000);
+    expect(parseKoreanListPriceKrw("33,500,000 won")).toBe(33_500_000);
+    expect(parseKoreanListPriceKrw("35,690,000 won")).toBe(35_690_000);
   });
 });
 
@@ -125,6 +135,17 @@ describe("resolveRegistryDisplayAmount", () => {
       type: "new_car_delivery",
       details: [{ label: "New car list price", value: "13.57 million won" }],
     })).toBe("135,700,000 won");
+  });
+
+  it("does not inflate mid-range list and delivery prices", () => {
+    expect(resolveRegistryDisplayAmount({
+      type: "new_car_delivery",
+      details: [
+        { label: "New car list price", value: "33.5 million won" },
+        { label: "New car delivery price", value: "35.69 million won" },
+      ],
+    })).toBe("33,500,000 won");
+    expect(formatKoreanListPriceAmountText("35.69 million won")).toBe("35,690,000 won");
   });
 });
 

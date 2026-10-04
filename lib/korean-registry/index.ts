@@ -37,9 +37,19 @@ export function isRegistryRepairCostLabel(label: string): boolean {
 /** Repair payouts above this are almost always new-car list prices mis-tagged by the provider. */
 export const MAX_PLAUSIBLE_KRW_REPAIR_PAYOUT = 80_000_000;
 
-/** Encar list prices below this in parsed KRW are usually under-scaled “X.XX million won” values. */
-export const MIN_PLAUSIBLE_NEW_CAR_LIST_KRW = 40_000_000;
+/**
+ * Floor for accepting a list/delivery price as a real new-car MSRP.
+ * Korean volume models commonly list around ₩20–40M — do not treat those as invalid.
+ */
+export const MIN_PLAUSIBLE_NEW_CAR_LIST_KRW = 15_000_000;
 export const MAX_PLAUSIBLE_NEW_CAR_LIST_KRW = 500_000_000;
+
+/**
+ * Only ×10 “X million won” when the literal parse is below this.
+ * Encar sometimes sends “13.57 million won” meaning ₩135.7M; mid-range MSRPs
+ * like “33.5 million won” (₩33.5M) must stay literal.
+ */
+export const MILLION_WON_LIST_PRICE_SCALE_BELOW_KRW = 20_000_000;
 
 export type KoreanRepairCostParts = {
   partCost?: number | null;
@@ -123,8 +133,10 @@ export function parseKrwAmountFromText(text: string | null | undefined): number 
 }
 
 /**
- * Encar/Carstat often encodes list prices as “13.57 million won” meaning ₩135.7M (not ₩13.57M).
- * Apply ×10 when a million-won parse is implausibly low for a new-car list price.
+ * Parse Encar/Carstat new-car list or delivery prices.
+ * - “33.5 million won” → ₩33.5M (literal mid-range MSRP)
+ * - “13.57 million won” → ₩135.7M (×10 only when literal is below
+ *   {@link MILLION_WON_LIST_PRICE_SCALE_BELOW_KRW}, historically under-scaled Encar text)
  */
 export function parseKoreanListPriceKrw(text: string | null | undefined): number | null {
   const base = parseKrwAmountFromText(text);
@@ -132,7 +144,7 @@ export function parseKoreanListPriceKrw(text: string | null | undefined): number
 
   const raw = (normalizeKrwAmountText(text) ?? String(text)).trim();
   const million = raw.match(/^([\d.,]+)\s*million\s+won$/i);
-  if (million && base < MIN_PLAUSIBLE_NEW_CAR_LIST_KRW) {
+  if (million && base < MILLION_WON_LIST_PRICE_SCALE_BELOW_KRW) {
     const scaled = Math.round(base * 10);
     if (scaled >= MIN_PLAUSIBLE_NEW_CAR_LIST_KRW && scaled <= MAX_PLAUSIBLE_NEW_CAR_LIST_KRW) {
       return scaled;

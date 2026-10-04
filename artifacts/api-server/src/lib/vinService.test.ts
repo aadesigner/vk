@@ -789,6 +789,33 @@ describe("extractRegistryHistoryFromLots", () => {
     );
   });
 
+  it("keeps mid-range Encar list and delivery prices literal (33.5M / 35.69M)", () => {
+    const events = extractRegistryHistoryFromLots([{
+      details: {
+        history: [{
+          date: "January 11, 2021",
+          content: [{
+            title: "New car delivery (corporate name)",
+            sub: "Suwon-si, Gyeonggi-do",
+            "New car list price": "33.5 million won",
+            "New car delivery price": "35.69 million won",
+            "First buyer": "corporation",
+          }],
+        }],
+      },
+    }]);
+
+    expect(events).toHaveLength(1);
+    expect(events[0]?.type).toBe("new_car_delivery");
+    expect(events[0]?.amount).toBe("33,500,000 won");
+    expect(events[0]?.details?.find((r) => r.label === "New car list price")?.value).toBe(
+      "33,500,000 won",
+    );
+    expect(events[0]?.details?.find((r) => r.label === "New car delivery price")?.value).toBe(
+      "35,690,000 won",
+    );
+  });
+
   it("does not treat Encar drone mileage typos as registry locations", () => {
     const events = extractRegistryHistoryFromLots([{
       details: {
