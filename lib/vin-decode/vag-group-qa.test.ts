@@ -25,13 +25,22 @@ describe("VAG Group QA — Typ 16 regression", () => {
     expect(decodeVolkswagenModern(vin)).toBeNull();
   });
 
-  it("early Typ 16 uniquely resolves to Jetta when only the old cycle fits", () => {
-    // A → 1980/2010; Beetle window starts 2012 → only Jetta 1980 remains.
+  it("letter B must not invent 1981 Jetta (2011 cycle still live)", () => {
+    // Real report: WVWZZZ16ZBM133566 was wrongly shown as 1981 via Typ 16 old window.
+    const vin = "WVWZZZ16ZBM133566";
+    expect(decodeVolkswagenModern(vin)).toBeNull();
+    const r = decodeVin(vin);
+    expect(r.make).toBe("Volkswagen");
+    expect(r.model).toBeNull();
+    expect(r.year).toBeNull();
+  });
+
+  it("letter A must not invent 1980 Jetta when 2010 remains plausible", () => {
+    // A → 1980/2010; Beetle window starts 2012 — 2010 is unmatched, so omit (no prefer-old).
     const vin = "WVWZZZ16ZAM043873";
-    expect(decodeVolkswagenModern(vin)?.model).toBe("Jetta");
-    expect(decodeVolkswagenModern(vin)?.chassis).toBe("Typ 16");
-    expect(decodeVin(vin).model).toMatch(/Jetta/i);
-    expect(decodeVin(vin).year).toBe(1980);
+    expect(decodeVolkswagenModern(vin)).toBeNull();
+    expect(decodeVin(vin).model).toBeNull();
+    expect(decodeVin(vin).year).toBeNull();
   });
 
   it("Typ 16 outside known windows → null (no invent)", () => {

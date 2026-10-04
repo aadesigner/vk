@@ -72,11 +72,12 @@ export type VinFulfillmentMode = "standard" | "manual_pending";
 export function buildManualPendingReportData(
   identity: Awaited<ReturnType<typeof decodeVinPeek>>,
 ): Record<string, unknown> {
+  // Prefill only verified local fields when present. Never trim/color/transmission
+  // (chassis≠trim; color/gear not VIN-sure).
   const payload = sanitizeCatalogPayload({
     make: identity.make,
     model: identity.model,
     year: identity.year,
-    trim: identity.trim,
     engine: identity.engine,
     country: identity.country,
     photos: [],

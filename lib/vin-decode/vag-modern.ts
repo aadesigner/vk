@@ -9,7 +9,7 @@
  * usually not an exact trim, battery, drivetrain or body variant.
  */
 
-import { resolveIsoModelYear } from "./iso-year";
+import { isoModelYearCandidates, maxPlausibleModelYear, resolveIsoModelYear } from "./iso-year";
 
 export type VagModernHit = {
   model: string;
@@ -77,15 +77,38 @@ const VW_EU_YEAR_GATED: YearGatedEuType[] = [
 function matchVwYearGated(code: string, yearCode: string): VagModernHit | null {
   const candidates = VW_EU_YEAR_GATED.filter((r) => r.code === code);
   if (candidates.length === 0) return null;
-  // Resolve year against each production window — emit only when exactly one rule matches.
-  const hits = candidates.filter((r) => {
-    const y = resolveIsoModelYear(yearCode, {
-      from: r.yearFrom ?? 1980,
-      to: r.yearTo ?? 2099,
-    });
-    return y != null;
-  });
-  return hits.length === 1 ? materialize(hits[0]!) : null;
+
+  // Enumerate plausible ISO cycles explicitly — do not let resolveIsoModelYear + a
+  // single generation window collapse an ambiguous letter onto the older cycle
+  // (e.g. Typ 16 + B → 1981 Jetta while 2011 remains a live reading).
+  const maxY = maxPlausibleModelYear();
+  const plausibleYears = isoModelYearCandidates(yearCode).filter((y) => y >= 1980 && y <= maxY);
+  if (plausibleYears.length === 0) return null;
+
+  const hits: { rule: YearGatedEuType; year: number }[] = [];
+  for (const y of plausibleYears) {
+    for (const r of candidates) {
+      const from = r.yearFrom ?? 1980;
+      const to = r.yearTo ?? 2099;
+      if (y >= from && y <= to) hits.push({ rule: r, year: y });
+    }
+  }
+  if (hits.length === 0) return null;
+
+  // Reused type codes (2+ generation rules): only emit when every plausible ISO
+  // cycle is accounted for and they agree on one model — never prefer-old.
+  if (candidates.length > 1) {
+    const yearsHit = new Set(hits.map((h) => h.year));
+    if (yearsHit.size !== plausibleYears.length) return null;
+    const models = [...new Set(hits.map((h) => h.rule.model))];
+    if (models.length !== 1) return null;
+    return materialize(hits[0]!.rule);
+  }
+
+  // Single generation rule: unique year-in-window only.
+  if (hits.length === 1) return materialize(hits[0]!.rule);
+  const models = [...new Set(hits.map((h) => h.rule.model))];
+  return models.length === 1 ? materialize(hits[0]!.rule) : null;
 }
 
 const VW_EU_TYPE_78: Record<string, StaticHit> = {

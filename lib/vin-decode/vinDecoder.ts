@@ -108,12 +108,10 @@ function resolveVinModelYear(
     ?? seriesFromDisplayModel(model);
   const chassisWin = chassisProductionWindow(series);
   if (chassisWin) {
-    const gated = resolveIsoModelYear(code, chassisWin);
-    if (gated != null) return gated;
-    // Window rejects every cycle: allow unambiguous digit years only.
-    const digitOnly = resolveIsoModelYear(code, null);
-    if (digitOnly != null) return digitOnly;
-    return null;
+    // Unique cycle inside a verified production window only.
+    // Never fall back to an unconstrained digit year that the window already rejected
+    // (that was inventing e.g. 2004 when the chassis only ran 2010–2017).
+    return resolveIsoModelYear(code, chassisWin);
   }
 
   // Platform / prefix verified window (e.g. Hyundai IONIQ 5 from 2021).

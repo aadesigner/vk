@@ -52,6 +52,8 @@ export {
   isoModelYearCandidates,
   resolveIsoModelYear,
   resolveIsoModelYearWhere,
+  maxPlausibleModelYear,
+  isIsoModelYearCandidate,
   type IsoYearWindow,
 } from "./iso-year";
 export { decodeUsVdsModel, matchUsVdsRule } from "./us-vds";

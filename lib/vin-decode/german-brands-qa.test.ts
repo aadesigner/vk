@@ -239,7 +239,7 @@ const SMART: Case[] = [
   // Chassis 451 ended ~2015 — letter K=2019 omitted.
   { vin: pad("WME451", "K"), label: "Smart fortwo 451", make: "Smart", modelContains: "fortwo", year: null },
   { vin: pad("WME453", "K"), label: "Smart forfour", make: "Smart", modelContains: "forfour", year: 2019 },
-  { vin: pad("WME450", "9"), label: "Smart fortwo 450", make: "Smart", modelContains: "fortwo", year: 2009 },
+  { vin: pad("WME450", "9"), label: "Smart fortwo 450", make: "Smart", modelContains: "fortwo", year: null },
   // Chassis 453 ended ~2019 — letter L=2020 omitted.
   { vin: pad("W1A453", "L"), label: "Smart forfour W1A", make: "Smart", modelContains: "forfour", year: null },
   { vin: "HESXR1C49PS069265", label: "Smart #1 EV", make: "Smart", modelContains: "#1", year: 2023, countryGermany: false },
