@@ -37,6 +37,7 @@ import { useTheme } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { pathFor } from "@/lib/localized-routes";
+import { isPaypalHiddenForCheckout } from "@/lib/payment-method-policy";
 
 type PublicSettings = {
   paypalClientId: string | null;
@@ -57,12 +58,16 @@ const PACK_FEATURES = [
 
 export default function CreditsCheckout({ params }: Props) {
   const { t, language } = useTranslation();
-  const { isSignedIn, isLoaded, refreshUser } = useAuth();
+  const { isSignedIn, isLoaded, user, refreshUser } = useAuth();
   const { displayPrice: rawDisplayPrice, currencySymbol } = useDisplayPrice();
   const [, setLocation] = useLocation();
   const search = useSearch();
   const { resolvedTheme } = useTheme();
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const paypalHidden = isPaypalHiddenForCheckout({
+    language,
+    countryCode: user?.countryCode,
+  });
   const singleUnit = rawDisplayPrice && rawDisplayPrice > 0
     ? rawDisplayPrice
     : DEFAULT_PRICING.discountPrice;
@@ -98,10 +103,10 @@ export default function CreditsCheckout({ params }: Props) {
     isLoading: pubSettingsLoading,
     dataUpdatedAt: pubSettingsUpdatedAt,
   });
-  const paypalReady = !!pubSettings?.paypalClientId;
+  const paypalReady = !!pubSettings?.paypalClientId && !paypalHidden;
   const pokEnabled = !!pubSettings?.pokEnabled;
   const anyPaymentReady = paypalReady || pokEnabled;
-  const [payMethod, setPayMethod] = useState<"paypal" | "card">("paypal");
+  const [payMethod, setPayMethod] = useState<"paypal" | "card">(paypalHidden ? "card" : "paypal");
   const [status, setStatus] = useState<"idle" | "creating" | "paying" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [paymentStarted, setPaymentStarted] = useState(false);
@@ -118,8 +123,8 @@ export default function CreditsCheckout({ params }: Props) {
   const finalizeRef = useRef<(orderId: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
-    if (pokEnabled && !paypalReady) setPayMethod("card");
-  }, [pokEnabled, paypalReady]);
+    if (paypalHidden || (pokEnabled && !paypalReady)) setPayMethod("card");
+  }, [pokEnabled, paypalReady, paypalHidden]);
 
   useEffect(() => {
     activeRef.current = true;
@@ -219,6 +224,7 @@ export default function CreditsCheckout({ params }: Props) {
   }, [finalizeCapture]);
 
   // PayPal full-page return (?token=ORDER_ID) after mobile/redirect checkout.
+  // Always finalize capture even under card-only UI — buyer already approved PayPal.
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !packId) return;
     if (paypalReturnHandledRef.current) return;
@@ -241,7 +247,7 @@ export default function CreditsCheckout({ params }: Props) {
 
   // Resume capture after refresh if user approved PayPal but capture did not finish.
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || !packId || payMethod !== "paypal") return;
+    if (!isLoaded || !isSignedIn || !packId) return;
     if (paypalResumeAttemptedRef.current || paypalReturnHandledRef.current) return;
     const session = readPaypalCreditPackSession();
     if (!session || session.packId !== packId || !shouldResumePaypalCreditPackCapture(session)) return;
@@ -249,7 +255,7 @@ export default function CreditsCheckout({ params }: Props) {
     paypalResumeAttemptedRef.current = true;
     setPaymentStarted(true);
     void finalizeCapture(session.orderId);
-  }, [isLoaded, isSignedIn, packId, payMethod, finalizeCapture]);
+  }, [isLoaded, isSignedIn, packId, finalizeCapture]);
 
   const mountPaypal = useCallback(async (orderId: string) => {
     // Settings can still be loading after create-order succeeds (server uses env secrets).
@@ -347,6 +353,16 @@ export default function CreditsCheckout({ params }: Props) {
   const handleStartPayment = async () => {
     if (!pack) return;
     if (!paymentSettingsHydrated) return;
+
+    if (paypalHidden && !(payMethod === "card" && pokEnabled)) {
+      if (!pokEnabled) {
+        setErrorMsg(t("checkout_payment_not_configured"));
+        setStatus("error");
+        return;
+      }
+      setPayMethod("card");
+      return;
+    }
 
     if (payMethod === "card" && pokEnabled) {
       setStatus("creating");
@@ -659,13 +675,15 @@ export default function CreditsCheckout({ params }: Props) {
                       </div>
                     )}
 
-                    <div
-                      ref={paypalContainerRef}
-                      className={cn(
-                        "[color-scheme:none] min-h-0",
-                        (!paymentStarted || payMethod === "card") && "hidden",
-                      )}
-                    />
+                    {!paypalHidden && (
+                      <div
+                        ref={paypalContainerRef}
+                        className={cn(
+                          "[color-scheme:none] min-h-0",
+                          (!paymentStarted || payMethod === "card") && "hidden",
+                        )}
+                      />
+                    )}
 
                     {payMethod === "card" && pokOrderId && (
                       <PokGuestCheckout

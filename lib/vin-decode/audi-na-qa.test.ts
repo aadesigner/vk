@@ -89,6 +89,13 @@ describe("Audi EU QA — ZZZ / modern still green", () => {
     expect(r.model).toMatch(/A3/i);
   });
 
+  it("Typ 4F C6 A6 letter year 2010 is unique inside the generation window", () => {
+    const r = decodeVin("WAUZZZ4F1AA123456");
+    expect(r.make).toBe("Audi");
+    expect(r.model).toMatch(/A6/i);
+    expect(r.year).toBe(2010);
+  });
+
   it("WAUZZZ4H1FN034894 is A8 D4 2015, never A7", () => {
     const r = decodeVin("WAUZZZ4H1FN034894");
     expect(r.make).toBe("Audi");

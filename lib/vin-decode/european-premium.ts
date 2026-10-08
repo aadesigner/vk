@@ -531,6 +531,8 @@ const CHASSIS_YEAR: Record<string, { from: number; to: number }> = {
   "C7 4G": { from: 2011, to: 2018 },
   "C8 4K": { from: 2018, to: 2099 },
   "C6 4F": { from: 2004, to: 2011 },
+  // Bare Typ 4F (EU ZZZ / NA) is the same C6 A6 — letter years 2010–2011 need this key.
+  "4F": { from: 2004, to: 2011 },
   // Audi Typ codes (EU ZZZ / homologation) — wide enough for NA digit-year fixtures
   "4H": { from: 2010, to: 2018 },
   "4E": { from: 2002, to: 2010 },

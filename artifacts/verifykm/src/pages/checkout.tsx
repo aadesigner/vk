@@ -59,6 +59,7 @@ import { VinDecodeRecheckHint } from "@/components/vin-decode-recheck-hint";
 import { VinPendingDoubleCheckHint } from "@/components/vin-pending-double-check-hint";
 import { useVinLookupDisabledForUser } from "@/hooks/use-site-public-flags";
 import { useTheme } from "@/components/theme-provider";
+import { isPaypalHiddenForCheckout } from "@/lib/payment-method-policy";
 
 function isPaypalUserAbort(err: unknown): boolean {
   const msg =
@@ -175,6 +176,10 @@ export default function Checkout({ params }: Props) {
   const { resolvedTheme } = useTheme();
   const lightMotion = useLightMotion();
   usePreloadCheckoutPaymentLogos(true);
+  const paypalHidden = isPaypalHiddenForCheckout({
+    language,
+    countryCode: user?.countryCode,
+  });
 
   // Fresh credit balance (admin edits / pack purchases) before showing Pay with credit.
   useEffect(() => {
@@ -205,7 +210,7 @@ export default function Checkout({ params }: Props) {
   const [errorMsg, setErrorMsg] = useState("");
   /** While status===paying: confirm payment vs unlock report (clearer than one spinner). */
   const [payingPhase, setPayingPhase] = useState<"payment" | "report">("payment");
-  const [payMethod, setPayMethod] = useState<"paypal" | "card">("paypal");
+  const [payMethod, setPayMethod] = useState<"paypal" | "card">(paypalHidden ? "card" : "paypal");
   const [hostedFieldsReady, setHostedFieldsReady] = useState(false);
   // "unknown" = SDK not yet checked, "yes" = eligible, "no" = confirmed ineligible
   const [cardEligible, setCardEligible] = useState<"unknown" | "yes" | "no">("unknown");
@@ -409,14 +414,20 @@ export default function Checkout({ params }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- redirect once when peek resolves
   }, [peekForVin?.alreadyUnlocked, peekForVin?.lookupId, normalizedVin]);
 
-  // Inject PayPal SDK once we have the client ID; include hosted-fields component when cards enabled
+  // Inject PayPal SDK once we have the client ID; include hosted-fields component when cards enabled.
+  // Card-only locales/countries skip Buttons entirely; Hosted Fields SDK still loads when POK is off.
   useEffect(() => {
     if (!pubSettings?.paypalClientId) return;
+    if (paypalHidden && pubSettings.pokEnabled) return;
     const enableCards = pubSettings.paypalEnableCards ?? false;
-    const components = enableCards ? "buttons,hosted-fields" : "buttons";
+    const components = paypalHidden
+      ? (enableCards ? "hosted-fields" : null)
+      : (enableCards ? "buttons,hosted-fields" : "buttons");
+    if (!components) return;
     const existing = document.getElementById("paypal-sdk");
     if (existing) {
-      const needsReload = enableCards && !existing.getAttribute("src")?.includes("hosted-fields");
+      const src = existing.getAttribute("src") ?? "";
+      const needsReload = enableCards && !src.includes("hosted-fields");
       if (!needsReload) return;
       existing.remove();
     }
@@ -426,13 +437,14 @@ export default function Checkout({ params }: Props) {
     script.async = true;
     document.body.appendChild(script);
     return () => { document.getElementById("paypal-sdk")?.remove(); };
-  }, [pubSettings?.paypalClientId, pubSettings?.paypalEnableCards, currency]);
+  }, [pubSettings?.paypalClientId, pubSettings?.paypalEnableCards, pubSettings?.pokEnabled, currency, paypalHidden]);
 
   // Post-SDK probe: check HostedFields eligibility after SDK loads, independently of tab.
   // Only sets "no" for confirmed isEligible() === false; SDK load timeout leaves state "unknown"
   // so a subsequent card-tab activation can retry without a permanent lockout.
   useEffect(() => {
     if (!pubSettings?.paypalEnableCards || !pubSettings?.paypalClientId) return;
+    if (pubSettings.pokEnabled) return;
     if (cardEligible !== "unknown") return; // already determined, no need to re-probe
 
     let cancelled = false;
@@ -451,16 +463,21 @@ export default function Checkout({ params }: Props) {
     };
     probe();
     return () => { cancelled = true; };
-  }, [pubSettings?.paypalEnableCards, pubSettings?.paypalClientId, cardEligible]);
+  }, [pubSettings?.paypalEnableCards, pubSettings?.paypalClientId, pubSettings?.pokEnabled, cardEligible]);
 
-  // Default payment tab is PayPal (`useState` above). Card remains available when POK/hosted fields are configured.
+  // Card-only UI (German language or DE/AT/IT/GR/FR/MK profile): never surface PayPal.
+  useEffect(() => {
+    if (!paypalHidden) return;
+    setPayMethod("card");
+  }, [paypalHidden]);
 
   // Auto-switch back to PayPal when confirmed ineligible (unless POK cards are available)
   useEffect(() => {
+    if (paypalHidden) return;
     if (cardEligible === "no" && !pubSettings?.pokEnabled) {
       setPayMethod("paypal");
     }
-  }, [cardEligible, pubSettings?.pokEnabled]);
+  }, [cardEligible, pubSettings?.pokEnabled, paypalHidden]);
 
   // Initialize PayPal Hosted Fields when card tab is active (skipped when POK is configured)
   useEffect(() => {
@@ -1097,6 +1114,7 @@ export default function Checkout({ params }: Props) {
   ]);
 
   // Resume PayPal after refresh: re-show buttons if still awaiting approval, or retry capture if approved.
+  // Card-only UI still completes capture for an already-approved order (never drop a paid session).
   useEffect(() => {
     if (postAuthPrefillLandingRef.current) return;
     if (!isLoaded || !isSignedIn || !vinIsValid || peekLoadingUi) return;
@@ -1104,8 +1122,7 @@ export default function Checkout({ params }: Props) {
     if (paypalResumeAttemptedRef.current) return;
     // Never remount PayPal over a free coupon — that races and shows "Payment failed".
     if (isFreeCoupon) return;
-    // Card / POK checkout must not resume a stale PayPal session (overwrites UI with create/capture errors).
-    if (payMethod === "card" || !!pokOrderId || status === "creating" || pokCreatingRef.current) return;
+    if (!!pokOrderId || status === "creating" || pokCreatingRef.current) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("token")) return;
 
@@ -1115,21 +1132,25 @@ export default function Checkout({ params }: Props) {
     if (peekForVin?.alreadyUnlocked && peekForVin.lookupId) return;
 
     const captureResume = shouldResumePaypalCapture(session);
+    if (captureResume) {
+      paypalResumeAttemptedRef.current = true;
+      pendingPaypalOrderRef.current = session.orderId;
+      setPaymentStarted(true);
+      void finalizePaidCheckout(session.orderId, normalizedVin);
+      return;
+    }
+
+    // Do not remount Buttons under card-only UI or while card/POK is selected.
+    if (paypalHidden || payMethod === "card") return;
     const peekPayable =
       !vinLookupDisabled
       && peekForVin?.dataAvailable === true
       && !peekForVin?.checkUnavailable
       && !(peekForVin?.vehicleTooOld === true || isVehicleTooOldForLookup(peekForVin?.year));
-    if (!captureResume && !peekPayable) return;
+    if (!peekPayable) return;
 
     paypalResumeAttemptedRef.current = true;
     pendingPaypalOrderRef.current = session.orderId;
-
-    if (captureResume) {
-      setPaymentStarted(true);
-      void finalizePaidCheckout(session.orderId, normalizedVin);
-      return;
-    }
 
     void mountPaypalButtons(normalizedVin, session.orderId).then((mounted) => {
       if (!mounted) paypalResumeAttemptedRef.current = false;
@@ -1153,11 +1174,13 @@ export default function Checkout({ params }: Props) {
     payMethod,
     pokOrderId,
     status,
+    paypalHidden,
     finalizePaidCheckout,
     mountPaypalButtons,
   ]);
 
   // PayPal full-page return (?token=ORDER_ID) after mobile/redirect checkout.
+  // Always finalize capture even under card-only UI — buyer already approved PayPal.
   useEffect(() => {
     if (!isSignedIn || !vinIsValid) return;
     if (paypalReturnHandledRef.current) return;
@@ -1233,6 +1256,11 @@ export default function Checkout({ params }: Props) {
     const nvin = validateVin();
     if (!nvin) return;
     if (isFreeCoupon) { await createOrder(nvin); return; }
+    // Card-only UI: never start PayPal Buttons for restricted language/country.
+    if (paypalHidden) {
+      setPayMethod("card");
+      return;
+    }
     // OAuth-only public-settings seed has no paypalClientId yet — wait, don't alarm.
     if (!pubSettings?.paypalClientId) {
       if (!paymentSettingsHydrated) return;
@@ -1541,12 +1569,17 @@ export default function Checkout({ params }: Props) {
       && !!pubSettings?.paypalClientId
       && cardEligible === "yes"
     );
+  // Hide method tabs when PayPal is UI-hidden (card-only) or when PayPal is unavailable.
   const showPaymentMethodTabs =
     checkoutDataReady &&
     showCardTab &&
+    !paypalHidden &&
     !!pubSettings?.paypalClientId &&
     !isFreeCoupon &&
     status !== "success";
+  const cardPaymentConfigured =
+    !!pubSettings?.pokEnabled
+    || (!!pubSettings?.paypalEnableCards && !!pubSettings?.paypalClientId);
   const showProceedButton =
     checkoutDataReady &&
     (status === "idle" || status === "error") &&
@@ -2240,7 +2273,9 @@ export default function Checkout({ params }: Props) {
 
                   {/* PayPal button container — color-scheme:none stops forced white iframe chrome in dark mode */}
                   {paymentAllowed && !isFreeCoupon && (
-                    <div ref={paypalContainerRef} className={cn("[color-scheme:none] min-h-0", payMethod === "card" && "hidden")} />
+                    {!paypalHidden && (
+                      <div ref={paypalContainerRef} className={cn("[color-scheme:none] min-h-0", payMethod === "card" && "hidden")} />
+                    )}
                   )}
 
                   {/* Hosted card fields (PayPal) or POK GuestCheckoutForm.
@@ -2353,12 +2388,14 @@ export default function Checkout({ params }: Props) {
                     </Button>
                   )}
 
-                  {/* PayPal configured — no footer note. Hide until API settings hydrate (OAuth seed has no client id). */}
-                  {!paymentSettingsHydrated || pubSettings?.paypalClientId || pubSettingsError
+                  {/* Payment configured — no footer note. Hide until API settings hydrate (OAuth seed has no client id). */}
+                  {!paymentSettingsHydrated || pubSettingsError
                     ? null
-                    : <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400 text-center">
-                        {t("checkout_payment_not_configured")}
-                      </div>
+                    : (paypalHidden ? cardPaymentConfigured : !!pubSettings?.paypalClientId)
+                      ? null
+                      : <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400 text-center">
+                          {t("checkout_payment_not_configured")}
+                        </div>
                   }
                 </div>
               </div>
