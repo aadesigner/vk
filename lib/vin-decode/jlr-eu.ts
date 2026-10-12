@@ -12,6 +12,7 @@
  * SALWA2BK → Range Rover Sport L494.
  */
 
+import { maxPlausibleModelYear } from "./iso-year";
 import { compilePrefixRules, type PrefixRule } from "./prefix-match";
 
 export type JlrDecode = {
@@ -274,10 +275,13 @@ function matchJlrRules(vin: string, rules: readonly JlrPrefixRule[]): JlrDecode 
       // Ungated: model only — do not invent a year cycle.
       return hitToDecode(rule, null, null);
     }
-    const fits = years.filter((y) => yearFits(y, rule));
-    if (fits.length === 1) return hitToDecode(rule, fits[0]!, fits[0]!);
-    if (fits.length > 1) {
-      // Multiple ISO cycles fit the production window — keep model, omit year.
+    const inWindow = years.filter((y) => yearFits(y, rule));
+    const maxY = maxPlausibleModelYear();
+    const plausible = inWindow.filter((y) => y <= maxY);
+    if (plausible.length === 1) return hitToDecode(rule, plausible[0]!, plausible[0]!);
+    if (plausible.length > 1 || inWindow.length > 0) {
+      // Two cycles still fit, or the only in-window year is past now+1 (W/X/Y → 2028–2030).
+      // Keep the model, omit the year.
       return hitToDecode(rule, null, null);
     }
   }

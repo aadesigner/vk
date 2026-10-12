@@ -52,7 +52,31 @@ import { decodeLocalSeries } from "./local-trim";
 // Codes repeat every 30 years — never "prefer recent"; see iso-year.ts.
 
 /** Layout-specific year (or null when ISO pos.10 is not a year). */
+/**
+ * Make is verified (NHTSA manufacturer name). Position 10 is not a verified
+ * ISO model year for these WMIs — a digit must not become 2001–2009 and a
+ * letter must not become 1980/1981.
+ */
+const YEAR_UNVERIFIED_WMI = new Set([
+  // Mercedes-Benz trucks / Sprinter plants — not the passenger Baumuster set
+  "1MB", "8BT", "8BU", "9DB", "W1H", "W1Y", "W2W", "W2Y", "WD0", "WD3", "WYB",
+  // Volvo Group trucks (not Volvo Cars YV1/YV4)
+  "1WA", "1WU", "3V4", "3X1", "4V1", "4V3", "4V4", "4V6", "4VA", "4VD", "4VG", "4VJ", "9BV",
+  // Older Adam Opel WMIs — not the modern W0L/W0V layout
+  "W04", "W06", "W08",
+  // Additional plants; no verified VDS or year window
+  "ZAS", "ZFD", "ZSG", "ZPB", "ZC2", "ZN6", "SJA", "SD7", "SD8",
+  "7GB", "MCU", "MCV", "KL5", "LJU", "SC6", "SH7", "YK1", "514", "YH4",
+  // Heavy-truck WMIs — year code position is not ISO pos.10
+  "1HP", "1HS", "3HR", "3HS", "93M", "93S",
+  "1XK", "2XK", "3NM", "3WK", "3WM", "3XK", "SFN",
+  "1XP", "2XP", "3WP",
+  "2FU", "AFV", "KFB", "RSB",
+  "2AZ", "7H4", "JH7", "JHA",
+]);
+
 function decodeVinLayoutYear(vin: string): { handled: true; year: number | null } | { handled: false } {
+  if (YEAR_UNVERIFIED_WMI.has(vin.toUpperCase().slice(0, 3))) return { handled: true, year: null };
   // Classic European Mercedes Baumuster: pos.10 is LHD/RHD, not ISO model year.
   if (isMercedesEuroBaumusterVin(vin)) return { handled: true, year: null };
   // Classic BMW ETK FINs often put "0" at pos.10 — not a year digit.
@@ -61,7 +85,19 @@ function decodeVinLayoutYear(vin: string): { handled: true; year: number | null 
   if (isFordEuXxLayout(vin)) return { handled: true, year: decodeFordEuXxYear(vin) };
   // Pre-~1998 Opel W0L0000TT… — first year cycle only (N=1992, not 2022).
   if (isOpelOldPaddedTypeVin(vin)) return { handled: true, year: decodeOpelOldPaddedYear(vin) };
+  // Sunderland Qashqai J11: pos.10–11 is series U1/U2/UZ, not an ISO model year.
+  if (isNissanSunderlandQashqaiJ11(vin)) return { handled: true, year: null };
   return { handled: false };
+}
+
+/**
+ * UK Sunderland Qashqai (J11). Layout is not ISO VDS:
+ * SJN + engine/transmission (pos 4–6) + model code J11 (pos 7–9) + series U1/U2/UZ + serial.
+ * Year is not in the VIN.
+ */
+function isNissanSunderlandQashqaiJ11(vin: string): boolean {
+  const u = vin.toUpperCase();
+  return u.length === 17 && u.startsWith("SJN") && u.slice(6, 9) === "J11";
 }
 
 /**
@@ -108,10 +144,17 @@ function resolveVinModelYear(
     ?? seriesFromDisplayModel(model);
   const chassisWin = chassisProductionWindow(series);
   if (chassisWin) {
+    // A shared chassis token can be wider than the prefix that identified the car
+    // (Audi "C8" is 2018+, Corvette C8 is 2020+; XG10 is 2020+, Alabama Corolla Cross is 2022+).
+    // Keep only years that sit in both windows. An empty overlap means omit the year.
+    const tightened = tightenChassisWindow(chassisWin, [
+      vagHit, globalHit, hyRule, asiaRule, usRule,
+    ]);
+    if (!tightened) return null;
     // Unique cycle inside a verified production window only.
     // Never fall back to an unconstrained digit year that the window already rejected
     // (that was inventing e.g. 2004 when the chassis only ran 2010–2017).
-    return resolveIsoModelYear(code, chassisWin);
+    return resolveIsoModelYear(code, tightened);
   }
 
   // Platform / prefix verified window (e.g. Hyundai IONIQ 5 from 2021).
@@ -164,8 +207,50 @@ function resolveVinModelYear(
   if (vin.startsWith("WBS5")) {
     return resolveIsoModelYear(code, chassisProductionWindow("F10/F90/G90"));
   }
+  // A slash family ("i30 / Tucson / Kona", "IONIQ 5 / IONIQ 9") is not one model.
+  // A single year would be a guess.
+  if (model?.includes(" / ")) return null;
+  const floor = knownModelYearFloor(vin, make, model);
+  if (floor) return resolveIsoModelYear(code, floor);
   // Known make, no verified window: unique cycle only — never prefer-recent.
   return resolveIsoModelYear(code, null);
+}
+
+function explicitYearWindow(
+  rule: { yearFrom?: number; yearTo?: number } | null | undefined,
+): IsoYearWindow | null {
+  if (!rule || (rule.yearFrom == null && rule.yearTo == null)) return null;
+  return { from: rule.yearFrom ?? 1980, to: rule.yearTo ?? 2099 };
+}
+
+/** Intersect a chassis window with every matched prefix rule that has its own years. */
+function tightenChassisWindow(
+  chassis: IsoYearWindow,
+  rules: Array<{ yearFrom?: number; yearTo?: number } | null | undefined>,
+): IsoYearWindow | null {
+  let from = chassis.from;
+  let to = chassis.to;
+  for (const rule of rules) {
+    const w = explicitYearWindow(rule);
+    if (!w) continue;
+    from = Math.max(from, w.from);
+    to = Math.min(to, w.to);
+  }
+  if (from > to) return null;
+  return { from, to };
+}
+
+/**
+ * Models whose first model year is known, but the VIN prefix has no chassis window.
+ * Digit codes must not become 2001–2009 before the car existed.
+ */
+function knownModelYearFloor(vin: string, make: string | null, model: string | null): IsoYearWindow | null {
+  const wmi = vin.toUpperCase().slice(0, 3);
+  if (make === "Xiaomi") return { from: 2024, to: 2099 };
+  if (wmi === "7JR") return { from: 2019, to: 2099 };
+  if (wmi === "LVY") return { from: 2016, to: 2099 };
+  if (model?.includes("GR Supra")) return { from: 2019, to: 2099 };
+  return null;
 }
 
 /** Verified Tesla model-year floors — omit rather than invent a cycle. */
@@ -236,6 +321,15 @@ const WMI_ORIGIN_COUNTRY_PREFIXES: readonly { prefix: string; country: string }[
   { prefix: "7JD", country: "United States" },
   { prefix: "7YA", country: "United States" },
   { prefix: "7SY", country: "United States" },
+  { prefix: "7SV", country: "United States" }, // Toyota Texas — 7* would be New Zealand
+  { prefix: "7GB", country: "United States" }, // Mahindra NA — 7* would be New Zealand
+  { prefix: "7H4", country: "United States" }, // Hino USA — 7* would be New Zealand
+  { prefix: "6MP", country: "Australia" }, // Ford Australia — 6* is Australia/New Zealand
+  { prefix: "ML3", country: "Thailand" }, // Mitsubishi Thailand — M* would be India
+  { prefix: "MP3", country: "Thailand" },
+  { prefix: "KFB", country: "Israel" }, // Freightliner — K* would be South Korea
+  { prefix: "RSB", country: "Saudi Arabia" }, // Freightliner — R* would be Taiwan
+  { prefix: "YK1", country: "Finland" }, // Saab-Valmet — Y* is Sweden/Finland
   // Tesla Berlin — X* defaults to Russia in ISO pos.1 map
   { prefix: "XP7", country: "Germany" },
   // Kia Žilina — U* defaults to Denmark; NHTSA lists HATCI (US) but plant is Slovakia
@@ -448,6 +542,7 @@ const WMI_MAP: Record<string, string> = {
   "SHH": "Honda",
   "SHS": "Honda", // Honda UK MPV (NHTSA)
   "SJK": "Nissan", // Nissan UK PC — shared Infiniti; default Nissan (NHTSA)
+  "SJN": "Nissan", // Nissan Motor Manufacturing (UK), Sunderland — Qashqai J11 and others
   // ── Ford Europe ───────────────────────────────────────────────────────────
   "WF0": "Ford", "WF1": "Ford", "8AF": "Ford", "SA1": "Ford", "SFA": "Ford",
   "NM0": "Ford", // Ford Otosan Turkey truck (Transit) — NHTSA
@@ -595,6 +690,54 @@ const WMI_MAP: Record<string, string> = {
   "KMJ": "Hyundai Commercial",
   // ── Additional Mercedes-Benz WMIs ────────────────────────────────────────
   "WDH": "Mercedes-Benz",
+  // NHTSA GetWMIsForManufacturer — unambiguous manufacturer name only.
+  // No model. Year stays null unless this OEM already uses ISO position 10
+  // (see YEAR_UNVERIFIED_WMI). Shared plants (Chrysler Mexico, DaimlerChrysler
+  // Sprinter, Auto Alliance, Austin Rover, Fuso) are intentionally absent.
+  "1F1": "Ford", "1F7": "Ford", "1FL": "Ford", "1MR": "Ford",
+  "2ME": "Ford", "2MR": "Ford", "3MA": "Ford", "3ME": "Ford",
+  "4F3": "Ford", "4M2": "Ford", "4M4": "Ford", "4N2": "Ford", "4N4": "Ford",
+  "5LT": "Ford", "6MP": "Ford",
+  "5TB": "Toyota", "7SV": "Toyota",
+  "2HJ": "Honda", "2HU": "Honda", "JH1": "Honda", "JR2": "Honda",
+  "KME": "Hyundai", "KPH": "Hyundai",
+  "JC1": "Mazda", "JC2": "Mazda", "JM2": "Mazda",
+  "JF3": "Subaru", "JF4": "Subaru",
+  "4A3": "Mitsubishi", "4A4": "Mitsubishi", "4P3": "Mitsubishi",
+  "JA7": "Mitsubishi", "JB4": "Mitsubishi", "JB7": "Mitsubishi", "JE4": "Mitsubishi",
+  "JJ3": "Mitsubishi", "JP3": "Mitsubishi", "JP4": "Mitsubishi", "JP7": "Mitsubishi",
+  "JW7": "Mitsubishi", "ML3": "Mitsubishi", "MP3": "Mitsubishi",
+  "JNT": "Nissan",
+  "JG7": "Suzuki", "5Z6": "Suzuki", "KL5": "Suzuki",
+  "J81": "Isuzu", "J8Z": "Isuzu", "JAE": "Isuzu",
+  "KPS": "SsangYong",
+  "JD1": "Daihatsu", "JD2": "Daihatsu",
+  "1MB": "Mercedes-Benz", "8BT": "Mercedes-Benz", "8BU": "Mercedes-Benz", "9DB": "Mercedes-Benz",
+  "W1H": "Mercedes-Benz", "W1Y": "Mercedes-Benz", "W2W": "Mercedes-Benz", "W2Y": "Mercedes-Benz",
+  "WD0": "Mercedes-Benz", "WD3": "Mercedes-Benz", "WYB": "Mercedes-Benz",
+  "1WA": "Volvo", "1WU": "Volvo", "3V4": "Volvo", "3X1": "Volvo",
+  "4V1": "Volvo", "4V3": "Volvo", "4V4": "Volvo", "4V6": "Volvo",
+  "4VA": "Volvo", "4VD": "Volvo", "4VG": "Volvo", "4VJ": "Volvo", "9BV": "Volvo",
+  "W04": "Opel", "W06": "Opel", "W08": "Opel",
+  "ZAS": "Alfa Romeo",
+  "ZFD": "Ferrari", "ZSG": "Ferrari",
+  "ZPB": "Lamborghini",
+  "ZC2": "Maserati", "ZN6": "Maserati",
+  "SJA": "Bentley",
+  "SD7": "Aston Martin",
+  "SD8": "Moke",
+  "7GB": "Mahindra", "MCU": "Mahindra", "MCV": "Mahindra",
+  "LJU": "Lotus",
+  "SC6": "INEOS", "SH7": "INEOS",
+  "YK1": "Saab",
+  "514": "Fisker", "YH4": "Fisker",
+  "1HP": "International", "1HS": "International", "3HR": "International", "3HS": "International",
+  "93M": "International", "93S": "International",
+  "1XK": "Kenworth", "2XK": "Kenworth", "3NM": "Kenworth", "3WK": "Kenworth", "3WM": "Kenworth",
+  "3XK": "Kenworth", "SFN": "Kenworth",
+  "1XP": "Peterbilt", "2XP": "Peterbilt", "3WP": "Peterbilt",
+  "2FU": "Freightliner", "AFV": "Freightliner", "KFB": "Freightliner", "RSB": "Freightliner",
+  "2AZ": "Hino", "7H4": "Hino", "JH7": "Hino", "JHA": "Hino",
 };
 
 function decodeMake(vin: string, wmiMake: string | null, global?: ReturnType<typeof decodeGlobalBrand>): string | null {
@@ -955,6 +1098,9 @@ const MODEL_OVERRIDES: Record<string, string> = {
 
 function decodeModel(vin: string, global?: GlobalBrandDecode): string | null {
   const upper = vin.toUpperCase();
+
+  // Pos 7–9 "J11" is the Qashqai model code. Pos 4–6 (e.g. FFA) is engine/gear — not the model.
+  if (isNissanSunderlandQashqaiJ11(upper)) return "Qashqai";
 
   const brandModel = resolveBrandVinModel(upper);
   if (brandModel) return brandModel;

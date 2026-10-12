@@ -75,7 +75,7 @@ function wmiFamily(wmi: string): string | null {
     WBX: "BMW", WAP: "BMW",
     "55S": "Mercedes-Benz USA", WD4: "Mercedes-Benz", WD8: "Mercedes-Benz USA",
     JN1: "Nissan", "1N4": "Nissan USA", "3N8": "Nissan Mexico", "3PC": "Nissan Mexico",
-    SJK: "Nissan UK", "5N3": "Infiniti USA", JNR: "Infiniti Japan",
+    SJK: "Nissan UK", SJN: "Nissan UK Sunderland", "5N3": "Infiniti USA", JNR: "Infiniti Japan",
     JF1: "Subaru", "4S3": "Subaru USA",
     YV1: "Volvo", SAL: "Land Rover", SAJ: "Jaguar", SAD: "Jaguar",
   };

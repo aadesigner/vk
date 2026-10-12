@@ -15,6 +15,7 @@ import {
   splitEventComment,
 } from "./provider-pdf-parse";
 import { applyProviderPdfToForm } from "./provider-pdf-apply";
+import { layoutPdfTextItems } from "./provider-pdf-extract";
 import { EMPTY_VIN_CATALOG_FORM } from "@/components/admin/vin-catalog-data-form";
 
 const SAMPLE_VIN = "1HGCM82633A004352";
@@ -185,7 +186,7 @@ describe("history comment / location split", () => {
   it("keeps Registration issued or renewed intact", () => {
     const rest = "not reported Ontario Ministry of Transportation Registration issued or renewed";
     const { titleStatus, description } = splitEventComment(rest);
-    expect(titleStatus).toBe("");
+    expect(titleStatus).toBe("Registration issued or renewed");
     expect(description).toBe("Registration issued or renewed");
     expect(extractHistoryLocation(rest)).toBe("Ontario Ministry of Transportation");
   });
@@ -194,7 +195,7 @@ describe("history comment / location split", () => {
     const rest =
       "3,572 mi Ontario Ministry of Transportation Passed Ontario safety standards inspection";
     const { titleStatus, description } = splitEventComment(rest);
-    expect(titleStatus).toBe("");
+    expect(titleStatus).toBe("Passed Ontario safety standards inspection");
     expect(description).toBe("Passed Ontario safety standards inspection");
     expect(description).not.toMatch(/^Passed Ontario$/i);
   });
@@ -203,7 +204,7 @@ describe("history comment / location split", () => {
     const rest =
       "not reported Ontario Ministry of Transportation Registration issued or renewed Ignition coil(s) replaced - Spark plug(s) replaced - Four tires mounted";
     const { titleStatus, description, orphanWork } = splitEventComment(rest);
-    expect(titleStatus).toBe("");
+    expect(titleStatus).toBe("Registration issued or renewed");
     expect(description).toBe("Registration issued or renewed");
     expect(description).not.toMatch(/ignition|spark|tire/i);
     expect(orphanWork.some((w) => /ignition|spark/i.test(w))).toBe(true);
@@ -223,7 +224,7 @@ describe("history comment / location split", () => {
     const importRow = splitEventComment(
       "not reported Vehicle Importer Vehicle exported from Michigan and imported to Ontario",
     );
-    expect(importRow.titleStatus).toBe("");
+    expect(importRow.titleStatus).toMatch(/Vehicle exported/i);
     expect(importRow.description).toMatch(/Vehicle exported/i);
     expect(importRow.description).not.toMatch(/Vehicle serviced/i);
   });
@@ -279,7 +280,8 @@ describe("provider-pdf-parse", () => {
     expect(r.form.bodyType).toBe("sedan");
     expect(r.form.color).toBe("");
     expect(r.form.odometer).toBe(String(milesToKm(45230)));
-    expect(r.form.mileageHistory.every((m) => m.source === "")).toBe(true);
+    expect(r.form.mileageHistory.every((m) => m.source === m.location)).toBe(true);
+    expect(r.form.mileageHistory.every((m) => !/carfax|autocheck|provider/i.test(m.source))).toBe(true);
     // Highest mileage first
     const odos = r.form.mileageHistory.map((m) => Number(m.odometer));
     expect(odos).toEqual([...odos].sort((a, b) => b - a));
@@ -385,6 +387,44 @@ describe("provider-pdf-parse", () => {
     expect(r.form.isSalvage).toBe(true);
     expect(r.form.color).toBe("");
     expect(r.form.transmission).toBe("automatic");
+  });
+});
+
+describe("layoutPdfTextItems", () => {
+  it("rebuilds a column-major Carfax table into rows", () => {
+    const text = layoutPdfTextItems([
+      { str: "01/28/2012", transform: [1, 0, 0, 1, 40, 500] },
+      { str: "05/15/2012", transform: [1, 0, 0, 1, 40, 480] },
+      { str: "11", transform: [1, 0, 0, 1, 140, 500] },
+      { str: "mi", transform: [1, 0, 0, 1, 160, 500] },
+      { str: "30", transform: [1, 0, 0, 1, 140, 480] },
+      { str: "mi", transform: [1, 0, 0, 1, 160, 480] },
+      { str: "Doral", transform: [1, 0, 0, 1, 220, 500] },
+      { str: "Volkswagen", transform: [1, 0, 0, 1, 270, 500] },
+      { str: "Florida", transform: [1, 0, 0, 1, 220, 480] },
+      { str: "Motor", transform: [1, 0, 0, 1, 270, 480] },
+      { str: "Vehicle", transform: [1, 0, 0, 1, 320, 480] },
+      { str: "Dept.", transform: [1, 0, 0, 1, 380, 480] },
+      { str: "Vehicle", transform: [1, 0, 0, 1, 460, 500] },
+      { str: "serviced", transform: [1, 0, 0, 1, 520, 500] },
+      { str: "Vehicle", transform: [1, 0, 0, 1, 460, 480] },
+      { str: "purchase", transform: [1, 0, 0, 1, 520, 480] },
+      { str: "reported", transform: [1, 0, 0, 1, 580, 480] },
+    ]);
+    const r = parseProviderPdfText(
+      `CARFAX Vehicle History Report\nVIN: ${SAMPLE_VIN}\nYear: 2019\nMake: Honda\nModel: Civic\nDetailed History\n${text}`,
+      SAMPLE_VIN,
+    );
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const doral = r.form.mileageHistory.find((m) => m.date.startsWith("2012-01-28"));
+    expect(doral?.location).toMatch(/Doral Volkswagen/i);
+    expect(doral?.source).toMatch(/Doral Volkswagen/i);
+    expect(doral?.titleStatus).toMatch(/Vehicle serviced/i);
+    const purchase = r.form.mileageHistory.find((m) => m.date.startsWith("2012-05-15"));
+    expect(purchase?.location).toMatch(/Florida Motor Vehicle Dept/i);
+    expect(purchase?.titleStatus).toMatch(/Vehicle purchase reported/i);
+    expect(purchase?.odometer).toBe(String(milesToKm(30)));
   });
 });
 

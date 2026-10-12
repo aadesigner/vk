@@ -167,3 +167,55 @@ describe("no-guess year — letter A–Y matrix on high-volume WMIs", () => {
     });
   }
 });
+
+describe("no-guess year — prefix floor beats a wider shared chassis code", () => {
+  it("Corvette C8 is not the Audi C8 window (J is 2018, C8 starts 2020)", () => {
+    const r = decodeVin(pad("1G1YC", "J"));
+    expect(r.make).toBe("Chevrolet");
+    expect(r.model).toBe("Corvette");
+    expect(r.year).toBeNull();
+  });
+
+  it("Alabama Corolla Cross is not a 2020 XG10", () => {
+    const r = decodeVin(pad("7MU", "L"));
+    expect(r.make).toBe("Toyota");
+    expect(r.model).toBe("Corolla Cross");
+    expect(r.year).toBeNull();
+  });
+
+  it("Suzuki Across is not a 2019 RAV4", () => {
+    const r = decodeVin(pad("TSMRB", "K"));
+    expect(r.make).toBe("Suzuki");
+    expect(r.model).toBe("Across");
+    expect(r.year).toBeNull();
+  });
+
+  it("Land Rover does not emit 2028 while that model year is still in the future", () => {
+    const r = decodeVin(pad("SALY", "W"));
+    expect(r.make).toBe("Land Rover");
+    expect(r.model).toContain("Velar");
+    expect(r.year).toBeNull();
+    expect(r.year).not.toBe(2028);
+  });
+
+  it("Xiaomi SU7 digit 1 is not 2001", () => {
+    const r = decodeVin(pad("LNB", "1"));
+    expect(r.make).toBe("Xiaomi");
+    expect(r.model).toBe("SU7");
+    expect(r.year).toBeNull();
+  });
+
+  it("Charleston S60 digit 1 is not 2001", () => {
+    const r = decodeVin(pad("7JR", "1"));
+    expect(r.make).toBe("Volvo");
+    expect(r.model).toBe("S60");
+    expect(r.year).toBeNull();
+  });
+
+  it("a plant family list does not get a single digit year", () => {
+    const r = decodeVin(pad("TMA", "1"));
+    expect(r.make).toBe("Hyundai");
+    expect(r.model).toContain("/");
+    expect(r.year).toBeNull();
+  });
+});

@@ -15,6 +15,24 @@ describe("decodeGlobalBrand lightweight dispatch", () => {
   });
 });
 
+describe("SJN Sunderland Qashqai J11", () => {
+  it("SJNFFAJ11U2932667 is Nissan Qashqai with no invented year", () => {
+    const r = decodeVin("SJNFFAJ11U2932667");
+    expect(r.make).toBe("Nissan");
+    expect(r.model).toBe("Qashqai");
+    expect(r.country).toBe("United Kingdom");
+    // Pos 10–11 is series U2, not ISO year (U would be 1997 or 2027).
+    expect(r.year).toBeNull();
+  });
+
+  it("does not treat a non-J11 SJN VIN as Qashqai", () => {
+    const r = decodeVin("SJNFFAF15U2932667");
+    expect(r.make).toBe("Nissan");
+    expect(r.model).toBeNull();
+    expect(r.year).toBeNull();
+  });
+});
+
 describe("JN1 Nissan vs Infiniti (shared Japan PC WMI)", () => {
   it("defaults JN1 make to Nissan (not Infiniti)", () => {
     const r = decodeVin("JN1ZZZZZ0N0123456");

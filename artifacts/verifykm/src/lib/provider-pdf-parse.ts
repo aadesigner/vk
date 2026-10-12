@@ -8,11 +8,13 @@ import {
   EMPTY_ACCIDENT,
   EMPTY_MILEAGE,
   EMPTY_OWNER,
+  EMPTY_REGISTRY,
   EMPTY_SERVICE,
   EMPTY_MARKET_DATA,
   type CatalogAccidentForm,
   type CatalogMileageForm,
   type CatalogOwnerForm,
+  type CatalogRegistryForm,
   type CatalogServiceForm,
 } from "@/components/admin/vin-catalog-history-editors";
 import type { VinCatalogFormState } from "@/components/admin/vin-catalog-data-form";
@@ -615,12 +617,13 @@ export function splitEventComment(rest: string): {
       };
     }
 
-    // Registry / admin / ownership: description = event only.
+    // Registry / admin / ownership: the comment is why the reading was recorded.
     // Shop-work that PDF dumped here is orphaned for a prior Vehicle serviced row.
     if (isAdminOrRegistryEvent(eventPhrase)) {
+      const why = eventPhrase.slice(0, 160);
       return {
-        titleStatus: "",
-        description: eventPhrase.slice(0, 400),
+        titleStatus: why,
+        description: why,
         orphanWork: workBullets,
       };
     }
@@ -1048,7 +1051,7 @@ function buildMileage(hits: HistoryHit[], latestKm: string): CatalogMileageForm[
       date: h.date,
       odometer: h.odometerKm,
       unit: "km",
-      source: "",
+      source: cleanHistoryLocation(h.location),
       location: cleanHistoryLocation(h.location),
       titleStatus: sanitizeCustomerFacingText(h.titleStatus),
       description: sanitizeCustomerFacingText(h.description),
@@ -1072,6 +1075,34 @@ function buildMileage(hits: HistoryHit[], latestKm: string): CatalogMileageForm[
     }];
   }
   return sortMileageHighestFirst(unique).slice(0, 50);
+}
+
+/**
+ * Title, registration, inspection, and similar rows whose mileage column
+ * was "not reported". They still say where and why the record exists.
+ * Rows that already have a mileage reading stay on the mileage timeline.
+ */
+function buildRegistry(hits: HistoryHit[]): CatalogRegistryForm[] {
+  const rows: CatalogRegistryForm[] = [];
+  const seen = new Set<string>();
+  for (const h of hits) {
+    if (h.odometerKm) continue;
+    const why = sanitizeCustomerFacingText(h.titleStatus || h.description).trim();
+    if (!why || /^vehicle\s+serviced$/i.test(why)) continue;
+    if (!isAdminOrRegistryEvent(why)) continue;
+    const location = cleanHistoryLocation(h.location);
+    const key = `${h.date}|${why.toLowerCase()}|${location.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    rows.push({
+      ...EMPTY_REGISTRY,
+      date: h.date,
+      type: "registration",
+      title: why.slice(0, 160),
+      location,
+    });
+  }
+  return sortHistoryNewestFirst(rows).slice(0, 60);
 }
 
 function buildServices(hits: HistoryHit[]): CatalogServiceForm[] {
@@ -1244,6 +1275,7 @@ export function parseProviderPdfText(
   const mileageHistory = buildMileage(hits, odometerHeader);
   const serviceHistory = buildServices(hits);
   const ownerHistory = buildOwners(text, hits, ownerCount);
+  const registryHistory = buildRegistry(hits);
   const odometer = resolveLatestOdometerKm(odometerHeader, mileageHistory);
 
   const isSalvage = boolFlag(text, [
@@ -1292,6 +1324,7 @@ export function parseProviderPdfText(
     mileageHistory,
     serviceHistory,
     ownerHistory,
+    registryHistory,
   };
 
   const summary: string[] = [];
@@ -1306,6 +1339,7 @@ export function parseProviderPdfText(
   if (form.mileageHistory.length) summary.push(`${form.mileageHistory.length} mileage row(s)`);
   if (form.serviceHistory.length) summary.push(`${form.serviceHistory.length} service(s)`);
   if (form.ownerHistory.length) summary.push(`${form.ownerHistory.length} owner row(s)`);
+  if (form.registryHistory.length) summary.push(`${form.registryHistory.length} registry row(s)`);
 
   return { ok: true, provider, vinFound, form, summary };
 }

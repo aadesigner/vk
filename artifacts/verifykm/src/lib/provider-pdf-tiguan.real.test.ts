@@ -36,7 +36,21 @@ describe("real Carfax Tiguan PDF extract", () => {
 
     const doral = r.form.mileageHistory.find((m) => m.date.startsWith("2012-01-28"));
     expect(doral?.location).toMatch(/Doral Volkswagen/i);
+    expect(doral?.source).toBe(doral?.location);
     expect(doral?.titleStatus).toMatch(/Vehicle serviced/i);
+
+    const mto = r.form.mileageHistory.find((m) => m.date.startsWith("2026-03-20"));
+    expect(mto?.location).toBe("Ontario Ministry of Transportation");
+    expect(mto?.source).toBe("Ontario Ministry of Transportation");
+    expect(mto?.titleStatus).toMatch(/Odometer reading reported/i);
+    expect(mto?.description).toMatch(/Odometer reading reported/i);
+
+    const safety = r.form.registryHistory.find(
+      (row) => row.date.startsWith("2026-07-15") || row.date.startsWith("2026-07-29"),
+    );
+    expect(safety?.title).toMatch(/Passed Ontario safety standards inspection/i);
+    expect(safety?.location).toBe("Ontario Ministry of Transportation");
+    expect(r.form.registryHistory.some((row) => /registration issued or renewed/i.test(row.title))).toBe(true);
 
     const tire = r.form.mileageHistory.find((m) => m.date.startsWith("2026-04-20"));
     expect(tire?.location).toBe("Gc Tire And Auto Brampton, ON");
