@@ -39,17 +39,10 @@ export const MAX_PLAUSIBLE_KRW_REPAIR_PAYOUT = 80_000_000;
 
 /**
  * Floor for accepting a list/delivery price as a real new-car MSRP.
- * Korean volume models commonly list around ₩20–40M — do not treat those as invalid.
+ * Small Korean cars list under ₩15M; volume models are often ₩20–40M.
  */
-export const MIN_PLAUSIBLE_NEW_CAR_LIST_KRW = 15_000_000;
+export const MIN_PLAUSIBLE_NEW_CAR_LIST_KRW = 8_000_000;
 export const MAX_PLAUSIBLE_NEW_CAR_LIST_KRW = 500_000_000;
-
-/**
- * Only ×10 “X million won” when the literal parse is below this.
- * Encar sometimes sends “13.57 million won” meaning ₩135.7M; mid-range MSRPs
- * like “33.5 million won” (₩33.5M) must stay literal.
- */
-export const MILLION_WON_LIST_PRICE_SCALE_BELOW_KRW = 20_000_000;
 
 export type KoreanRepairCostParts = {
   partCost?: number | null;
@@ -134,28 +127,54 @@ export function parseKrwAmountFromText(text: string | null | undefined): number 
 
 /**
  * Parse Encar/Carstat new-car list or delivery prices.
- * - “33.5 million won” → ₩33.5M (literal mid-range MSRP)
- * - “13.57 million won” → ₩135.7M (×10 only when literal is below
- *   {@link MILLION_WON_LIST_PRICE_SCALE_BELOW_KRW}, historically under-scaled Encar text)
+ * “19.2 million won” is ₩19.2M. Do not multiply by 10 — that cutoff turned a
+ * 2018 Sonata list price into ₩192M while the delivery price next to it stayed ₩20.56M.
  */
 export function parseKoreanListPriceKrw(text: string | null | undefined): number | null {
   const base = parseKrwAmountFromText(text);
   if (base == null || base <= 0) return null;
-
-  const raw = (normalizeKrwAmountText(text) ?? String(text)).trim();
-  const million = raw.match(/^([\d.,]+)\s*million\s+won$/i);
-  if (million && base < MILLION_WON_LIST_PRICE_SCALE_BELOW_KRW) {
-    const scaled = Math.round(base * 10);
-    if (scaled >= MIN_PLAUSIBLE_NEW_CAR_LIST_KRW && scaled <= MAX_PLAUSIBLE_NEW_CAR_LIST_KRW) {
-      return scaled;
-    }
-  }
 
   if (base >= MIN_PLAUSIBLE_NEW_CAR_LIST_KRW && base <= MAX_PLAUSIBLE_NEW_CAR_LIST_KRW) {
     return Math.round(base);
   }
 
   return base < MIN_PLAUSIBLE_NEW_CAR_LIST_KRW ? null : Math.round(base);
+}
+
+/**
+ * Older imports multiplied “X million won” by 10 only when that literal was under ₩20M,
+ * so a stored list price in [₩150M, ₩200M) is that mistake when list/10 sits next to
+ * the sibling delivery price. A real luxury MSRP in that band is not 10× its delivery price.
+ */
+export function correctCliffScaledKoreanListKrw(
+  listKrw: number,
+  deliveryKrw: number | null | undefined,
+): number {
+  if (deliveryKrw == null || !Number.isFinite(deliveryKrw) || deliveryKrw <= 0) return listKrw;
+  if (listKrw < 150_000_000 || listKrw >= 200_000_000) return listKrw;
+  if (deliveryKrw < MIN_PLAUSIBLE_NEW_CAR_LIST_KRW || deliveryKrw > 80_000_000) return listKrw;
+  const undone = Math.round(listKrw / 10);
+  if (Math.abs(undone - deliveryKrw) / deliveryKrw <= 0.25) return undone;
+  return listKrw;
+}
+
+export function correctStoredKoreanNewCarPrices<T extends { label: string; value: string }>(
+  rows: T[],
+  amount?: string | null,
+): { rows: T[]; amount: string | null } {
+  const list = rows.find((row) => /new car list price/i.test(row.label));
+  const delivery = rows.find((row) => /new car delivery price/i.test(row.label));
+  const listKrw = list ? parseKoreanListPriceKrw(list.value) : null;
+  const deliveryKrw = delivery ? parseKoreanListPriceKrw(delivery.value) : null;
+  const fixed = listKrw != null ? correctCliffScaledKoreanListKrw(listKrw, deliveryKrw) : null;
+  if (list == null || fixed == null || fixed === listKrw) {
+    return { rows, amount: amount ?? null };
+  }
+  const value = `${fixed.toLocaleString("en-US")} won`;
+  const nextRows = rows.map((row) => (row === list ? { ...row, value } : row));
+  const amountKrw = amount ? parseKoreanListPriceKrw(amount) : null;
+  const nextAmount = amountKrw != null && amountKrw === listKrw ? value : (amount ?? null);
+  return { rows: nextRows, amount: nextAmount };
 }
 
 export function formatKoreanListPriceAmountText(text: string | null | undefined): string | null {

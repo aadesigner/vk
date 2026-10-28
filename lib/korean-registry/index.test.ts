@@ -4,6 +4,8 @@ import {
   normalizeKrwAmountText,
   parseKoreanListPriceKrw,
   formatKoreanListPriceAmountText,
+  correctCliffScaledKoreanListKrw,
+  correctStoredKoreanNewCarPrices,
   resolveRegistryDisplayAmount,
   resolveRegistryDisplayMileage,
   resolveKoreanDisplayKrw,
@@ -73,9 +75,25 @@ describe("sanitizeKoreanRepairKrwAmount", () => {
 });
 
 describe("parseKoreanListPriceKrw", () => {
-  it("scales under-reported Encar million-won list prices by 10×", () => {
-    expect(parseKoreanListPriceKrw("13.57 million won")).toBe(135_700_000);
-    expect(formatKoreanListPriceAmountText("13.57 million won")).toBe("135,700,000 won");
+  it("keeps million-won list prices literal, including values under ₩20M", () => {
+    expect(parseKoreanListPriceKrw("13.57 million won")).toBe(13_570_000);
+    expect(parseKoreanListPriceKrw("19.2 million won")).toBe(19_200_000);
+    expect(formatKoreanListPriceAmountText("19.2 million won")).toBe("19,200,000 won");
+  });
+
+  it("undoes a stored 10× list price when delivery price shows the real scale", () => {
+    expect(correctCliffScaledKoreanListKrw(192_000_000, 20_560_000)).toBe(19_200_000);
+    expect(correctCliffScaledKoreanListKrw(136_600_000, 35_690_000)).toBe(136_600_000);
+    const fixed = correctStoredKoreanNewCarPrices(
+      [
+        { label: "New car list price", value: "192,000,000 won" },
+        { label: "New car delivery price", value: "20,560,000 won" },
+      ],
+      "192,000,000 won",
+    );
+    expect(fixed.rows[0]?.value).toBe("19,200,000 won");
+    expect(fixed.rows[1]?.value).toBe("20,560,000 won");
+    expect(fixed.amount).toBe("19,200,000 won");
   });
 
   it("leaves correctly scaled million-won list prices unchanged", () => {
@@ -130,11 +148,11 @@ describe("resolveRegistryDisplayAmount", () => {
     })).toBeNull();
   });
 
-  it("scales new car delivery list price from Encar million-won format", () => {
+  it("keeps a small-car list price literal", () => {
     expect(resolveRegistryDisplayAmount({
       type: "new_car_delivery",
       details: [{ label: "New car list price", value: "13.57 million won" }],
-    })).toBe("135,700,000 won");
+    })).toBe("13,570,000 won");
   });
 
   it("does not inflate mid-range list and delivery prices", () => {

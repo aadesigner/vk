@@ -766,7 +766,7 @@ describe("extractRegistryHistoryFromLots", () => {
     expect(events[1]?.amount).toBe("136,600,000 won");
   });
 
-  it("scales under-reported Encar new car list prices (13.57M → 135.7M)", () => {
+  it("keeps Encar new car list prices literal (13.57 million won → ₩13.57M)", () => {
     const events = extractRegistryHistoryFromLots([{
       details: {
         history: [{
@@ -783,9 +783,9 @@ describe("extractRegistryHistoryFromLots", () => {
 
     expect(events).toHaveLength(1);
     expect(events[0]?.type).toBe("new_car_delivery");
-    expect(events[0]?.amount).toBe("135,700,000 won");
+    expect(events[0]?.amount).toBe("13,570,000 won");
     expect(events[0]?.details?.find((r) => r.label === "New car list price")?.value).toBe(
-      "135,700,000 won",
+      "13,570,000 won",
     );
   });
 
