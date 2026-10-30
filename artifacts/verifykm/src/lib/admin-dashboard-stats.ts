@@ -200,94 +200,114 @@ export function isOtherAcquisitionChannel(channel: string | null | undefined): b
  * Brand-aligned acquisition colors (shared by online badges + metric cards).
  * Soft fills for badges; solid text for card attribution lines.
  */
-const ACQ_BRAND: Record<string, { text: string; tint: string }> = {
+const ACQ_BRAND: Record<string, { text: string; tint: string; bar: string }> = {
   // Meta / Facebook — #1877F2
   meta: {
     text: "text-[#1877F2]",
     tint: "bg-[#1877F2]/10 text-[#166FE5] border-[#1877F2]/25",
+    bar: "bg-[#1877F2]",
   },
   // Instagram — #E4405F
   instagram: {
     text: "text-[#E4405F]",
     tint: "bg-[#E4405F]/10 text-[#D62956] border-[#E4405F]/25",
+    bar: "bg-[#E4405F]",
   },
   // Google — #4285F4
   google: {
     text: "text-[#4285F4]",
     tint: "bg-[#4285F4]/10 text-[#3367D6] border-[#4285F4]/25",
+    bar: "bg-[#4285F4]",
   },
   // TikTok — ink + brand red accent
   tiktok: {
     text: "text-[#FE2C55]",
     tint: "bg-[#FE2C55]/10 text-[#E11D48] border-[#FE2C55]/25",
+    bar: "bg-[#FE2C55]",
   },
   // LinkedIn — #0A66C2
   linkedin: {
     text: "text-[#0A66C2]",
     tint: "bg-[#0A66C2]/10 text-[#004182] border-[#0A66C2]/25",
+    bar: "bg-[#0A66C2]",
   },
   // X / Twitter — near-black
   x: {
     text: "text-[#0F1419]",
     tint: "bg-zinc-900/5 text-zinc-800 border-zinc-900/15",
+    bar: "bg-zinc-800",
   },
   // Bing — #00809D
   bing: {
     text: "text-[#00809D]",
     tint: "bg-[#00809D]/10 text-[#006F8A] border-[#00809D]/25",
+    bar: "bg-[#00809D]",
   },
   // Messenger — #006AFF (ready if/when channel is added)
   messenger: {
     text: "text-[#006AFF]",
     tint: "bg-[#006AFF]/10 text-[#005AE0] border-[#006AFF]/25",
+    bar: "bg-[#006AFF]",
   },
   youtube: {
     text: "text-[#FF0000]",
     tint: "bg-[#FF0000]/10 text-[#CC0000] border-[#FF0000]/25",
+    bar: "bg-[#FF0000]",
   },
   whatsapp: {
     text: "text-[#25D366]",
     tint: "bg-[#25D366]/10 text-[#128C7E] border-[#25D366]/25",
+    bar: "bg-[#25D366]",
   },
   telegram: {
     text: "text-[#229ED9]",
     tint: "bg-[#229ED9]/10 text-[#1A7AA8] border-[#229ED9]/25",
+    bar: "bg-[#229ED9]",
   },
   reddit: {
     text: "text-[#FF4500]",
     tint: "bg-[#FF4500]/10 text-[#CC3700] border-[#FF4500]/25",
+    bar: "bg-[#FF4500]",
   },
   pinterest: {
     text: "text-[#E60023]",
     tint: "bg-[#E60023]/10 text-[#B8001C] border-[#E60023]/25",
+    bar: "bg-[#E60023]",
   },
   snapchat: {
     text: "text-[#C9A227]",
     tint: "bg-[#FFFC00]/30 text-[#7A6A00] border-[#C9A227]/40",
+    bar: "bg-[#C9A227]",
   },
   threads: {
     text: "text-[#0F1419]",
     tint: "bg-zinc-900/5 text-zinc-800 border-zinc-900/15",
+    bar: "bg-zinc-800",
   },
   referral: {
     text: "text-amber-700",
     tint: "bg-amber-50 text-amber-800 border-amber-200/80",
+    bar: "bg-amber-500",
   },
   direct: {
     text: "text-slate-600",
     tint: "bg-slate-100 text-slate-700 border-slate-200/80",
+    bar: "bg-slate-400",
   },
   paid_ads: {
     text: "text-orange-700",
     tint: "bg-orange-50 text-orange-800 border-orange-200/80",
+    bar: "bg-orange-500",
   },
   organic_social: {
     text: "text-rose-600",
     tint: "bg-rose-50 text-rose-700 border-rose-200/80",
+    bar: "bg-rose-400",
   },
   other: {
     text: "text-slate-500",
     tint: "bg-slate-100 text-slate-600 border-slate-200/80",
+    bar: "bg-slate-300",
   },
 };
 
@@ -336,6 +356,11 @@ export function acquisitionChannelTextClass(channel: string | null | undefined):
 /** Soft brand fills for online-user channel badges. */
 export function acquisitionChannelTintClass(channel: string | null | undefined): string {
   return ACQ_BRAND[acquisitionBrandKey(channel)].tint;
+}
+
+/** Solid fill for CSS share / mix bars (no extra chart library). */
+export function acquisitionChannelBarClass(channel: string | null | undefined): string {
+  return ACQ_BRAND[acquisitionBrandKey(channel)].bar;
 }
 
 /** Compact “€120 FB ads · €20 Insta social” line for the Revenue metric. */

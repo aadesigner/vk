@@ -10,7 +10,7 @@ import {
   withBasePath,
   DEFAULT_FAVICONS,
 } from "./country-favicon-config.mjs";
-import { isSeoOgPageKey, seoOgImagePath } from "./seo-og-config.mjs";
+import { isSeoOgPageKey, seoOgImagePath, SEO_OG_WIDTH, SEO_OG_HEIGHT } from "./seo-og-config.mjs";
 import { vinSeoTemplates } from "./vin-seo-templates.mjs";
 import { buildCountryPageJsonLd, buildHomeOrganizationJsonLd, isCountrySeoPageKey } from "./country-page-json-ld.mjs";
 import {
@@ -317,7 +317,11 @@ export function resolveSeoForPath(pathname, basePath = "") {
   const canonicalPath = localizedPath(lang, rest);
   const dir = lang === "ar" ? "rtl" : "ltr";
   const ogImage = seo.ogImage
-    ?? (isSeoOgPageKey(pageKey) ? seoOgImagePath(pageKey, lang, basePath) : undefined);
+    ?? (isSeoOgPageKey(pageKey)
+      ? seoOgImagePath(pageKey, lang, basePath)
+      : (pageKey === "sign_up" || pageKey === "auth")
+        ? seoOgImagePath("home", lang, basePath)
+        : undefined);
 
   return {
     lang,
@@ -405,6 +409,8 @@ function buildSeoHeadBlock(resolved) {
     if (ogImageAlt) {
       lines.push(`<meta property="og:image:alt" content="${escapeHtml(ogImageAlt)}" />`);
     }
+    lines.push(`<meta property="og:image:width" content="${SEO_OG_WIDTH}" />`);
+    lines.push(`<meta property="og:image:height" content="${SEO_OG_HEIGHT}" />`);
   }
 
   if (!noIndex) {
@@ -496,9 +502,12 @@ export function injectSeoIntoHtml(html, pathname, basePath = "") {
   return out;
 }
 
-/** Indexable marketing routes only — no sign-in/checkout/dashboard shells. */
+/** Auth shells are prerendered with noindex + home OG image for Facebook ads scrapes. */
+export const AUTH_PRERENDER_PATHS = ["/sign-in", "/sign-up"];
+
+/** Indexable marketing routes plus auth shells (auth stays noindex). */
 export function getPrerenderPaths() {
-  return INDEXABLE_PRERENDER_PATHS;
+  return [...INDEXABLE_PRERENDER_PATHS, ...AUTH_PRERENDER_PATHS];
 }
 
 export { seoData, b2bSeoData };

@@ -20,7 +20,6 @@ import {
   readAuthCredentials,
   resolveAuthRecaptchaToken,
   shouldBlockAuthWithoutRecaptcha,
-  shouldWaitForAuthRecaptcha,
   validateAuthSignupInput,
 } from "@/lib/auth-email-submit";
 import {
@@ -409,11 +408,8 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
 
     setLoading(true);
     try {
-      if (shouldWaitForAuthRecaptcha(rcEnabled, rcReady)) {
-        setError(t("error_recaptcha_loading"));
-        return;
-      }
-
+      // Chrome-from-ad: wait for grecaptcha instead of aborting the first submit.
+      // In-app browsers skip recaptcha (shouldWaitForAuthRecaptcha is false there).
       const primed = recaptchaPrimeRef.current;
       recaptchaPrimeRef.current = null;
 
@@ -449,7 +445,15 @@ export function AuthForm({ mode: initialMode }: AuthFormProps) {
 
   return (
     <>
-      <SEOHead title={seo.title} description={seo.description} lang={seo.lang} noIndex />
+      <SEOHead
+        title={seo.title}
+        description={seo.description}
+        lang={seo.lang}
+        canonicalPath={seo.canonicalPath}
+        noIndex
+        ogImage={seo.ogImage}
+        ogImageAlt={seo.ogImageAlt}
+      />
       <AuthPageShell hideLogo>
             <AnimatePresence mode="wait" initial={false}>
               <motion.div

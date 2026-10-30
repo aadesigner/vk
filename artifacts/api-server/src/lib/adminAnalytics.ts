@@ -25,6 +25,15 @@ export const ANALYTICS_PERIODS: DashboardPeriodKey[] = [
   "year",
 ];
 
+export const ANALYTICS_BUCKET_ORDER = [
+  "paid_ads",
+  "organic_social",
+  "google",
+  "referral",
+  "direct",
+  "unknown",
+] as const;
+
 const CHANNEL_SQL = `COALESCE(
   NULLIF(TRIM(u.acquisition_channel), ''),
   NULLIF(TRIM(u.acquisition_bucket), ''),
@@ -38,12 +47,33 @@ export type AnalyticsChannelRow = {
   revenue: number;
   checks: number;
   conversionPct: number | null;
+  signupSharePct: number;
+  revenueSharePct: number;
+  revenuePerSignup: number;
 };
 
 export type AnalyticsCampaignRow = {
   campaign: string;
+  signups: number;
   buyers: number;
   revenue: number;
+  conversionPct: number | null;
+};
+
+export type AnalyticsDimRow = {
+  key: string;
+  signups: number;
+  buyers: number;
+  revenue: number;
+  conversionPct: number | null;
+  signupSharePct: number;
+  revenueSharePct: number;
+};
+
+export type AnalyticsReferrerRow = {
+  referrer: string;
+  signups: number;
+  signupSharePct: number;
 };
 
 export type AnalyticsDailyRow = {
@@ -60,21 +90,32 @@ export type AnalyticsMethodRow = {
   revenue: number;
 };
 
+export type AnalyticsSummary = {
+  revenue: number;
+  checks: number;
+  signups: number;
+  payingUsers: number;
+  aov: number;
+  cacheHitRate: number;
+  onlineNow: number;
+  signupToBuyerPct: number | null;
+  revenuePerSignup: number;
+  checksPerSignup: number;
+  attributedPct: number;
+  clickIdPct: number;
+};
+
 export type AdminAnalyticsPayload = {
   period: DashboardPeriodKey;
   from: string;
   toExclusive: string | null;
-  summary: {
-    revenue: number;
-    checks: number;
-    signups: number;
-    payingUsers: number;
-    aov: number;
-    cacheHitRate: number;
-    onlineNow: number;
-  };
+  summary: AnalyticsSummary;
   channels: AnalyticsChannelRow[];
+  buckets: AnalyticsDimRow[];
+  sources: AnalyticsDimRow[];
+  mediums: AnalyticsDimRow[];
   campaigns: AnalyticsCampaignRow[];
+  referrers: AnalyticsReferrerRow[];
   daily: AnalyticsDailyRow[];
   countries: AnalyticsCountryRow[];
   paymentMethods: AnalyticsMethodRow[];
@@ -102,6 +143,168 @@ export function sortAnalyticsChannels(rows: AnalyticsChannelRow[]): AnalyticsCha
   return [...named, ...other];
 }
 
+export function ratioPct(numerator: number, denominator: number): number {
+  if (denominator <= 0) return 0;
+  return Math.round((numerator / denominator) * 1000) / 10;
+}
+
+export function conversionPct(buyers: number, signups: number): number | null {
+  if (signups <= 0) return null;
+  return Math.round((buyers / signups) * 1000) / 10;
+}
+
+export function perSignup(amount: number, signups: number): number {
+  if (signups <= 0) return 0;
+  return Math.round((amount / signups) * 100) / 100;
+}
+
+type ChannelScratch = Omit<AnalyticsChannelRow, "signupSharePct" | "revenueSharePct" | "revenuePerSignup">;
+
+export function enrichChannelRows(rows: ChannelScratch[]): AnalyticsChannelRow[] {
+  const totalSignups = rows.reduce((s, r) => s + r.signups, 0);
+  const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
+  return rows.map((r) => ({
+    ...r,
+    signupSharePct: ratioPct(r.signups, totalSignups),
+    revenueSharePct: ratioPct(r.revenue, totalRevenue),
+    revenuePerSignup: perSignup(r.revenue, r.signups),
+  }));
+}
+
+type NamedScratch = { key: string; signups: number; buyers: number; revenue: number };
+
+export function finalizeNamedRows(
+  rows: NamedScratch[],
+  opts?: { limit?: number; order?: readonly string[] },
+): AnalyticsDimRow[] {
+  const merged = new Map<string, NamedScratch>();
+  for (const r of rows) {
+    const key = (r.key || "unknown").trim().toLowerCase().slice(0, 80) || "unknown";
+    const cur = merged.get(key);
+    if (cur) {
+      cur.signups += r.signups;
+      cur.buyers += r.buyers;
+      cur.revenue += r.revenue;
+    } else {
+      merged.set(key, { key, signups: r.signups, buyers: r.buyers, revenue: r.revenue });
+    }
+  }
+  let list = [...merged.values()].filter((r) => r.signups > 0 || r.buyers > 0 || r.revenue > 0);
+  if (opts?.order) {
+    const rank = new Map(opts.order.map((k, i) => [k, i]));
+    list.sort((a, b) => (rank.get(a.key) ?? 99) - (rank.get(b.key) ?? 99) || b.signups - a.signups);
+  } else {
+    const named = list.filter((r) => !isOtherChannel(r.key));
+    const other = list.filter((r) => isOtherChannel(r.key));
+    named.sort((a, b) => b.revenue - a.revenue || b.signups - a.signups);
+    other.sort((a, b) => b.signups - a.signups);
+    list = [...named, ...other];
+  }
+  if (opts?.limit && list.length > opts.limit) {
+    list = list.slice(0, opts.limit);
+  }
+  const totalSignups = list.reduce((s, r) => s + r.signups, 0);
+  const totalRevenue = list.reduce((s, r) => s + r.revenue, 0);
+  return list.map((r) => ({
+    key: r.key,
+    signups: r.signups,
+    buyers: r.buyers,
+    revenue: r.revenue,
+    conversionPct: conversionPct(r.buyers, r.signups),
+    signupSharePct: ratioPct(r.signups, totalSignups),
+    revenueSharePct: ratioPct(r.revenue, totalRevenue),
+  }));
+}
+
+export function normalizeReferrerHost(raw: string): string {
+  const s = raw.trim().toLowerCase();
+  if (!s || s === "direct" || s === "unknown" || s === "none") return "";
+  try {
+    const u = new URL(s.includes("://") ? s : `https://${s}`);
+    return u.hostname.replace(/^www\./i, "").slice(0, 80);
+  } catch {
+    return s.replace(/^www\./, "").slice(0, 80);
+  }
+}
+
+export function finalizeReferrers(
+  rows: Array<{ referrer: string; signups: number }>,
+  totalSignups: number,
+  limit = 8,
+): AnalyticsReferrerRow[] {
+  const merged = new Map<string, number>();
+  for (const r of rows) {
+    const host = normalizeReferrerHost(r.referrer);
+    if (!host) continue;
+    merged.set(host, (merged.get(host) ?? 0) + r.signups);
+  }
+  return [...merged.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([referrer, signups]) => ({
+      referrer,
+      signups,
+      signupSharePct: ratioPct(signups, totalSignups),
+    }));
+}
+
+export function mergeCampaigns(
+  signupRows: Array<{ campaign: string; signups: number }>,
+  payRows: Array<{ campaign: string; buyers: number; revenue: number }>,
+  limit = 12,
+): AnalyticsCampaignRow[] {
+  const map = new Map<string, AnalyticsCampaignRow>();
+  const touch = (name: string) => {
+    const campaign = name.trim().slice(0, 80);
+    if (!campaign) return null;
+    let row = map.get(campaign);
+    if (!row) {
+      row = { campaign, signups: 0, buyers: 0, revenue: 0, conversionPct: null };
+      map.set(campaign, row);
+    }
+    return row;
+  };
+  for (const r of signupRows) {
+    const row = touch(r.campaign);
+    if (row) row.signups += r.signups;
+  }
+  for (const r of payRows) {
+    const row = touch(r.campaign);
+    if (row) {
+      row.buyers += r.buyers;
+      row.revenue += r.revenue;
+    }
+  }
+  return [...map.values()]
+    .map((r) => ({ ...r, conversionPct: conversionPct(r.buyers, r.signups) }))
+    .sort((a, b) => b.revenue - a.revenue || b.signups - a.signups)
+    .slice(0, limit);
+}
+
+export function deriveAnalyticsSummaryExtras(input: {
+  revenue: number;
+  checks: number;
+  signups: number;
+  payingUsers: number;
+  channels: Array<{ channel: string; signups: number }>;
+  clickIdSignups: number;
+}): Pick<
+  AnalyticsSummary,
+  "signupToBuyerPct" | "revenuePerSignup" | "checksPerSignup" | "attributedPct" | "clickIdPct"
+> {
+  const unknownSignups = input.channels
+    .filter((c) => isOtherChannel(c.channel))
+    .reduce((s, c) => s + c.signups, 0);
+  const attributed = Math.max(0, input.signups - unknownSignups);
+  return {
+    signupToBuyerPct: conversionPct(input.payingUsers, input.signups),
+    revenuePerSignup: perSignup(input.revenue, input.signups),
+    checksPerSignup: perSignup(input.checks, input.signups),
+    attributedPct: ratioPct(attributed, input.signups),
+    clickIdPct: ratioPct(input.clickIdSignups, input.signups),
+  };
+}
+
 function normalizeMethod(raw: unknown): AnalyticsMethodRow["method"] {
   const m = String(raw ?? "").toLowerCase();
   if (m === "pok" || m === "credit" || m === "free" || m === "paypal") return m;
@@ -125,41 +328,66 @@ export function parseAnalyticsPeriod(raw: unknown): DashboardPeriodKey {
   return "week";
 }
 
+const EMPTY_SUMMARY: AnalyticsSummary = {
+  revenue: 0,
+  checks: 0,
+  signups: 0,
+  payingUsers: 0,
+  aov: 0,
+  cacheHitRate: 0,
+  onlineNow: 0,
+  signupToBuyerPct: null,
+  revenuePerSignup: 0,
+  checksPerSignup: 0,
+  attributedPct: 0,
+  clickIdPct: 0,
+};
+
 function emptyPayload(period: DashboardPeriodKey, from: string, toExclusive?: string): AdminAnalyticsPayload {
   return {
     period,
     from,
     toExclusive: toExclusive ?? null,
-    summary: {
-      revenue: 0,
-      checks: 0,
-      signups: 0,
-      payingUsers: 0,
-      aov: 0,
-      cacheHitRate: 0,
-      onlineNow: 0,
-    },
+    summary: { ...EMPTY_SUMMARY },
     channels: [],
+    buckets: [],
+    sources: [],
+    mediums: [],
     campaigns: [],
+    referrers: [],
     daily: [],
     countries: [],
     paymentMethods: [],
   };
 }
 
-async function loadAcquisitionSlices(
-  from: string,
-  toExclusive: string | undefined,
-): Promise<{
+type SliceResult = {
   channels: AnalyticsChannelRow[];
+  buckets: AnalyticsDimRow[];
+  sources: AnalyticsDimRow[];
+  mediums: AnalyticsDimRow[];
   campaigns: AnalyticsCampaignRow[];
-}> {
+  referrers: AnalyticsReferrerRow[];
+  clickIdSignups: number;
+};
+
+const EMPTY_SLICES: SliceResult = {
+  channels: [],
+  buckets: [],
+  sources: [],
+  mediums: [],
+  campaigns: [],
+  referrers: [],
+  clickIdSignups: 0,
+};
+
+async function loadAcquisitionSlices(from: string, toExclusive: string | undefined): Promise<SliceResult> {
   const userDate = sqlDateFilter("u", from, toExclusive);
   const payDate = sqlDateFilter("p", from, toExclusive);
   const lookupDate = sqlDateFilter("vl", from, toExclusive);
 
   try {
-    const [signupRows, buyerRows, checkRows, campaignRows] = await Promise.all([
+    const [signupRows, buyerRows, checkRows, dimSignupRows, dimPayRows] = await Promise.all([
       db.execute(sql`
         SELECT ${sql.raw(CHANNEL_SQL)} AS channel, COUNT(*)::int AS signups
         FROM users u
@@ -188,21 +416,34 @@ async function loadAcquisitionSlices(
       `),
       db.execute(sql`
         SELECT
+          COALESCE(NULLIF(TRIM(u.acquisition_bucket), ''), 'unknown') AS bucket,
+          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_source)), ''), 'unknown') AS source,
+          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_medium)), ''), 'unknown') AS medium,
+          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_referrer)), ''), '') AS referrer,
+          NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
+          COUNT(*)::int AS signups,
+          COALESCE(SUM(CASE WHEN NULLIF(TRIM(u.acquisition_click_id), '') IS NOT NULL THEN 1 ELSE 0 END), 0)::int AS with_click
+        FROM users u
+        WHERE u.is_admin = false AND ${sql.raw(userDate)}
+        GROUP BY 1, 2, 3, 4, 5
+      `),
+      db.execute(sql`
+        SELECT
+          COALESCE(NULLIF(TRIM(u.acquisition_bucket), ''), 'unknown') AS bucket,
+          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_source)), ''), 'unknown') AS source,
+          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_medium)), ''), 'unknown') AS medium,
           NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
           COUNT(DISTINCT p.user_id)::int AS buyers,
           COALESCE(SUM(p.amount), 0)::float AS revenue
         FROM payments p
-        INNER JOIN users u ON u.id = p.user_id
+        LEFT JOIN users u ON u.id = p.user_id
         WHERE ${sql.raw(SQL_COLLECTED_REVENUE_ROW_FILTER)}
           AND ${sql.raw(payDate)}
-          AND NULLIF(TRIM(u.acquisition_campaign), '') IS NOT NULL
-        GROUP BY 1
-        ORDER BY revenue DESC
-        LIMIT 10
+        GROUP BY 1, 2, 3, 4
       `),
     ]);
 
-    const map = new Map<string, AnalyticsChannelRow>();
+    const map = new Map<string, ChannelScratch>();
     const touch = (channelRaw: unknown) => {
       const channel = String(channelRaw ?? "unknown").toLowerCase().trim().slice(0, 48) || "unknown";
       let row = map.get(channel);
@@ -225,29 +466,107 @@ async function loadAcquisitionSlices(
       touch(r.channel).checks += Number(r.checks ?? 0);
     }
 
-    const channels = sortAnalyticsChannels(
-      [...map.values()].map((row) => ({
-        ...row,
-        conversionPct: row.signups > 0 ? Math.round((row.buyers / row.signups) * 1000) / 10 : null,
-      })),
+    const channels = enrichChannelRows(
+      sortAnalyticsChannels(
+        [...map.values()].map((row) => ({
+          ...row,
+          conversionPct: conversionPct(row.buyers, row.signups),
+          signupSharePct: 0,
+          revenueSharePct: 0,
+          revenuePerSignup: 0,
+        })),
+      ),
     );
 
-    const campaigns: AnalyticsCampaignRow[] = (campaignRows.rows as Array<{
+    type DimSignup = {
+      bucket: unknown;
+      source: unknown;
+      medium: unknown;
+      referrer: unknown;
+      campaign: unknown;
+      signups: unknown;
+      with_click: unknown;
+    };
+    type DimPay = {
+      bucket: unknown;
+      source: unknown;
+      medium: unknown;
       campaign: unknown;
       buyers: unknown;
       revenue: unknown;
-    }>)
-      .map((r) => ({
-        campaign: String(r.campaign ?? "").slice(0, 80),
-        buyers: Number(r.buyers ?? 0),
-        revenue: Number(r.revenue ?? 0),
-      }))
-      .filter((r) => r.campaign && r.revenue > 0);
+    };
 
-    return { channels, campaigns };
+    const dimSignups = dimSignupRows.rows as DimSignup[];
+    const dimPays = dimPayRows.rows as DimPay[];
+
+    const clickIdSignups = dimSignups.reduce((s, r) => s + Number(r.with_click ?? 0), 0);
+    const totalSignups = dimSignups.reduce((s, r) => s + Number(r.signups ?? 0), 0);
+
+    const bucketSignups: NamedScratch[] = dimSignups.map((r) => ({
+      key: String(r.bucket ?? "unknown"),
+      signups: Number(r.signups ?? 0),
+      buyers: 0,
+      revenue: 0,
+    }));
+    const bucketPays: NamedScratch[] = dimPays.map((r) => ({
+      key: String(r.bucket ?? "unknown"),
+      signups: 0,
+      buyers: Number(r.buyers ?? 0),
+      revenue: Number(r.revenue ?? 0),
+    }));
+    const sourceSignups: NamedScratch[] = dimSignups.map((r) => ({
+      key: String(r.source ?? "unknown"),
+      signups: Number(r.signups ?? 0),
+      buyers: 0,
+      revenue: 0,
+    }));
+    const sourcePays: NamedScratch[] = dimPays.map((r) => ({
+      key: String(r.source ?? "unknown"),
+      signups: 0,
+      buyers: Number(r.buyers ?? 0),
+      revenue: Number(r.revenue ?? 0),
+    }));
+    const mediumSignups: NamedScratch[] = dimSignups.map((r) => ({
+      key: String(r.medium ?? "unknown"),
+      signups: Number(r.signups ?? 0),
+      buyers: 0,
+      revenue: 0,
+    }));
+    const mediumPays: NamedScratch[] = dimPays.map((r) => ({
+      key: String(r.medium ?? "unknown"),
+      signups: 0,
+      buyers: Number(r.buyers ?? 0),
+      revenue: Number(r.revenue ?? 0),
+    }));
+
+    return {
+      channels,
+      buckets: finalizeNamedRows([...bucketSignups, ...bucketPays], { order: ANALYTICS_BUCKET_ORDER }),
+      sources: finalizeNamedRows([...sourceSignups, ...sourcePays], { limit: 10 }),
+      mediums: finalizeNamedRows([...mediumSignups, ...mediumPays], { limit: 8 }),
+      campaigns: mergeCampaigns(
+        dimSignups.map((r) => ({
+          campaign: String(r.campaign ?? ""),
+          signups: Number(r.signups ?? 0),
+        })),
+        dimPays.map((r) => ({
+          campaign: String(r.campaign ?? ""),
+          buyers: Number(r.buyers ?? 0),
+          revenue: Number(r.revenue ?? 0),
+        })),
+      ),
+      referrers: finalizeReferrers(
+        dimSignups.map((r) => ({
+          referrer: String(r.referrer ?? ""),
+          signups: Number(r.signups ?? 0),
+        })),
+        totalSignups,
+      ),
+      clickIdSignups,
+    };
   } catch (err) {
     logger.warn({ err }, "analytics acquisition slices unavailable");
-    return { channels: [], campaigns: [] };
+    return EMPTY_SLICES;
   }
 }
 
@@ -368,21 +687,39 @@ export async function loadAdminAnalyticsPayload(
       checks: checksByDay.get(date) ?? 0,
     }));
 
+    const revenue = Number(agg.revenue ?? 0);
+    const checks = Number(agg.checks ?? 0);
+    const signups = Number(agg.signups ?? 0);
+    const payingUsers = Number(agg.paying_users ?? 0);
+    const extras = deriveAnalyticsSummaryExtras({
+      revenue,
+      checks,
+      signups,
+      payingUsers,
+      channels: acquisition.channels,
+      clickIdSignups: acquisition.clickIdSignups,
+    });
+
     return {
       period,
       from,
       toExclusive: toExclusive ?? null,
       summary: {
-        revenue: Number(agg.revenue ?? 0),
-        checks: Number(agg.checks ?? 0),
-        signups: Number(agg.signups ?? 0),
-        payingUsers: Number(agg.paying_users ?? 0),
+        revenue,
+        checks,
+        signups,
+        payingUsers,
         aov: Number(agg.aov ?? 0),
         cacheHitRate: total > 0 ? (cached / total) * 100 : 0,
         onlineNow: onlinePresence.onlineNow,
+        ...extras,
       },
       channels: acquisition.channels,
+      buckets: acquisition.buckets,
+      sources: acquisition.sources,
+      mediums: acquisition.mediums,
       campaigns: acquisition.campaigns,
+      referrers: acquisition.referrers,
       daily,
       countries: (countriesRaw.rows as Array<{ country_code: unknown; count: unknown }>).map((r) => ({
         countryCode: String(r.country_code ?? "—"),

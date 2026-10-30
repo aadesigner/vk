@@ -17,6 +17,7 @@ import {
 } from "@/lib/seo-pages";
 import { resolveFavicons, type FaviconSet } from "@/lib/country-favicons";
 import { toCanonicalRest } from "@/lib/localized-routes";
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "@/lib/seo-og-images";
 
 export { SEO_DATA };
 export type { SeoPageKey };
@@ -116,11 +117,13 @@ export function applySeoHead({
   upsertMeta("twitter:title", title);
   upsertMeta("twitter:description", description);
 
-  const origin = typeof window !== "undefined" ? window.location.origin : SITE_ORIGIN;
+  const origin = SITE_ORIGIN;
   const absoluteOgImage = resolveAbsoluteAssetUrl(origin, ogImage);
   if (absoluteOgImage) {
     upsertMeta("og:image", absoluteOgImage, "property");
     upsertMeta("twitter:image", absoluteOgImage);
+    upsertMeta("og:image:width", String(OG_IMAGE_WIDTH), "property");
+    upsertMeta("og:image:height", String(OG_IMAGE_HEIGHT), "property");
     if (absoluteOgImage.startsWith("https://")) {
       upsertMeta("og:image:secure_url", absoluteOgImage, "property");
     }
@@ -132,6 +135,8 @@ export function applySeoHead({
     document.querySelector('meta[name="twitter:image"]')?.remove();
     document.querySelector('meta[property="og:image:secure_url"]')?.remove();
     document.querySelector('meta[property="og:image:alt"]')?.remove();
+    document.querySelector('meta[property="og:image:width"]')?.remove();
+    document.querySelector('meta[property="og:image:height"]')?.remove();
   }
 
   const path = canonicalPath ?? (typeof window !== "undefined" ? window.location.pathname : `/${lang}`);

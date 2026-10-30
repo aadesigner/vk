@@ -50,6 +50,8 @@ const PATH_TO_PAGE_KEY: Record<string, string> = {
   "/cars/china": "country_china",
   "/cars/japan": "country_japan",
   "/cars/uae": "country_uae",
+  "/sign-in": "auth",
+  "/sign-up": "sign_up",
 };
 
 const OG_PAGE_KEYS = new Set([
@@ -111,8 +113,10 @@ export function parseMarketingPath(reqPath: string): { pageKey: string; rest: st
 }
 
 function seoOgImagePath(pageKey: string, lang: string): string | undefined {
-  if (!OG_PAGE_KEYS.has(pageKey)) return undefined;
-  const key = pageKey === "api_b2b" ? "home" : pageKey;
+  const key = pageKey === "api_b2b" || pageKey === "sign_up" || pageKey === "auth"
+    ? "home"
+    : pageKey;
+  if (!OG_PAGE_KEYS.has(key)) return undefined;
   return `/seo/og/${key}-${lang}.webp`;
 }
 
@@ -182,6 +186,8 @@ function buildSeoHeadBlock(resolved: MarketingMetaSeo, origin: string): string {
     if (ogImageAlt) {
       lines.push(`<meta property="og:image:alt" content="${escapeHtml(ogImageAlt)}" />`);
     }
+    lines.push(`<meta property="og:image:width" content="1200" />`);
+    lines.push(`<meta property="og:image:height" content="630" />`);
   }
 
   if (!noIndex) {
@@ -224,7 +230,7 @@ export function resolveMarketingMetaSeo(reqPath: string, siteOrigin: string): Ma
     description: seo.description,
     pageKey,
     rest,
-    noIndex: rest.startsWith("/api-b2b/"),
+    noIndex: rest.startsWith("/api-b2b/") || rest === "/sign-up" || rest === "/sign-in",
     canonicalPath,
     canonicalUrl: `${origin}${canonicalPath}`,
     ogImage,

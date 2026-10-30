@@ -9,6 +9,7 @@ import {
   removeInjectedMetaPixel,
   removeInjectedPublicAnalytics,
 } from "@/lib/analytics-scope";
+import { flushPendingCompleteRegistration } from "@/lib/complete-registration";
 
 const GTM_HEAD_ATTR = "data-verifykm-gtm-head";
 const GTM_BODY_ATTR = "data-verifykm-gtm-body";
@@ -255,6 +256,7 @@ export function SiteAnalytics() {
     injectMetaPixel(metaId);
     configRef.current = { ...configRef.current, meta: metaId };
     metaInjectedRef.current = true;
+    flushPendingCompleteRegistration();
     // Base snippet already fires PageView — skip the next SPA location effect once.
     metaSkipNextPvRef.current = true;
   }, [gtmId, gaId, clarityId, metaId, publicTrackable, siteTrackable]); // eslint-disable-line react-hooks/exhaustive-deps -- inject + first pageview only

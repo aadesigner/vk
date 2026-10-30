@@ -18,7 +18,33 @@ export function getAllowedOrigins(): string[] {
     list.push("http://localhost:3000", "http://localhost:5173");
   }
 
-  return [...new Set(list)];
+  // www and apex are both valid ad landings; also 301 one host at Railway/Cloudflare.
+  return withWwwApexTwins([...new Set(list)]);
+}
+
+/** Allow both https://example.com and https://www.example.com for CORS / client guard. */
+function withWwwApexTwins(origins: string[]): string[] {
+  const out = new Set(origins);
+  for (const origin of origins) {
+    try {
+      const u = new URL(origin);
+      const host = u.hostname.toLowerCase();
+      if (
+        host === "localhost"
+        || host.endsWith(".localhost")
+        || host.endsWith(".ts.net")
+        || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)
+        || host.includes(":")
+      ) {
+        continue;
+      }
+      u.hostname = host.startsWith("www.") ? host.slice(4) : `www.${host}`;
+      out.add(normalizeOrigin(u.origin));
+    } catch {
+      /* skip invalid */
+    }
+  }
+  return [...out];
 }
 
 function normalizeOrigin(origin: string): string {

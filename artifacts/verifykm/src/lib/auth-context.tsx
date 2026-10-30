@@ -5,6 +5,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { clearAuthCache, readAuthCache, writeAuthCache } from "@/lib/auth-session-cache";
 import { invalidateClientAreaQueries } from "@/lib/client-area-queries";
+import { consumeSignupQueryFlag, trackCompleteRegistration } from "@/lib/complete-registration";
 import type { AuthUser } from "@/lib/auth-types";
 
 export type { AuthUser } from "@/lib/auth-types";
@@ -123,6 +124,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refreshUser();
   }, [refreshUser]);
 
+  useEffect(() => {
+    if (consumeSignupQueryFlag()) trackCompleteRegistration();
+  }, []);
+
   const login = useCallback(async (email: string, password: string, recaptchaToken?: string) => {
     const res = await fetch(`${basePath}/api/auth/login`, {
       method: "POST",
@@ -161,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     assertActiveUser(data.user);
     setUser(data.user ?? null);
     persistUserSession(data.user ?? null);
+    trackCompleteRegistration();
     invalidateClientAreaQueries(queryClient);
   }, [queryClient]);
 

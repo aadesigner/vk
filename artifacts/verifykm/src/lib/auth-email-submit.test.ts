@@ -16,6 +16,21 @@ vi.mock("@/hooks/use-recaptcha", () => ({
     if (siteKey === "fail-quick") return null;
     return `token-${action}`;
   }),
+  resolveRecaptchaToken: vi.fn(async (opts: {
+    enabled: boolean;
+    siteKey: string | null;
+    action: string;
+    primed: Promise<string | null> | null;
+    getToken: (action: string) => Promise<string | null>;
+  }) => {
+    if (!opts.enabled || !opts.siteKey) return null;
+    if (opts.primed) {
+      const fromPrime = await opts.primed;
+      if (fromPrime) return fromPrime;
+    }
+    if (opts.siteKey === "fail-quick") return opts.getToken(opts.action);
+    return `token-${opts.action}`;
+  }),
 }));
 
 describe("readAuthCredentials", () => {
@@ -103,6 +118,11 @@ describe("resolveAuthRecaptchaToken", () => {
     expect(shouldBlockAuthWithoutRecaptcha(true, null, false)).toBe(true);
     expect(shouldWaitForAuthRecaptcha(true, false, true)).toBe(false);
     expect(shouldWaitForAuthRecaptcha(true, false, false)).toBe(true);
+  });
+
+  it("signals wait — not a hard error — when recaptcha is not ready on Chrome", () => {
+    expect(shouldWaitForAuthRecaptcha(true, false, false)).toBe(true);
+    expect(shouldBlockAuthWithoutRecaptcha(true, "token-register", false)).toBe(false);
   });
 
   it("returns undefined when disabled", async () => {

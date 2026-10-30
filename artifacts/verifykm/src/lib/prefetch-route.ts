@@ -58,7 +58,7 @@ export function prefetchRouteFromHref(href: string, options?: { isSignedIn?: boo
 }
 
 export function prefetchCommonRoutes(): void {
-  ["pricing", "how-it-works", "faq"].forEach((r) => prefetchRoute(r));
+  ["pricing", "how-it-works", "faq", "sign-up"].forEach((r) => prefetchRoute(r));
 }
 
 /** Warm the shared country page chunk (all /cars/:country routes). */
