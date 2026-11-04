@@ -9,7 +9,7 @@ import {
   parseVinPagePath,
 } from "@workspace/vin-page-seo";
 import { injectVinPageSeoIntoHtml } from "./vinSeoHtmlInject.js";
-import { catalogDataToVinSeoVehicle } from "./vinPageSeo.js";
+import { applyPublicVinIndexPolicy, catalogDataToVinSeoVehicle } from "./vinPageSeo.js";
 
 const SAMPLE_HTML = `<!DOCTYPE html>
 <html><head><title>verifykm.com</title></head><body>
@@ -218,7 +218,30 @@ describe("vin-page-seo", () => {
     expect(seo.ogImage).toBeUndefined();
   });
 
-  it("emits WebPage + Vehicle JSON-LD when preview image exists", () => {
+  it("noindexes rows that fail the public VIN index policy", () => {
+    const indexed = applyPublicVinIndexPolicy(
+      buildVinPageSeo(
+        "en",
+        {
+          vin: "1HGBH41JXMN109186",
+          make: "Honda",
+          model: "Accord",
+          year: 1991,
+          thumbnailUrl: "/api/vin/image?token=abc",
+        },
+        "https://verifykm.com",
+      ),
+      true,
+    );
+    // Policy helper still allows index when caller passes true — routes pass catalogIsSeoIndexable (false).
+    expect(indexed.noIndex).toBe(false);
+
+    const blocked = applyPublicVinIndexPolicy(indexed, false);
+    expect(blocked.noIndex).toBe(true);
+    expect(blocked.jsonLd).toHaveLength(0);
+  });
+
+  it("emits WebPage JSON-LD without Vehicle type when preview image exists", () => {
     const seo = buildVinPageSeo(
       "en",
       {
@@ -231,7 +254,11 @@ describe("vin-page-seo", () => {
       "https://verifykm.com",
     );
     expect(seo.noIndex).toBe(false);
-    expect(seo.jsonLd).toHaveLength(2);
+    expect(seo.jsonLd).toHaveLength(1);
+    expect(seo.jsonLd[0]).toMatchObject({ "@type": "WebPage" });
+    const blob = JSON.stringify(seo.jsonLd);
+    expect(blob).not.toContain('"@type":"Vehicle"');
+    expect(blob).toContain("CreativeWork");
     expect(seo.canonicalPath).toBe("/en/vin/1HGBH41JXMN109186");
     expect(normalizeVin("1hgbh41jxmn109186")).toBe("1HGBH41JXMN109186");
   });

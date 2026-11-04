@@ -17,7 +17,7 @@ import {
   sanitizeAuctionPanoramaUrl,
   splitAuctionPanoramaUrls,
 } from "../lib/vinService.js";
-import { catalogHasDeliverableReport, catalogIsReusableWithoutProvider } from "../lib/vinCatalogImport.js";
+import { catalogHasDeliverableReport, catalogIsReusableWithoutProvider, catalogIsSeoIndexable } from "../lib/vinCatalogImport.js";
 import { logger } from "../lib/logger.js";
 import { decodeVin, decodeCountry, resolveCheckDigitValid, decodeVinDiagnostics, isVehicleTooOldForLookup } from "@workspace/vin-decode";
 import { decodeFreeVin } from "../lib/vinDecodeFree.js";
@@ -903,6 +903,7 @@ router.get("/vin/public/:vin", publicVinLimiter, optionalAuth, async (req, res) 
         photos: [],
         inCatalog: false,
         isUnlocked: true,
+        seoIndexable: false,
         status: VIN_FULFILLING_STATUS,
         fulfilling: true,
       });
@@ -920,8 +921,12 @@ router.get("/vin/public/:vin", publicVinLimiter, optionalAuth, async (req, res) 
   const catalogPhotos = Array.isArray(d.photos)
     ? (d.photos as string[]).filter(Boolean)
     : [];
+  // SEO flag must never block unlock/checkout — compute separately and fail closed for index only.
   const lockedPreviewSources = await resolveLockedPreviewPhotoSources(vin, d);
   const lockedPreviewPhotos = proxyPhotoUrls(lockedPreviewSources, mediaVersion);
+  const seoIndexable =
+    catalogIsSeoIndexable(d)
+    && lockedPreviewPhotos.length > 0;
 
   // 3. Fetch current pricing
   const [pricingRow] = await db
@@ -946,6 +951,7 @@ router.get("/vin/public/:vin", publicVinLimiter, optionalAuth, async (req, res) 
     photos: lockedPreviewPhotos,
     inCatalog,
     isUnlocked,
+    seoIndexable,
     price: displayPrice,
     currency,
   };

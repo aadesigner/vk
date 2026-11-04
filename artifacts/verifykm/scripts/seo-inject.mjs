@@ -314,7 +314,12 @@ export function resolveSeoForPath(pathname, basePath = "") {
     ?? b2bSeo
     ?? (page ? (page[lang] ?? page.en ?? seoData.home.en) : seoData.home.en);
   const noIndex = isNoIndexPath(rest, pageKey);
-  const canonicalPath = localizedPath(lang, rest);
+  // English home indexes at apex https://verifykm.com/ (not /en).
+  const localized = localizedPath(lang, rest);
+  const canonicalPath = !rest && lang === "en" ? "/" : localized;
+  const canonicalUrl = canonicalPath === "/"
+    ? `${SITE_ORIGIN}/`
+    : `${SITE_ORIGIN}${canonicalPath}`;
   const dir = lang === "ar" ? "rtl" : "ltr";
   const ogImage = seo.ogImage
     ?? (isSeoOgPageKey(pageKey)
@@ -332,10 +337,15 @@ export function resolveSeoForPath(pathname, basePath = "") {
     rest,
     noIndex,
     canonicalPath,
-    canonicalUrl: `${SITE_ORIGIN}${canonicalPath}`,
+    canonicalUrl,
     ogImage,
     ogImageAlt: seo.ogImageAlt ?? seo.title,
   };
+}
+
+function seoAbsoluteUrl(lang, canonicalRest) {
+  if (!canonicalRest && lang === "en") return `${SITE_ORIGIN}/`;
+  return `${SITE_ORIGIN}${localizedPath(lang, canonicalRest)}`;
 }
 
 function removeGeneratedSeoTags(html) {
@@ -415,14 +425,14 @@ function buildSeoHeadBlock(resolved) {
 
   if (!noIndex) {
     for (const l of SEO_LANGS) {
-      const href = `${SITE_ORIGIN}${localizedPath(l, rest)}`;
+      const href = seoAbsoluteUrl(l, rest);
       lines.push(
         `<link rel="alternate" hreflang="${HREFLANG_MAP[l]}" href="${escapeHtml(href)}" />`,
       );
     }
     lines.push(
       `<link rel="alternate" hreflang="x-default" href="${escapeHtml(
-        `${SITE_ORIGIN}${localizedPath("en", rest)}`,
+        seoAbsoluteUrl("en", rest),
       )}" />`,
     );
     for (const l of SEO_LANGS) {

@@ -620,27 +620,21 @@ export function buildVinPageSeo(
     findingsSummary: !isUnlocked ? opts?.findingsSummary : undefined,
   });
 
-  const vehicleLd: Record<string, unknown> = {
-    "@context": "https://schema.org",
-    "@type": "Vehicle",
-    "@id": `${pageUrl}#vehicle`,
-    vehicleIdentificationNumber: vin,
-    name: vehicleTitle,
+  // Use WebPage + CreativeWork only — schema.org Vehicle rich results require
+  // offers/review/aggregateRating (GSC "Invalid item"). We are a history report,
+  // not a car listing, so do not emit @type Vehicle.
+  const reportLd: Record<string, unknown> = {
+    "@type": "CreativeWork",
+    "@id": `${pageUrl}#report`,
+    name: `${vehicleTitle} — VIN history report`,
     url: pageUrl,
-    ...(vehicle.year && { modelDate: String(vehicle.year) }),
-    ...(vehicle.make && { brand: { "@type": "Brand", name: vehicle.make }, manufacturer: { "@type": "Organization", name: vehicle.make } }),
-    ...(vehicle.model && { model: vehicle.model }),
-    ...(vehicle.color && { color: vehicle.color }),
-    ...(vehicle.bodyType && { bodyType: vehicle.bodyType }),
-    ...(vehicle.fuelType && { fuelType: vehicle.fuelType }),
-    ...(opts?.isUnlocked && opts.odometer != null && {
-      mileageFromOdometer: {
-        "@type": "QuantitativeValue",
-        value: opts.odometer,
-        unitCode: "KMT",
-      },
-    }),
+    identifier: vin,
+    ...(vehicle.year && { dateCreated: String(vehicle.year) }),
+    ...(vehicle.make && { creator: { "@type": "Organization", name: vehicle.make } }),
     ...(absoluteImage && { image: absoluteImage }),
+    ...(opts?.isUnlocked && opts.odometer != null && {
+      description: `${vehicleTitle}. Odometer ${opts.odometer} km. VIN ${vin}.`,
+    }),
   };
 
   const webPageLd: Record<string, unknown> = {
@@ -652,7 +646,7 @@ export function buildVinPageSeo(
     description: pageDescription,
     inLanguage: lang,
     isPartOf: { "@type": "WebSite", name: "verifykm.com", url: siteOrigin },
-    about: { "@id": `${pageUrl}#vehicle` },
+    mainEntity: reportLd,
     primaryImageOfPage: absoluteImage ?? undefined,
   };
 
@@ -663,7 +657,7 @@ export function buildVinPageSeo(
     description: pageDescription,
     canonicalPath,
     noIndex,
-    jsonLd: noIndex ? [] : [webPageLd, vehicleLd],
+    jsonLd: noIndex ? [] : [webPageLd],
     ogImage: absoluteImage,
     ogImageAlt: vehicleTitle,
   };

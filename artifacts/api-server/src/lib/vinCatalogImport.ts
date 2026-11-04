@@ -97,10 +97,26 @@ export function catalogIsReusableWithoutProvider(data: unknown): boolean {
   return catalogHasDeliverableReport(data) && !reportNeedsPhotoBackfill(data);
 }
 
-/** Google/sitemap eligibility — deliverable catalog row with a teaser image only. */
+/**
+ * When false (current policy): public VIN report pages stay online for users
+ * but are never Google-indexed or listed in the VIN sitemap. SEO focuses on
+ * static marketing pages (EN + SQ priority).
+ */
+export const PUBLIC_VIN_PAGES_SEO_ENABLED = false;
+
+/**
+ * Google eligibility for a VIN page body.
+ * Currently always false — VIN inventory is noindex; marketing pages own SEO.
+ */
 export function catalogIsSeoIndexable(data: unknown): boolean {
+  if (!PUBLIC_VIN_PAGES_SEO_ENABLED) return false;
   return catalogHasDeliverableReport(data) && catalogHasPreviewPhoto(data);
 }
+
+/**
+ * VIN sitemap URL cap. 0 = no VIN shards (marketing-only SEO policy).
+ */
+export const VIN_SITEMAP_MAX_URLS = 0;
 
 /** SQL fragment for VIN sitemap queries — keep in sync with catalogHasPreviewPhoto. */
 export const CATALOG_HAS_PREVIEW_PHOTO_SQL = `

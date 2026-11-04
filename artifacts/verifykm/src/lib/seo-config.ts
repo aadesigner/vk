@@ -29,12 +29,25 @@ export const OG_LOCALE_MAP: Record<SeoLang, string> = Object.fromEntries(
  */
 export const INDEXABLE_PATHS = indexablePaths as readonly string[];
 
-/** Build `/{lang}` or `/{lang}/{localized-slug…}` from an English canonical rest. */
+/**
+ * English marketing home lives at apex `/` (indexed as verifykm.com).
+ * Other locales keep `/{lang}` homes.
+ */
+export function localeHomePath(lang: SeoLang | string): string {
+  return lang === "en" ? "/" : `/${lang}`;
+}
+
+export function localeHomeAbsoluteUrl(origin: string, lang: SeoLang | string): string {
+  const base = origin.replace(/\/$/, "");
+  return lang === "en" ? `${base}/` : `${base}/${lang}`;
+}
+
+/** Build SEO path from an English canonical rest (EN home → apex `/`). */
 export function buildLocalizedPath(lang: SeoLang, path: string): string {
   let canonical = !path || path === "/" ? "" : path;
   if (canonical && !canonical.startsWith("/")) canonical = `/${canonical}`;
   const rest = localizeCanonicalRest(lang, canonical);
-  if (!rest) return `/${lang}`;
+  if (!rest) return localeHomePath(lang);
   return `/${lang}${rest.startsWith("/") ? rest : `/${rest}`}`;
 }
 

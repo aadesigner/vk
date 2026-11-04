@@ -140,21 +140,27 @@ export function applySeoHead({
   }
 
   const path = canonicalPath ?? (typeof window !== "undefined" ? window.location.pathname : `/${lang}`);
-  const canonical = `${origin}${path}`;
+  // English home canonical is apex `/` → https://verifykm.com/
+  const canonical = path === "/" ? `${origin}/` : `${origin}${path}`;
   upsertLink("canonical", canonical);
   upsertMeta("og:url", canonical, "property");
 
   removeAlternates();
   if (!noIndex) {
     // path is localized (e.g. /es/precios) — normalize to English canonical for hreflang pairs
-    const localizedRest = stripLangPrefix(path);
+    const localizedRest = stripLangPrefix(path === "/" ? "/en" : path);
     const base = toCanonicalRest(localizedRest, lang);
     SEO_LANGS.forEach((l) => {
-      upsertLink("alternate", `${origin}${buildLocalizedPath(l, base)}`, {
+      const hrefPath = buildLocalizedPath(l, base);
+      const href = hrefPath === "/" ? `${origin}/` : `${origin}${hrefPath}`;
+      upsertLink("alternate", href, {
         hreflang: HREFLANG_MAP[l],
       });
     });
-    upsertLink("alternate", `${origin}${buildLocalizedPath("en", base)}`, { hreflang: "x-default" });
+    const xDefaultPath = buildLocalizedPath("en", base);
+    upsertLink("alternate", xDefaultPath === "/" ? `${origin}/` : `${origin}${xDefaultPath}`, {
+      hreflang: "x-default",
+    });
 
     SEO_LANGS.filter((l) => l !== lang).forEach((l) => {
       upsertMeta("og:locale:alternate", OG_LOCALE_MAP[l], "property");
@@ -222,6 +228,12 @@ export function faqPageJsonLd(items: { q: string; a: string }[]) {
   };
 }
 
+/**
+ * Pricing page structured data.
+ * Do NOT use schema.org Product — GSC Product rich results warn on missing
+ * review/aggregateRating, and we do not have real reviews to publish.
+ * WebPage + Service + Offer describes the VIN report without Product eligibility.
+ */
 export function productOfferJsonLd(params: {
   name: string;
   description: string;
@@ -231,21 +243,34 @@ export function productOfferJsonLd(params: {
 }) {
   const validUntil = new Date();
   validUntil.setFullYear(validUntil.getFullYear() + 1);
+  let origin = "https://verifykm.com";
+  try {
+    origin = new URL(params.url).origin;
+  } catch {
+    // keep default
+  }
 
   return {
     "@context": "https://schema.org",
-    "@type": "Product",
+    "@type": "WebPage",
+    "@id": `${params.url}#webpage`,
+    url: params.url,
     name: params.name,
     description: params.description,
-    url: params.url,
-    brand: { "@type": "Brand", name: "verifykm.com" },
-    offers: {
-      "@type": "Offer",
-      url: params.url,
-      priceCurrency: params.currency,
-      price: params.price.toFixed(2),
-      availability: "https://schema.org/OnlineOnly",
-      priceValidUntil: validUntil.toISOString().split("T")[0],
+    isPartOf: { "@type": "WebSite", name: "verifykm.com", url: origin },
+    mainEntity: {
+      "@type": "Service",
+      name: params.name,
+      description: params.description,
+      provider: { "@type": "Organization", name: "verifykm.com", url: origin },
+      offers: {
+        "@type": "Offer",
+        url: params.url,
+        priceCurrency: params.currency,
+        price: params.price.toFixed(2),
+        availability: "https://schema.org/OnlineOnly",
+        priceValidUntil: validUntil.toISOString().split("T")[0],
+      },
     },
   };
 }

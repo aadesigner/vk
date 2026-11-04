@@ -129,17 +129,18 @@ export function getSeoEntry(lang: SeoLang, pageKey: SeoPageKey) {
   return page[lang] ?? page.en;
 }
 
-/** Canonical URL path uses the language's localized slug. */
+/** Canonical URL path uses the language's localized slug. EN home → apex `/`. */
 export function buildCanonicalPath(lang: SeoLang, rest: string): string {
   const canonical = toCanonicalRest(rest, lang);
   const localized = localizeCanonicalRest(lang, canonical);
-  return localized ? `/${lang}${localized}` : `/${lang}`;
+  if (!localized) return lang === "en" ? "/" : `/${lang}`;
+  return `/${lang}${localized}`;
 }
 
 function blogRouteSeo(lang: SeoLang, canonicalRest: string, rest: string, basePath: string) {
   const language = lang as Language;
   const canonicalPath = buildCanonicalPath(lang, rest);
-  const canonicalUrl = `${SITE_ORIGIN}${canonicalPath}`;
+  const canonicalUrl = canonicalPath === "/" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${canonicalPath}`;
   const favicons = resolveFavicons(undefined, basePath);
 
   if (canonicalRest === "/blog") {
@@ -267,7 +268,7 @@ export function getRouteSeo(
   const seo = getSeoEntry(resolved.lang, pageKey);
   const ogImage = resolvePageOgImage(pageKey, resolved.lang, basePath);
   const canonicalPath = buildCanonicalPath(resolved.lang, resolved.rest);
-  const canonicalUrl = `${SITE_ORIGIN}${canonicalPath}`;
+  const canonicalUrl = canonicalPath === "/" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${canonicalPath}`;
   const absoluteOgImage = ogImage
     ? (ogImage.startsWith("http") ? ogImage : `${SITE_ORIGIN}${ogImage}`)
     : undefined;

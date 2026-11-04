@@ -4,7 +4,8 @@ import path from "node:path";
 import { parseVinPagePath, buildLockedHistorySummary, extractLockedPreviewSignals } from "@workspace/vin-page-seo";
 import { logger } from "./logger.js";
 import { resolveLockedPreviewPhotoSources, vinHasReportData } from "./vinService.js";
-import { buildVinSeoFromCatalogData, catalogDataToVinSeoVehicle } from "./vinPageSeo.js";
+import { applyPublicVinIndexPolicy, buildVinSeoFromCatalogData, catalogDataToVinSeoVehicle } from "./vinPageSeo.js";
+import { catalogIsSeoIndexable } from "./vinCatalogImport.js";
 import { resolveVinPhotoUrlForClient } from "./imageProxy.js";
 import { buildVinOnlyFallbackSeo, injectVinPageSeoIntoHtml } from "./vinSeoHtmlInject.js";
 import { injectMarketingPageSeoFromPath } from "./marketingSeoHtmlInject.js";
@@ -153,11 +154,14 @@ async function injectVinCatalogSeo(html: string, reqPath: string, origin: string
     }
 
     const vehicle = catalogDataToVinSeoVehicle(parsed.vin, d, thumbnailUrl);
-    const seo = buildVinSeoFromCatalogData(parsed.lang, parsed.vin, d, {
-      thumbnailUrl,
-      origin,
-      isUnlocked: false,
-    });
+    const seo = applyPublicVinIndexPolicy(
+      buildVinSeoFromCatalogData(parsed.lang, parsed.vin, d, {
+        thumbnailUrl,
+        origin,
+        isUnlocked: false,
+      }),
+      catalogIsSeoIndexable(d),
+    );
     const summary = buildLockedHistorySummary(
       parsed.lang,
       vehicle,
@@ -312,15 +316,25 @@ export function mountStaticSite(app: Express): string | null {
       res.status(405).end();
       return;
     }
-    // Soft-duplicate fix: `/` and `/en` both served English home (200 + canonical /en).
-    // Crawlers get a stable 301 → /en. Real visitors keep SPA RootLangRedirect (geo/cookie).
+    const q = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
+    // Apex `/` is the indexed English homepage for crawlers (GSC "verifykm.com").
+    // Real visitors keep SPA RootLangRedirect (geo/cookie). Do NOT 301 Googlebot to /en.
     if (
       (req.path === "/" || req.path === "/index.html")
       && isCrawlerUserAgent(req.get("user-agent"))
     ) {
-      const q = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
-      res.redirect(301, `/en${q}`);
+      if (sendSpaFile(publicDir, "/en", res)) return;
+      if (await sendSpaFallback(publicDir, "/en", req, res)) return;
+      res.status(404).send("Not found");
       return;
+    }
+    // Sitemap + canonicals are slash-free (except apex `/`). 301 trailing-slash URLs.
+    if (req.path.length > 1 && req.path.endsWith("/")) {
+      const bare = req.path.replace(/\/+$/, "") || "/";
+      if (!/\.[a-zA-Z0-9]{1,8}$/.test(bare)) {
+        res.redirect(301, `${bare}${q}`);
+        return;
+      }
     }
     const urlPath = req.path === "/" ? "/index.html" : req.path;
     if (sendSpaFile(publicDir, urlPath, res)) return;

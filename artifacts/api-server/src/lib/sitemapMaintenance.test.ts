@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { removeVinUrlBlocks } from "./sitemapMaintenance.js";
 
@@ -36,5 +37,15 @@ describe("removeVinUrlBlocks", () => {
     const out = removeVinUrlBlocks(xml, "JM1BPAM7XK1234567");
     expect(out).not.toContain("JM1BPAM7XK1234567");
     expect(out).toContain("OTHERVIN000000001");
+  });
+});
+
+describe("VIN sitemap recovery policy", () => {
+  it("keeps VIN sitemap off when VIN_SITEMAP_MAX_URLS is 0 (marketing-only SEO)", () => {
+    const src = readFileSync(new URL("./sitemapMaintenance.ts", import.meta.url), "utf8");
+    expect(src).toContain("VIN_SITEMAP_MAX_URLS");
+    expect(src).toMatch(/VIN_SITEMAP_MAX_URLS\s*<=\s*0/);
+    expect(src).toContain("priority>0.25</priority>");
+    expect(src).not.toContain("limit(50_000)");
   });
 });

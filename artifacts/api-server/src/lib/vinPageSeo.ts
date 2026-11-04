@@ -62,6 +62,15 @@ export function buildVinSeoFromCatalogData(
   });
 }
 
+/** Import-only catalog rows stay crawlable for users but must not rank. */
+export function applyPublicVinIndexPolicy<T extends { noIndex: boolean; jsonLd: unknown[] }>(
+  seo: T,
+  publiclyIndexable: boolean,
+): T {
+  if (publiclyIndexable) return seo;
+  return { ...seo, noIndex: true, jsonLd: [] };
+}
+
 export function buildLockedSsrFromCatalog(
   lang: VinSeoLang,
   vehicle: VinSeoVehicle,

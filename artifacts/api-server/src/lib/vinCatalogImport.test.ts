@@ -24,6 +24,7 @@ import {
   sanitizeCatalogPayload,
   preserveAdminTaxiFlag,
   stampCatalogImportData,
+  VIN_SITEMAP_MAX_URLS,
 } from "./vinCatalogImport";
 import { normalizeCarstatResponse } from "./vinService";
 
@@ -53,7 +54,7 @@ describe("catalogHasDeliverableReport", () => {
     expect(catalogHasDeliverableReport({})).toBe(false);
   });
 
-  it("requires preview photo for SEO indexability", () => {
+  it("keeps VIN pages out of Google (marketing-only SEO policy)", () => {
     const withHistoryOnly = {
       make: "Hyundai",
       model: "Elantra",
@@ -62,8 +63,18 @@ describe("catalogHasDeliverableReport", () => {
     };
     expect(catalogHasDeliverableReport(withHistoryOnly)).toBe(true);
     expect(catalogHasPreviewPhoto(withHistoryOnly)).toBe(false);
-    expect(catalogIsSeoIndexable(withHistoryOnly)).toBe(false);
     expect(reportNeedsPhotoBackfill(withHistoryOnly)).toBe(false);
+
+    const withPhoto = {
+      ...withHistoryOnly,
+      photos: ["https://cdn.test/1.jpg"],
+    };
+    // Even rich catalog rows stay noindex while PUBLIC_VIN_PAGES_SEO_ENABLED is false.
+    expect(catalogIsSeoIndexable(withPhoto)).toBe(false);
+  });
+
+  it("disables VIN sitemap so marketing pages own crawl budget", () => {
+    expect(VIN_SITEMAP_MAX_URLS).toBe(0);
   });
 
   it("flags Korean / auction history rows missing galleries for photo backfill", () => {
@@ -103,7 +114,7 @@ describe("catalogHasDeliverableReport", () => {
       year: 2018,
       mileageHistory: [{ date: "2020-01-01", odometer: 50000 }],
       photos: ["https://cdn.test/1.jpg"],
-    })).toBe(true);
+    })).toBe(false);
   });
 
   it("catalogDeliverableFromHint matches full-data helper", () => {
