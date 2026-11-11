@@ -80,13 +80,25 @@ export function balanceUrl(base: string): string {
   return `${base.replace(/\/$/, "")}/api/reports/balance`;
 }
 
-/** Prefer carfax when it has records; else autocheck. */
+/**
+ * Minimum Carfax/Autocheck record count before we offer Carstat USA (US/Canada).
+ * Below this → treat as no USA hit so checkout can go manual pending instead of a thin report.
+ */
+export const CARSTAT_USA_MIN_RECORDS = Math.max(
+  1,
+  Number(process.env.CARSTAT_USA_MIN_RECORDS ?? 5) || 5,
+);
+
+/**
+ * Prefer carfax when it has enough records; else autocheck.
+ * Either product must have >= {@link CARSTAT_USA_MIN_RECORDS}; otherwise skip USA entirely.
+ */
 export function pickPreferredReportType(records: {
   carfax: number;
   autocheck: number;
 }): CarstatUsaReportType | null {
-  if (records.carfax > 0) return "carfax";
-  if (records.autocheck > 0) return "autocheck";
+  if (records.carfax >= CARSTAT_USA_MIN_RECORDS) return "carfax";
+  if (records.autocheck >= CARSTAT_USA_MIN_RECORDS) return "autocheck";
   return null;
 }
 
@@ -221,7 +233,19 @@ export async function checkCarstatUsaRecords(vin: string): Promise<CarstatUsaChe
       vehicle: str(body.vehicle),
     };
     const preferredType = pickPreferredReportType(records);
-    if (!preferredType) return { status: "not_found" };
+    if (!preferredType) {
+      // Free check still ran — we intentionally skip paid USA when both counts are thin.
+      if (records.carfax > 0 || records.autocheck > 0) {
+        logger.info({
+          msg: "carstat_usa_check_records_below_min",
+          vin: normalized,
+          carfax: records.carfax,
+          autocheck: records.autocheck,
+          minRecords: CARSTAT_USA_MIN_RECORDS,
+        });
+      }
+      return { status: "not_found" };
+    }
 
     return { status: "exists", records, preferredType };
   } catch (err) {

@@ -25,9 +25,13 @@ describe("carstatUsaApi helpers", () => {
     expect(balanceUrl(base)).toBe("https://carstat.dev/api/reports/balance");
   });
 
-  it("prefers carfax when both have records", () => {
+  it("requires >=5 records on carfax or autocheck before offering USA", () => {
     expect(pickPreferredReportType({ carfax: 13, autocheck: 17 })).toBe("carfax");
+    expect(pickPreferredReportType({ carfax: 5, autocheck: 0 })).toBe("carfax");
     expect(pickPreferredReportType({ carfax: 0, autocheck: 5 })).toBe("autocheck");
+    expect(pickPreferredReportType({ carfax: 4, autocheck: 10 })).toBe("autocheck");
+    expect(pickPreferredReportType({ carfax: 4, autocheck: 4 })).toBeNull();
+    expect(pickPreferredReportType({ carfax: 3, autocheck: 0 })).toBeNull();
     expect(pickPreferredReportType({ carfax: 0, autocheck: 0 })).toBeNull();
   });
 
