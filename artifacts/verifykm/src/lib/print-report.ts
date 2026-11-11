@@ -70,6 +70,7 @@ function waitForPrintImages(
         (url) =>
           new Promise<void>((res) => {
             const image = new Image();
+            image.referrerPolicy = "no-referrer";
             image.onload = () => res();
             image.onerror = () => res();
             image.src = url;

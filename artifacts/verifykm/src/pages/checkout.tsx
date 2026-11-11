@@ -2272,10 +2272,8 @@ export default function Checkout({ params }: Props) {
                   )}
 
                   {/* PayPal button container — color-scheme:none stops forced white iframe chrome in dark mode */}
-                  {paymentAllowed && !isFreeCoupon && (
-                    {!paypalHidden && (
-                      <div ref={paypalContainerRef} className={cn("[color-scheme:none] min-h-0", payMethod === "card" && "hidden")} />
-                    )}
+                  {paymentAllowed && !isFreeCoupon && !paypalHidden && (
+                    <div ref={paypalContainerRef} className={cn("[color-scheme:none] min-h-0", payMethod === "card" && "hidden")} />
                   )}
 
                   {/* Hosted card fields (PayPal) or POK GuestCheckoutForm.

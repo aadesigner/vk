@@ -51,6 +51,7 @@ export function warmVinImage(url: string): Promise<void> {
 
   const promise = new Promise<void>((resolve) => {
     const img = new Image();
+    img.referrerPolicy = "no-referrer";
     img.decoding = "async";
     const finish = () => {
       markVinImageSessionLoaded(url);

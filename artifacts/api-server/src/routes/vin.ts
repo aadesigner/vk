@@ -23,6 +23,10 @@ import { decodeVin, decodeCountry, resolveCheckDigitValid, decodeVinDiagnostics,
 import { decodeFreeVin } from "../lib/vinDecodeFree.js";
 import { decodeVinPeek } from "../lib/vinDecodePreview.js";
 import { verifyImageToken, transformVinPhotoData, resolveVinPhotoUrlForClient, parseVinImageWidth } from "../lib/imageProxy.js";
+import {
+  assertAllowedUsaReportUrl,
+  redactCarstatUsaDataForClient,
+} from "../lib/carstatUsaReportSanitize.js";
 import { getOrFetchVinImage, getMemoryCachedVinImage, resolveVinImageDiskHit, getVinImageDiskHit, withVinImageUpstreamSlot, vinImageCacheKey } from "../lib/vinImageCache.js";
 import { resizeVinImageForDisplay } from "../lib/vinImageResize.js";
 import { signVinShareToken, verifyVinShareToken } from "../lib/vinShareToken.js";
@@ -32,7 +36,7 @@ import { isTrustedApiRequest } from "../lib/clientGuard.js";
 import { rejectVinLookupIfDisabled } from "../lib/vinLookupGate.js";
 import { clientIpKey } from "../lib/trustedClient.js";
 import { assertAllowedImageUrl } from "../lib/imageHostAllowlist.js";
-import { vinPeekLimiter, vinLookupUserLimiter } from "../lib/expensiveEndpointLimiter.js";
+import { vinPeekLimiter, vinLookupUserLimiter, vinUsaReportProxyLimiter } from "../lib/expensiveEndpointLimiter.js";
 import { startProviderFulfillment, VIN_FULFILLING_STATUS } from "../lib/vinFulfillmentService.js";
 import { isRecaptchaRelaxedForRequest } from "../lib/allowedOrigins.js";
 import rateLimit from "express-rate-limit";
@@ -248,7 +252,7 @@ function transformVinPhotos(data: unknown, mediaVersion?: number): unknown {
   if (Array.isArray(transformed.photos360Interior)) {
     transformed.photos360Interior = (transformed.photos360Interior as string[]).slice(0, MAX_VIN_SPIN_PHOTOS);
   }
-  return transformed;
+  return redactCarstatUsaDataForClient(transformed);
 }
 
 function proxyPhotoUrls(
@@ -913,7 +917,7 @@ router.get("/vin/public/:vin", publicVinLimiter, optionalAuth, async (req, res) 
     return;
   }
 
-  const { dataSource: d, inCatalog, mediaVersion } = report;
+  const { dataSource: d, inCatalog, mediaVersion, lookupId: ownedLookupId } = report;
   // Only the purchasing account (or admin) unlocks — share links never bypass payment.
   const isUnlocked = ownsReport;
   const floodReady = applyMissingFloodFlagsForServe(d as Record<string, unknown>) ?? d;
@@ -1025,6 +1029,15 @@ router.get("/vin/public/:vin", publicVinLimiter, optionalAuth, async (req, res) 
       auctionHistory: Array.isArray(d.auctionHistory) ? d.auctionHistory : [],
       marketData: (d.marketData as Record<string, unknown> | null) ?? null,
       krwPerUsd: readFrozenKrwPerUsd(d),
+      ...(d.dataSource === "carstat_usa" && d.pdfReport && typeof d.pdfReport === "object"
+        ? {
+            pdfReport: redactCarstatUsaDataForClient({
+              dataSource: "carstat_usa",
+              pdfReport: d.pdfReport,
+            }).pdfReport,
+            lookupId: ownedLookupId ?? null,
+          }
+        : {}),
     });
   }
 
@@ -1164,6 +1177,147 @@ router.get("/vin/wait-update/:vin", requireAuth, async (req, res) => {
     changed,
     lookup: changed ? await loadClientLookup() : null,
   });
+});
+
+async function loadOwnedUsaLookup(req: { userId?: string }, id: number) {
+  const userId = req.userId!;
+  const [lookup] = await db.select().from(vinLookupsTable).where(eq(vinLookupsTable.id, id)).limit(1);
+  if (!lookup) return { error: 404 as const };
+  const [user] = await db
+    .select({ isAdmin: usersTable.isAdmin })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+  if (lookup.userId !== userId && !user?.isAdmin) return { error: 404 as const };
+  if (lookup.status === "revoked" && !user?.isAdmin) return { error: 403 as const };
+  const data = lookup.data as Record<string, unknown> | null;
+  if (!data || data.dataSource !== "carstat_usa") return { error: 404 as const };
+  const pr = data.pdfReport as Record<string, unknown> | undefined;
+  return { lookup, pr };
+}
+
+/**
+ * Stream USA PDF bytes for an owned lookup (avoids hotlink/CORS; no disk write).
+ */
+router.get("/vin/:id/pdf-proxy", requireAuth, vinUsaReportProxyLimiter, async (req, res) => {
+  const id = parseInt(String(req.params.id ?? ""), 10);
+  if (!Number.isFinite(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid ID" });
+    return;
+  }
+
+  const loaded = await loadOwnedUsaLookup(req, id);
+  if (loaded.error !== undefined) {
+    res.status(loaded.error).json({
+      error: loaded.error === 403 ? "Access to this report has been revoked" : "VIN lookup not found",
+    });
+    return;
+  }
+
+  const pdfUrl = typeof loaded.pr?.pdfUrl === "string" ? loaded.pr.pdfUrl.trim() : "";
+  if (!pdfUrl) {
+    res.status(404).json({ error: "PDF URL missing" });
+    return;
+  }
+  try {
+    assertAllowedUsaReportUrl(pdfUrl);
+  } catch {
+    res.status(404).json({ error: "PDF URL missing" });
+    return;
+  }
+
+  try {
+    const upstream = await fetch(pdfUrl, {
+      signal: AbortSignal.timeout(60_000),
+      headers: { Accept: "application/pdf,*/*" },
+    });
+    if (!upstream.ok || !upstream.body) {
+      logger.warn({ status: upstream.status, lookupId: id }, "carstat_usa_pdf_proxy_upstream_failed");
+      res.status(502).json({ error: "Could not fetch PDF" });
+      return;
+    }
+    res.setHeader("Content-Type", upstream.headers.get("content-type") || "application/pdf");
+    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("Content-Disposition", `inline; filename="vin-report-${loaded.lookup.vin}.pdf"`);
+    // Override Helmet CSP so the PDF frame is not treated as a blocked document.
+    res.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'self'; object-src 'self' blob:;");
+    const { Readable } = await import("node:stream");
+    await pipeline(Readable.fromWeb(upstream.body as import("node:stream/web").ReadableStream), res);
+  } catch (err) {
+    logger.warn({ err, lookupId: id }, "carstat_usa_pdf_proxy_failed");
+    if (!res.headersSent) res.status(502).json({ error: "Could not fetch PDF" });
+  }
+});
+
+const USA_HTML_FRAME_CSP = [
+  "default-src 'self' https: data: blob:",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:",
+  "style-src 'self' 'unsafe-inline' https:",
+  "img-src 'self' https: data: blob:",
+  "font-src 'self' https: data:",
+  "connect-src 'self' https:",
+  "frame-src 'self' https:",
+  "frame-ancestors 'self'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join("; ");
+
+function sendUsaHtmlReport(res: import("express").Response, html: string): void {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "private, no-store");
+  // Prefer CSP frame-ancestors over X-Frame-Options (avoids Chrome "content is blocked" conflicts).
+  res.removeHeader("X-Frame-Options");
+  res.setHeader("Content-Security-Policy", USA_HTML_FRAME_CSP);
+  res.send(html);
+}
+
+/**
+ * Proxied + sanitized USA HTML report (hides brand logos / outbound provider links).
+ * Local gzip snapshot first (survives ~10-day CDN expiry); CDN fetch + store on miss.
+ */
+router.get("/vin/:id/html-proxy", requireAuth, vinUsaReportProxyLimiter, async (req, res) => {
+  const id = parseInt(String(req.params.id ?? ""), 10);
+  if (!Number.isFinite(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid ID" });
+    return;
+  }
+
+  const loaded = await loadOwnedUsaLookup(req, id);
+  if (loaded.error !== undefined) {
+    res.status(loaded.error).json({
+      error: loaded.error === 403 ? "Access to this report has been revoked" : "VIN lookup not found",
+    });
+    return;
+  }
+
+  const vin = loaded.lookup.vin;
+  const htmlUrl = typeof loaded.pr?.htmlUrl === "string" ? loaded.pr.htmlUrl.trim() : "";
+
+  try {
+    const { readStoredUsaHtml, fetchSanitizeAndStoreUsaHtml } = await import("../lib/carstatUsaHtmlStore.js");
+    const stored = await readStoredUsaHtml(vin);
+    if (stored) {
+      sendUsaHtmlReport(res, stored);
+      return;
+    }
+
+    if (!htmlUrl) {
+      res.status(404).json({ error: "HTML report missing" });
+      return;
+    }
+    try {
+      assertAllowedUsaReportUrl(htmlUrl);
+    } catch {
+      res.status(404).json({ error: "HTML report missing" });
+      return;
+    }
+
+    const sanitized = await fetchSanitizeAndStoreUsaHtml(vin, htmlUrl);
+    sendUsaHtmlReport(res, sanitized);
+  } catch (err) {
+    logger.warn({ err, lookupId: id }, "carstat_usa_html_proxy_failed");
+    if (!res.headersSent) res.status(502).json({ error: "Could not fetch report" });
+  }
 });
 
 // GET /vin/:id

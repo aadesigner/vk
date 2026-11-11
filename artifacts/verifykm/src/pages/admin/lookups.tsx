@@ -30,7 +30,8 @@ import {
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Search, RefreshCw, Trash2, ImageOff, AlertTriangle, Download } from "lucide-react";
+import { Link } from "wouter";
+import { Search, RefreshCw, Trash2, ImageOff, AlertTriangle, Download, Pencil } from "lucide-react";
 
 const STATUS_VARIANTS: Record<
   string,
@@ -51,6 +52,7 @@ interface VinData {
   accidentCount?: number;
   isSalvage?: boolean;
   photos?: string[];
+  dataSource?: string | null;
 }
 
 function VinThumb({ photos }: { photos?: string[] }) {
@@ -363,6 +365,9 @@ export default function AdminLookups() {
                           <Badge variant={STATUS_VARIANTS[lookup.status] ?? "secondary"} className="text-[10px]">{lookup.status}</Badge>
                           {lookup.fromCache ? <Badge variant="outline" className="text-[10px]">cache</Badge> : null}
                           {lookup.providerName && <Badge variant="secondary" className="text-[10px]">{lookup.providerName}</Badge>}
+                          {(lookup.providerName === "carstat_usa" || vd?.dataSource === "carstat_usa") && (
+                            <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">USA PDF</Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -373,6 +378,11 @@ export default function AdminLookups() {
                       <span className="ml-auto">{new Date(lookup.createdAt).toLocaleDateString()}</span>
                     </div>
                     <div className="flex gap-2">
+                      <Button size="sm" variant="outline" className="flex-1" asChild>
+                        <Link href={`/adminx/vin/${lookup.vin}`}>
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+                        </Link>
+                      </Button>
                       <Button size="sm" variant="outline" className="flex-1" onClick={() => refreshVin.mutate({ id: lookup.id })} disabled={refreshVin.isPending}>
                         <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
                       </Button>
@@ -425,7 +435,12 @@ export default function AdminLookups() {
                           </Badge>
                         </td>
                         <td className="p-4 text-muted-foreground text-xs">
-                          {lookup.providerName ?? "—"}
+                          <div className="flex flex-col gap-1">
+                            <span>{lookup.providerName ?? "—"}</span>
+                            {(lookup.providerName === "carstat_usa" || vd?.dataSource === "carstat_usa") && (
+                              <Badge variant="outline" className="text-[10px] w-fit border-amber-400 text-amber-700">USA PDF</Badge>
+                            )}
+                          </div>
                         </td>
                         <td className="p-4">
                           {lookup.fromCache ? (
@@ -459,6 +474,12 @@ export default function AdminLookups() {
                         </td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <Button size="sm" variant="outline" asChild>
+                              <Link href={`/adminx/vin/${lookup.vin}`}>
+                                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                                Edit
+                              </Link>
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"

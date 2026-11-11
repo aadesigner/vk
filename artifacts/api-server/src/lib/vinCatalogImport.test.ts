@@ -283,6 +283,27 @@ describe("sanitizeCatalogPayload", () => {
     expect(data.photos360EmbedUrl).toBe(embed);
   });
 
+  it("preserves carstat_usa dataSource and pdfReport for USA catalog rows", () => {
+    const data = sanitizeCatalogPayload({
+      dataSource: "carstat_usa",
+      country: "us",
+      make: "Honda",
+      pdfReport: {
+        type: "carfax",
+        pdfUrl: null,
+        htmlUrl: "https://report-cars.b-cdn.net/reports/carfax/x.html",
+        vehicle: "HONDA CR-V",
+        reportId: 1,
+        fetchedAt: "2026-01-01T00:00:00.000Z",
+      },
+    });
+    expect(data.dataSource).toBe("carstat_usa");
+    expect(data.pdfReport).toMatchObject({
+      type: "carfax",
+      htmlUrl: "https://report-cars.b-cdn.net/reports/carfax/x.html",
+    });
+  });
+
   it("keeps 360 fields through normalize → sanitize (admin provider refresh)", () => {
     const exterior = Array.from({ length: 16 }, (_, i) => `https://cdn.example.com/ext-${i}.jpg`);
     const interior = Array.from({ length: 12 }, (_, i) => `https://cdn.example.com/int-${i}.jpg`);

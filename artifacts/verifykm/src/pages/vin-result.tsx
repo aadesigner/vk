@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ReportReveal } from "@/components/report-reveal";
+import { CarstatUsaPdfReport } from "@/components/carstat-usa-pdf-report";
 
 import { translateDamageLabel } from "@/lib/translate-damage-label";
 import { translateTitleStatus } from "@/lib/translate-title-status";
@@ -236,8 +237,18 @@ type LookupData = {
   isFlooded?: boolean | null;
   floodCount?: number | null;
   floodLossAmount?: number | null;
-  /** Opaque: `"getcarapi"` → Events section (not Korean registry). */
-  dataSource?: "getcarapi" | null;
+  /** Opaque: `"getcarapi"` → Events section; `"carstat_usa"` → PDF report viewer. */
+  dataSource?: "getcarapi" | "carstat_usa" | null;
+  pdfReport?: {
+    type: "carfax" | "autocheck";
+    pdfUrl?: string | null;
+    htmlUrl?: string | null;
+    hasPdf?: boolean;
+    hasHtml?: boolean;
+    reportId?: number | null;
+    vehicle?: string | null;
+    fetchedAt?: string;
+  } | null;
   accidentCount?: number | null;
   titleStatus?: string;
   photos?: string[];
@@ -674,6 +685,32 @@ export default function VinResult({ params }: Props) {
 
   const data = lookup.data as LookupData | null | undefined;
   const isGetCarApi = data?.dataSource === "getcarapi";
+
+  if (data?.dataSource === "carstat_usa" && data.pdfReport) {
+    const pdfTitle = data.pdfReport.vehicle?.trim()
+      || [data.year ? String(data.year) : null, data.make, data.model].filter(Boolean).join(" ")
+      || `${t("report_for")} ${lookup.vin}`;
+    return (
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-3">
+        <SEOHead title={seo.title} description={seo.description} lang={seo.lang} noIndex />
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild className="-ml-2 h-9 rounded-xl text-slate-600 hover:bg-white/70 hover:text-[#071018]">
+            <PrefetchLink href={pathFor(language, "dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              {t("back_to_dashboard")}
+            </PrefetchLink>
+          </Button>
+        </div>
+        <CarstatUsaPdfReport
+          vin={lookup.vin}
+          lookupId={typeof lookup.id === "number" ? lookup.id : null}
+          vehicleTitle={pdfTitle}
+          pdfReport={data.pdfReport}
+        />
+      </div>
+    );
+  }
+
   const insuranceClaims = sortHistoryNewestFirst(
     sanitizeInsuranceClaims(repairDatedRecords(data?.insuranceClaims, data?.year), data?.year),
   );

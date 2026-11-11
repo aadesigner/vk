@@ -5,7 +5,7 @@ import { getAllowedOrigins, isAllowedOrigin } from "./allowedOrigins.js";
 
 export const GUARD_HEADER = "x-verifykm-client";
 
-/** Routes that cannot send a custom client header (OAuth redirects, health probes, signed image proxy). */
+/** Routes that cannot send a custom client header (OAuth redirects, health probes, signed image proxy, iframe report mirrors). */
 const EXEMPT_PREFIXES = [
   "/healthz",
   "/auth/google",
@@ -14,8 +14,16 @@ const EXEMPT_PREFIXES = [
   "/payments/webhook/pok",
 ];
 
+/** Cookie-auth iframe/print targets — browsers cannot attach x-verifykm-client on navigations. */
+const EXEMPT_PATH_RE = [
+  /^\/vin\/\d+\/pdf-proxy\/?$/,
+  /^\/vin\/\d+\/html-proxy\/?$/,
+];
+
 export function isExemptApiPath(path: string): boolean {
-  return EXEMPT_PREFIXES.some(p => path === p || path.startsWith(`${p}/`));
+  const normalized = path.startsWith("/api/") ? path.slice(4) : path;
+  if (EXEMPT_PREFIXES.some(p => normalized === p || normalized.startsWith(`${p}/`))) return true;
+  return EXEMPT_PATH_RE.some((re) => re.test(normalized));
 }
 
 function timingSafeEqual(a: string, b: string): boolean {

@@ -22,6 +22,7 @@ import { translateDamageLabel } from "@/lib/translate-damage-label";
 import { translateTitleStatus } from "@/lib/translate-title-status";
 import { translateLotStatus } from "@/lib/translate-lot-status";
 import { SEOHead } from "@/components/seo";
+import { CarstatUsaPdfReport } from "@/components/carstat-usa-pdf-report";
 import { SITE_ORIGIN } from "@/lib/seo-config";
 import { buildLockedHistorySummary, buildVinPageSeo, lockedPreviewSignalsHaveFindings, type LockedPreviewSignals, type VinSeoLang } from "@workspace/vin-page-seo";
 import { PrintReportBranding } from "@/components/print-report-branding";
@@ -232,8 +233,19 @@ type VinPublicReport = {
   insuranceClaims?: InsuranceClaimEntry[] | null;
   registryHistory?: RegistryHistoryEntry[] | null;
   recallHistory?: RegistryHistoryEntry[] | null;
-  /** Opaque: `"getcarapi"` → Events section (not Korean registry). */
-  dataSource?: "getcarapi" | null;
+  /** Opaque: `"getcarapi"` → Events; `"carstat_usa"` → PDF viewer. */
+  dataSource?: "getcarapi" | "carstat_usa" | null;
+  pdfReport?: {
+    type: "carfax" | "autocheck";
+    pdfUrl?: string | null;
+    htmlUrl?: string | null;
+    hasPdf?: boolean;
+    hasHtml?: boolean;
+    reportId?: number | null;
+    vehicle?: string | null;
+    fetchedAt?: string;
+  } | null;
+  lookupId?: number | null;
   serviceHistory?: ServiceHistoryEntry[] | null;
   vehicleExtras?: VehicleExtraEntry[] | null;
   auctionHistory?: AuctionEntry[] | null;
@@ -639,6 +651,26 @@ export default function VinPublic({ params }: Props) {
   if (!data) return null;
 
   const isGetCarApi = data.dataSource === "getcarapi";
+
+  if (data.isUnlocked && data.dataSource === "carstat_usa" && data.pdfReport) {
+    const pdfTitle = data.pdfReport.vehicle?.trim()
+      || [data.year ? String(data.year) : null, data.make, data.model].filter(Boolean).join(" ")
+      || `${t("report_for")} ${vin}`;
+    return (
+      <>
+        {seoBlock}
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-3">
+          <CarstatUsaPdfReport
+            vin={vin}
+            lookupId={data.lookupId ?? null}
+            vehicleTitle={pdfTitle}
+            pdfReport={data.pdfReport}
+          />
+        </div>
+      </>
+    );
+  }
+
   const insuranceClaims = sortHistoryNewestFirst(
     sanitizeInsuranceClaims(repairDatedRecords(data.insuranceClaims, data.year), data.year),
   );

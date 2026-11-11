@@ -69,11 +69,17 @@ export default function AdminVinDetail({ params }: { params: { vin: string } }) 
   );
   const userResults = (userSearchResult?.items ?? []) as UserRow[];
 
+  const catalogDataSource = (detail?.data as Record<string, unknown> | undefined)?.dataSource;
+  const isUsaPdfReport =
+    detail?.providerName === "carstat_usa"
+    || catalogDataSource === "carstat_usa";
   const refreshSourceLabel =
     detail?.providerName === "getcarapi"
-    || (detail?.data as Record<string, unknown> | undefined)?.dataSource === "getcarapi"
+    || catalogDataSource === "getcarapi"
       ? "GetCarAPI"
-      : "Carstat";
+      : isUsaPdfReport
+        ? "Carstat USA"
+        : "Carstat";
 
   const refreshMutation = useAdminRefreshVinCatalog({
     mutation: {
@@ -90,15 +96,20 @@ export default function AdminVinDetail({ params }: { params: { vin: string } }) 
         const fromLabel =
           payload.refreshedFrom === "getcarapi"
             ? "GetCarAPI"
-            : payload.refreshedFrom === "carstat"
-              ? "Carstat"
-              : refreshSourceLabel;
+            : payload.refreshedFrom === "carstat_usa"
+              ? "Carstat USA"
+              : payload.refreshedFrom === "carstat"
+                ? "Carstat"
+                : refreshSourceLabel;
         const ownerLen = typeof payload.ownerHistoryLen === "number"
           ? payload.ownerHistoryLen
           : (Array.isArray(payload.data?.ownerHistory) ? payload.data.ownerHistory.length : 0);
         const ownerCount = typeof payload.data?.ownerCount === "number" ? payload.data.ownerCount : null;
         const isGetCarApi = fromLabel === "GetCarAPI";
-        if (ownerLen <= 0 && !isGetCarApi) {
+        const isUsa = fromLabel === "Carstat USA"
+          || payload.refreshedFrom === "carstat_usa"
+          || (payload.data as { dataSource?: string } | undefined)?.dataSource === "carstat_usa";
+        if (ownerLen <= 0 && !isGetCarApi && !isUsa) {
           setRefreshMsg({
             ok: false,
             text: ownerCount && ownerCount > 0
@@ -108,9 +119,11 @@ export default function AdminVinDetail({ params }: { params: { vin: string } }) 
         } else {
           setRefreshMsg({
             ok: true,
-            text: ownerLen > 0
-              ? `Refreshed from ${fromLabel} — ${ownerLen} owner record(s) saved. Catalog and lookups updated.`
-              : `Refreshed from ${fromLabel}. Catalog and lookups updated.`,
+            text: isUsa
+              ? `Refreshed from ${fromLabel} — vehicle history PDF/HTML updated. Catalog and lookups synced.`
+              : ownerLen > 0
+                ? `Refreshed from ${fromLabel} — ${ownerLen} owner record(s) saved. Catalog and lookups updated.`
+                : `Refreshed from ${fromLabel}. Catalog and lookups updated.`,
           });
         }
         if (payload.data) {
@@ -319,6 +332,77 @@ export default function AdminVinDetail({ params }: { params: { vin: string } }) 
         </div>
       </div>
 
+      {isUsaPdfReport ? (
+        <Card className="border-amber-500/25">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Gauge className="h-4 w-4" />USA vehicle history PDF
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              This VIN is a mirrored USA PDF/HTML report (not a VerifyKM timeline). You can edit basic vehicle fields below
+              or refresh the report from Carstat USA. Accident/owner history editors do not apply.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary">carstat_usa</Badge>
+              {typeof (data as { pdfReport?: { type?: string } }).pdfReport?.type === "string" ? (
+                <Badge variant="outline">
+                  report type: {(data as { pdfReport?: { type?: string } }).pdfReport?.type}
+                </Badge>
+              ) : null}
+              {(data as { pdfReport?: { pdfUrl?: string | null; htmlUrl?: string | null } }).pdfReport?.pdfUrl
+                || (data as { pdfReport?: { hasPdf?: boolean } }).pdfReport?.hasPdf
+                ? <Badge variant="outline">PDF</Badge>
+                : null}
+              {(data as { pdfReport?: { htmlUrl?: string | null } }).pdfReport?.htmlUrl
+                || (data as { pdfReport?: { hasHtml?: boolean } }).pdfReport?.hasHtml
+                ? <Badge variant="outline">HTML</Badge>
+                : null}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Make</label>
+                <Input
+                  value={form.make ?? ""}
+                  onChange={(e) => setForm((prev) => ({ ...prev, make: e.target.value }))}
+                  placeholder="Make"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Model</label>
+                <Input
+                  value={form.model ?? ""}
+                  onChange={(e) => setForm((prev) => ({ ...prev, model: e.target.value }))}
+                  placeholder="Model"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Year</label>
+                <Input
+                  value={form.year ?? ""}
+                  onChange={(e) => setForm((prev) => ({ ...prev, year: e.target.value }))}
+                  placeholder="Year"
+                  inputMode="numeric"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Trim</label>
+                <Input
+                  value={form.trim ?? ""}
+                  onChange={(e) => setForm((prev) => ({ ...prev, trim: e.target.value }))}
+                  placeholder="Trim"
+                />
+              </div>
+            </div>
+            <AdminVinSaveBar
+              onSave={handleSave}
+              saving={updateMutation.isPending}
+              saveMsg={saveMsg}
+            />
+          </CardContent>
+        </Card>
+      ) : (
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
@@ -342,6 +426,7 @@ export default function AdminVinDetail({ params }: { params: { vin: string } }) 
           />
         </CardContent>
       </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-3">

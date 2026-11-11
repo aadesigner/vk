@@ -5,6 +5,7 @@ import { requireAuth } from "../lib/auth.js";
 import { authSessionUserSelect } from "../lib/authUserSelect.js";
 import { recordedTransactionWhere } from "../lib/recordedPayments.js";
 import { transformVinPhotoData } from "../lib/imageProxy.js";
+import { redactCarstatUsaDataForClient } from "../lib/carstatUsaReportSanitize.js";
 import { mediaVersionFromUpdatedAt } from "../lib/vinImageCache.js";
 import { summarizeVinLookupData } from "../lib/vinLookupSummary.js";
 import { userHistoryLimiter } from "../lib/expensiveEndpointLimiter.js";
@@ -39,7 +40,9 @@ function proxyVinRow(row: Record<string, unknown>): Record<string, unknown> {
   const result: Record<string, unknown> = { ...rest };
 
   if (result.data && typeof result.data === "object" && !Array.isArray(result.data)) {
-    result.data = transformVinPhotoData(result.data, mediaVersion);
+    result.data = redactCarstatUsaDataForClient(
+      transformVinPhotoData(result.data, mediaVersion) as Record<string, unknown>,
+    );
   }
 
   return result;

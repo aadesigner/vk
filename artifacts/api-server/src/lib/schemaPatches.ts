@@ -25,6 +25,7 @@ const SYSTEM_SETTINGS_PATCHES = [
   `ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS maintenance_message text`,
   `ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS vin_lookup_enabled boolean NOT NULL DEFAULT true`,
   `ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS getcar_api_enabled boolean NOT NULL DEFAULT true`,
+  `ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS carstat_usa_api_enabled boolean NOT NULL DEFAULT false`,
   `ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS plugin_settings jsonb`,
   `ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS smtp_security text NOT NULL DEFAULT 'starttls'`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip text`,

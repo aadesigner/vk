@@ -8,6 +8,19 @@ const VIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/i;
 export function catalogHasDeliverableReport(data: unknown): boolean {
   if (!data || typeof data !== "object" || Array.isArray(data)) return false;
   const d = data as Record<string, unknown>;
+  // Carstat USA PDF reports store URLs, not history arrays.
+  if (d.dataSource === "carstat_usa") {
+    const pr = d.pdfReport;
+    if (pr && typeof pr === "object" && !Array.isArray(pr)) {
+      const p = pr as Record<string, unknown>;
+      if (
+        (typeof p.pdfUrl === "string" && p.pdfUrl.trim())
+        || (typeof p.htmlUrl === "string" && p.htmlUrl.trim())
+      ) {
+        return d.fulfillmentPending !== true;
+      }
+    }
+  }
   return catalogDeliverableFromHint({
     fulfillmentPending: d.fulfillmentPending === true,
     accidentsLen: Array.isArray(d.accidents) ? d.accidents.length : 0,
@@ -452,6 +465,15 @@ export function sanitizeCatalogPayload(input: Record<string, unknown>): Record<s
 
   if (input.odometerLocked === true) {
     out.odometerLocked = true;
+  }
+
+  // USA PDF/HTML report meta — must survive catalog upsert (not a history array).
+  if (
+    input.pdfReport
+    && typeof input.pdfReport === "object"
+    && !Array.isArray(input.pdfReport)
+  ) {
+    out.pdfReport = input.pdfReport;
   }
 
   return out;

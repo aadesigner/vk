@@ -38,6 +38,11 @@ export const systemSettingsTable = pgTable("system_settings", {
    * Cascade becomes catalog → Carstat → pending (same as no API key).
    */
   getcarApiEnabled: boolean("getcar_api_enabled").notNull().default(true),
+  /**
+   * When true, enable Carstat USA API (Carfax/AutoCheck PDF reports).
+   * Uses the same Carstat API key. Default false — opt-in to avoid surprise token spend.
+   */
+  carstatUsaApiEnabled: boolean("carstat_usa_api_enabled").notNull().default(false),
   /** Partial blocks when maintenanceMode is false: free_decoder | checkout | vin_reports */
   maintenanceRestrictions: jsonb("maintenance_restrictions").$type<string[]>().notNull().default([]),
   maintenanceMessage: text("maintenance_message"),
