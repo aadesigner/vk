@@ -3,6 +3,7 @@ import { useTranslation } from "@/i18n/context";
 import { useAuth } from "@/lib/auth-context";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
+import { AUTH_RETURN_PATH_KEY } from "@/lib/checkout-vin-flow";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -446,6 +447,7 @@ export default function VinPublic({ params }: Props) {
   const [, setLocation] = useLocation();
   const [expandedAccidents, setExpandedAccidents] = useState<Set<number>>(new Set());
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [showPaidLoginHint, setShowPaidLoginHint] = useState(false);
 
   const openLightbox = useCallback((i: number) => setLightboxIndex(i), []);
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
@@ -453,6 +455,44 @@ export default function VinPublic({ params }: Props) {
 
   const vin = params.id.toUpperCase();
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+  const paidLoginHintSessionKey = `verifykm_email_report_hint_${vin}`;
+  const paidLoginHintDismissKey = `verifykm_dismissed_paid_login_hint_${vin}`;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("from") === "email") {
+        sessionStorage.setItem(paidLoginHintSessionKey, "1");
+        params.delete("from");
+        const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}${window.location.hash}`;
+        window.history.replaceState(null, "", next);
+      }
+      const fromEmail = sessionStorage.getItem(paidLoginHintSessionKey) === "1";
+      const dismissed = localStorage.getItem(paidLoginHintDismissKey) === "1";
+      setShowPaidLoginHint(fromEmail && !dismissed);
+    } catch {
+      setShowPaidLoginHint(false);
+    }
+  }, [paidLoginHintDismissKey, paidLoginHintSessionKey]);
+
+  const dismissPaidLoginHint = useCallback(() => {
+    try {
+      localStorage.setItem(paidLoginHintDismissKey, "1");
+    } catch {
+      /* ignore */
+    }
+    setShowPaidLoginHint(false);
+  }, [paidLoginHintDismissKey]);
+
+  const goSignInForPaidReport = useCallback(() => {
+    try {
+      sessionStorage.setItem(AUTH_RETURN_PATH_KEY, `/${language}/vin/${vin}`);
+    } catch {
+      /* ignore */
+    }
+    setLocation(`/${language}/sign-in`);
+  }, [language, setLocation, vin]);
 
   const buildShareUrl = useCallback(() => {
     const origin = window.location.origin;
@@ -872,7 +912,10 @@ export default function VinPublic({ params }: Props) {
       </AnimatePresence>
 
       <div className={VIN_REPORT_PAGE_FIELD}>
-      <div className={cn(VIN_REPORT_PAGE_SHELL, !data.isUnlocked && "pb-28")}>
+      <div className={cn(
+        VIN_REPORT_PAGE_SHELL,
+        !data.isUnlocked && (showPaidLoginHint ? "pb-40" : "pb-28"),
+      )}>
 
         {/* Back — signed-in users only */}
         {isSignedIn && (
@@ -1626,26 +1669,55 @@ export default function VinPublic({ params }: Props) {
       </div>
       </div>
 
-      {/* ── Sticky Unlock Bar ── */}
-        {!data.isUnlocked && (
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-[#00a5fd]/25 bg-[#071018] print:hidden">
-          <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 py-4 sm:px-6 lg:px-8">
-            <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-bold text-white sm:text-base">{t("vin_public_unlock_title")}</p>
-              <p className="hidden truncate text-sm text-white/55 sm:block">
-                {t("vin_public_unlock_desc")}
-              </p>
-            </div>
-            <Button
-              className="h-11 shrink-0 gap-1.5 rounded-md bg-[#00a5fd] px-6 font-bold text-[#041018] shadow-none hover:bg-[#33bbfd]"
-              onClick={handleUnlock}
+      {/* ── Sticky Unlock Bar (+ optional email login hint) ── */}
+      {!data.isUnlocked && (
+        <div className="fixed inset-x-0 bottom-0 z-50 print:hidden">
+          {showPaidLoginHint && (
+            <div
+              className="border-t border-amber-500/25 bg-amber-950/95 text-amber-50"
+              role="status"
             >
-              <Lock className="h-3.5 w-3.5" />
-              {priceStr
-                ? `${t("vin_public_check_cta")} · ${priceStr}`
-                : t("vin_public_check_cta")}
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
+              <div className="mx-auto flex max-w-7xl items-start gap-3 px-4 py-2 sm:px-6 lg:px-8">
+                <p className="min-w-0 flex-1 pt-0.5 text-[11px] leading-snug text-amber-50/90 sm:text-xs">
+                  {t("vin_public_paid_login_hint")}{" "}
+                  <button
+                    type="button"
+                    className="font-semibold text-amber-100 underline underline-offset-2 hover:text-white"
+                    onClick={goSignInForPaidReport}
+                  >
+                    {t("vin_public_paid_login_hint_cta")}
+                  </button>
+                </p>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-md p-1 text-amber-100/70 hover:bg-white/10 hover:text-white"
+                  aria-label={t("vin_public_paid_login_hint_dismiss")}
+                  onClick={dismissPaidLoginHint}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+          <div className="border-t border-[#00a5fd]/25 bg-[#071018]">
+            <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 py-4 sm:px-6 lg:px-8">
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-bold text-white sm:text-base">{t("vin_public_unlock_title")}</p>
+                <p className="hidden truncate text-sm text-white/55 sm:block">
+                  {t("vin_public_unlock_desc")}
+                </p>
+              </div>
+              <Button
+                className="h-11 shrink-0 gap-1.5 rounded-md bg-[#00a5fd] px-6 font-bold text-[#041018] shadow-none hover:bg-[#33bbfd]"
+                onClick={handleUnlock}
+              >
+                <Lock className="h-3.5 w-3.5" />
+                {priceStr
+                  ? `${t("vin_public_check_cta")} · ${priceStr}`
+                  : t("vin_public_check_cta")}
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         </div>
       )}

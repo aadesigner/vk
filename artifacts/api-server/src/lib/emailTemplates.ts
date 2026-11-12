@@ -76,6 +76,9 @@ export const EMAIL_TEMPLATE_DEFAULTS: Record<EmailTemplateKey, TemplateDefaults>
       </tr>
     </table>
     ${btn("{{reportUrl}}", "View Full Report &rarr;")}
+    <p style="margin:12px 0 0;font-size:13px;line-height:1.5;color:#555555;font-family:Arial,Helvetica,sans-serif">
+      To view your report, sign in with the same account you used to pay.
+    </p>
     <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;font-family:Arial,Helvetica,sans-serif">
       Amount paid: <strong style="color:#555555">{{amount}}</strong> &middot; Ref: <span style="font-family:monospace;font-size:11px">{{paymentRef}}</span>
     </p>

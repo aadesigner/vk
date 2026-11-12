@@ -124,6 +124,7 @@ describe("combined report-ready template", () => {
     expect(html).toContain("Reported accidents");
     expect(html).toContain("Previous owners");
     expect(html).toContain("View Full Report");
+    expect(html).toContain("sign in with the same account you used to pay");
     expect(html).toContain("Amount paid");
     expect(html).toContain("€19.99");
   });

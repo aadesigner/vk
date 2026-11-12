@@ -99,7 +99,9 @@ export async function fireVinReadyEmailForUser(
         vin,
         // Unprefixed /vin/{VIN} so the SPA can redirect to the visitor's language
         // (stored preference / geo). Hardcoding /en/ would lock English.
-        reportUrl: `${siteUrl}/vin/${encodeURIComponent(vin)}`,
+        // ?from=email shows a dismissible “sign in to the account you paid with” hint
+        // above the unlock bar when the visitor is not yet on the owning session.
+        reportUrl: `${siteUrl}/vin/${encodeURIComponent(vin)}?from=email`,
         make: (d.make as string | null) ?? null,
         model: (d.model as string | null) ?? null,
         year: toNumber(d.year),
