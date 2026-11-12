@@ -11,6 +11,7 @@ import {
   FileWarning,
   UserRound,
   ClipboardCheck,
+  Ship,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -107,6 +108,12 @@ const TYPE_VISUAL: Record<string, { icon: LucideIcon; dot: string; ring: string;
     dot: "bg-muted-foreground/70",
     ring: "ring-muted-foreground/25",
     badge: "bg-muted text-muted-foreground",
+  },
+  export: {
+    icon: Ship,
+    dot: "bg-teal-500",
+    ring: "ring-teal-500/30",
+    badge: "bg-teal-500/10 text-teal-800 dark:text-teal-300",
   },
 };
 

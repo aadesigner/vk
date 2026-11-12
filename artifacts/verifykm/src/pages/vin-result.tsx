@@ -117,6 +117,7 @@ import {
   sanitizeOwnerHistory,
   sanitizeServiceHistory,
   enrichRegistryHistoryDates,
+  ensureExportRegistryEvent,
   sanitizeRegistryHistory,
   sanitizeRecallHistory,
 } from "@/lib/report-display";
@@ -735,10 +736,14 @@ export default function VinResult({ params }: Props) {
   const auctionHistory = sortHistoryNewestFirst(sanitizeAuctionHistory(data?.auctionHistory, data?.year));
   const registryHistory = sortHistoryNewestFirst(
     sanitizeRegistryHistory(
-      enrichRegistryHistoryDates(
-        repairDatedRecords(data?.registryHistory, data?.year),
-        [...(data?.mileageHistory ?? []), ...(data?.ownerHistory ?? [])],
-        data?.year,
+      ensureExportRegistryEvent(
+        enrichRegistryHistoryDates(
+          repairDatedRecords(data?.registryHistory, data?.year),
+          [...(data?.mileageHistory ?? []), ...(data?.ownerHistory ?? [])],
+          data?.year,
+        ),
+        data?.mileageHistory,
+        data?.vehicleExtras,
       ),
       data?.year,
       { listingOdometer: data?.odometer },

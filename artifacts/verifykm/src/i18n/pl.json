@@ -1006,6 +1006,7 @@
   "registry_type_no_insurance": "Okres bez ubezpieczenia",
   "registry_type_insurance_event": "Zdarzenie ubezpieczeniowe",
   "registry_type_recall": "Akcja serwisowa",
+  "registry_type_export": "Deklaracja eksportowa",
   "registry_type_other": "Zdarzenie rejestrowe",
   "registry_field_production_country": "Kraj produkcji",
   "registry_field_production_date": "Data produkcji",

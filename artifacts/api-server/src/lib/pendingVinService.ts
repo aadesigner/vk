@@ -101,6 +101,9 @@ export function buildManualPendingReportData(
 }
 
 export async function isVinEligibleForManualPending(vin: string): Promise<boolean> {
+  const { ensurePendingVinEnabledLoaded } = await import("./pendingVinSettingsCache.js");
+  if (!(await ensurePendingVinEnabledLoaded())) return false;
+
   const normalized = vin.trim().toUpperCase();
   if (normalized.length !== 17 || /[IOQ]/.test(normalized)) return false;
 

@@ -996,6 +996,7 @@
   "registry_type_no_insurance": "فترة بدون تأمين",
   "registry_type_insurance_event": "حدث تأمين",
   "registry_type_recall": "استدعاء (Recall)",
+  "registry_type_export": "إقرار التصدير",
   "registry_type_other": "حدث في السجل",
   "registry_field_production_country": "بلد الإنتاج",
   "registry_field_production_date": "تاريخ الإنتاج",

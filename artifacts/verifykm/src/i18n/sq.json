@@ -998,6 +998,7 @@
   "registry_type_no_insurance": "Periudhë pa sigurim",
   "registry_type_insurance_event": "Ngjarje sigurimi",
   "registry_type_recall": "Rikthim (recall)",
+  "registry_type_export": "Deklarata e eksportit",
   "registry_type_other": "Ngjarje regjistri",
   "registry_field_production_country": "Vendi i prodhimit",
   "registry_field_production_date": "Data e prodhimit",

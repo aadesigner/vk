@@ -129,6 +129,9 @@ export default function AdminProviders() {
   const [carstatUsaApiEnabled, setCarstatUsaApiEnabled] = useState(false);
   const [carstatUsaApiSaving, setCarstatUsaApiSaving] = useState(false);
   const [carstatUsaApiMsg, setCarstatUsaApiMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pendingVinEnabled, setPendingVinEnabled] = useState(true);
+  const [pendingVinSaving, setPendingVinSaving] = useState(false);
+  const [pendingVinMsg, setPendingVinMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const { data: providers = [], isLoading } = useAdminGetProviders();
   const { data: countries = [] } = useGetCountries();
@@ -141,6 +144,7 @@ export default function AdminProviders() {
         getcarApiEnabled?: boolean;
         getcarApiKeyConfigured?: boolean;
         carstatUsaApiEnabled?: boolean;
+        pendingVinEnabled?: boolean;
       }>;
     },
   });
@@ -154,6 +158,9 @@ export default function AdminProviders() {
     }
     if (typeof adminSettings?.carstatUsaApiEnabled === "boolean") {
       setCarstatUsaApiEnabled(adminSettings.carstatUsaApiEnabled);
+    }
+    if (typeof adminSettings?.pendingVinEnabled === "boolean") {
+      setPendingVinEnabled(adminSettings.pendingVinEnabled);
     }
   }, [adminSettings]);
 
@@ -246,6 +253,40 @@ export default function AdminProviders() {
       setCarstatUsaApiMsg({ ok: false, text: "Request failed." });
     } finally {
       setCarstatUsaApiSaving(false);
+    }
+  }
+
+  async function togglePendingVin(next: boolean) {
+    setPendingVinSaving(true);
+    setPendingVinMsg(null);
+    const prev = pendingVinEnabled;
+    setPendingVinEnabled(next);
+    try {
+      const resp = await fetch(`${basePath}/api/admin/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ pendingVinEnabled: next }),
+      });
+      if (!resp.ok) {
+        setPendingVinEnabled(prev);
+        setPendingVinMsg({ ok: false, text: "Failed to update pending VIN setting. Try again." });
+        return;
+      }
+      const saved = await resp.json() as { pendingVinEnabled?: boolean };
+      if (typeof saved.pendingVinEnabled === "boolean") setPendingVinEnabled(saved.pendingVinEnabled);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      setPendingVinMsg({
+        ok: true,
+        text: next
+          ? "Pending VINs enabled — when providers have no record, checkout can still accept payment and queue for manual fulfillment."
+          : "Pending VINs disabled — when providers have no record, checkout shows no info and payment is blocked.",
+      });
+    } catch {
+      setPendingVinEnabled(prev);
+      setPendingVinMsg({ ok: false, text: "Request failed." });
+    } finally {
+      setPendingVinSaving(false);
     }
   }
 
@@ -502,6 +543,50 @@ export default function AdminProviders() {
             >
               telegra.ph API notes
             </a>
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* ── Pending VINs (manual fulfillment queue) ─────────────────────────── */}
+      <Card className="border-2 border-rose-500/20">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 min-w-0">
+              <Globe className="h-5 w-5 text-rose-600 shrink-0" />
+              <div className="min-w-0">
+                <CardTitle className="text-lg">Pending VINs — pay when no provider record</CardTitle>
+                <CardDescription className="mt-1">
+                  When enabled, VINs with no archive record can still go to checkout and land in the
+                  pending queue for manual fulfillment. When disabled, checkout shows no info and
+                  payment is blocked.
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <Badge
+                variant={pendingVinEnabled ? "default" : "secondary"}
+                className={pendingVinEnabled ? "bg-[#ccebfe] text-[#075985] border-0" : ""}
+              >
+                {pendingVinEnabled ? "Enabled" : "Disabled"}
+              </Badge>
+              <Switch
+                id="pending-vin-enabled"
+                checked={pendingVinEnabled}
+                disabled={getcarApiLoading || pendingVinSaving}
+                onCheckedChange={(v) => void togglePendingVin(v)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {pendingVinMsg && (
+            <p className={`text-sm ${pendingVinMsg.ok ? "text-[#0088d4]" : "text-red-500"}`}>
+              {pendingVinMsg.text}
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Affects peek + payment gate + post-pay fulfillment fallback. Existing open pending checks
+            are not deleted when you turn this off.
           </p>
         </CardContent>
       </Card>

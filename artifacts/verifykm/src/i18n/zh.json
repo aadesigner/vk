@@ -1033,6 +1033,7 @@
   "registry_type_no_insurance": "未投保期间",
   "registry_type_insurance_event": "保险事件",
   "registry_type_recall": "召回",
+  "registry_type_export": "出口申报",
   "registry_type_other": "登记事件",
   "registry_field_production_country": "生产国",
   "registry_field_production_date": "生产日期",

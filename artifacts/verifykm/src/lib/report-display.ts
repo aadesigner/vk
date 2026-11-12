@@ -193,6 +193,114 @@ export function enrichRegistryHistoryDates<T extends RegistryHistoryLike>(
   });
 }
 
+const EXPORT_MILEAGE_SOURCE_RE =
+  /export\s*declaration|export\s*date|\bexport\b|수출|экспорт/i;
+
+function looksLikeDateText(value: string): boolean {
+  return /^\d{4}[-./]\d{1,2}([-./]\d{1,2})?$/.test(value.trim())
+    || /^\d{1,2}[-./]\d{1,2}[-./]\d{4}$/.test(value.trim());
+}
+
+function isExportRegistryEvent(event: {
+  type?: string | null;
+  title?: string | null;
+}): boolean {
+  const type = (event.type ?? "").trim().toLowerCase();
+  if (type === "export") return true;
+  return EXPORT_MILEAGE_SOURCE_RE.test(event.title ?? "");
+}
+
+function isExportMileageSource(source?: string | null): boolean {
+  return EXPORT_MILEAGE_SOURCE_RE.test(source ?? "");
+}
+
+/**
+ * When export date/mileage only exist on the mileage timeline (or kr_export_* extras),
+ * still surface them on the Korean registry timeline.
+ */
+export function ensureExportRegistryEvent<T extends RegistryHistoryLike>(
+  registry: T[],
+  mileage?: Array<{ date?: string | null; odometer?: number | null; source?: string | null }> | null,
+  extras?: Array<{
+    key?: string | null;
+    label?: string | null;
+    value?: string | null;
+    observedAt?: string | null;
+  }> | null,
+): T[] {
+  const exportMileage = (mileage ?? []).find(
+    (row) => isExportMileageSource(row.source) && cleanDisplayText(row.date),
+  );
+  const exportKm =
+    exportMileage?.odometer != null && Number.isFinite(Number(exportMileage.odometer))
+      ? Number(exportMileage.odometer)
+      : null;
+
+  const existingIdx = registry.findIndex((row) => isExportRegistryEvent(row));
+  if (existingIdx >= 0) {
+    const existing = registry[existingIdx]!;
+    const needsKm = (existing.mileage == null || existing.mileage <= 0) && exportKm != null && exportKm > 0;
+    const needsDate = !cleanDisplayText(existing.date) && cleanDisplayText(exportMileage?.date);
+    if (!needsKm && !needsDate) return registry;
+    const next = { ...existing } as T;
+    if (needsDate) next.date = cleanDisplayText(exportMileage?.date);
+    if (needsKm) {
+      next.mileage = exportKm;
+      if (!cleanDisplayText(next.subtitle)) {
+        next.subtitle = `${exportKm.toLocaleString()} km`;
+      }
+    }
+    const copy = registry.slice();
+    copy[existingIdx] = next;
+    return copy;
+  }
+
+  let exportDate = cleanDisplayText(exportMileage?.date);
+  if (!exportDate) {
+    for (const extra of extras ?? []) {
+      const blob = `${extra.key ?? ""} ${extra.label ?? ""}`.toLowerCase();
+      if (!/kr_export_date|export\s*date|export_declaration/.test(blob)) continue;
+      const value = cleanDisplayText(extra.value);
+      if (value && looksLikeDateText(value)) {
+        exportDate = value;
+        break;
+      }
+      const observed = cleanDisplayText(extra.observedAt);
+      if (observed) {
+        exportDate = observed;
+        break;
+      }
+    }
+  }
+  if (!exportDate) return registry;
+
+  let km = exportKm;
+  if (km == null) {
+    for (const extra of extras ?? []) {
+      const blob = `${extra.key ?? ""} ${extra.label ?? ""}`.toLowerCase();
+      if (!/kr_export_mileage|export\s*mileage|export.*km/.test(blob)) continue;
+      const digits = String(extra.value ?? "").replace(/[^\d]/g, "");
+      if (!digits) continue;
+      const n = Number(digits);
+      if (Number.isFinite(n) && n > 0) {
+        km = n;
+        break;
+      }
+    }
+  }
+
+  return [
+    ...registry,
+    {
+      date: exportDate,
+      type: "export",
+      title: "Export declaration",
+      subtitle: km != null ? `${km.toLocaleString()} km` : null,
+      mileage: km,
+    } as T,
+  ];
+}
+
 export function isMeaningfulOwnerEntry(entry: OwnerHistoryLike): boolean {
   return Boolean(
     cleanDisplayText(entry.date)

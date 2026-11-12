@@ -31,6 +31,7 @@ const TYPE_KEYS: Record<string, string> = {
   no_insurance: "registry_type_no_insurance",
   insurance_event: "registry_type_insurance_event",
   recall: "registry_type_recall",
+  export: "registry_type_export",
   other: "registry_type_other",
 };
 

@@ -66,7 +66,16 @@ export function resolveRegistryDisplayMileage(
   if (TYPES_WITHOUT_MILEAGE.has(type)) return null;
 
   const explicit = hasExplicitRegistryMileage(event);
-  if (!explicit && type !== "inspection" && type !== "owner_change") return null;
+  // Export declaration / first registration carry real recorded km from KR insurance.
+  if (
+    !explicit
+    && type !== "inspection"
+    && type !== "owner_change"
+    && type !== "export"
+    && type !== "first_registration"
+  ) {
+    return null;
+  }
 
   if (opts?.listingOdometer != null && mileage === opts.listingOdometer && !explicit) {
     return null;

@@ -1006,6 +1006,7 @@
   "registry_type_no_insurance": "Период без застраховка",
   "registry_type_insurance_event": "Застрахователно събитие",
   "registry_type_recall": "Отзоваване",
+  "registry_type_export": "Експортна декларация",
   "registry_type_other": "Регистрово събитие",
   "registry_field_production_country": "Държава на производство",
   "registry_field_production_date": "Дата на производство",

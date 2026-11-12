@@ -24,6 +24,8 @@ export function sanitizeAdminSettings(settings: SettingsRow) {
     getcarApiKeyConfigured: !!process.env["GETCARAPI_API_KEY"]?.trim(),
     carstatUsaApiEnabled:
       (settings as SettingsRow & { carstatUsaApiEnabled?: boolean }).carstatUsaApiEnabled ?? false,
+    pendingVinEnabled:
+      (settings as SettingsRow & { pendingVinEnabled?: boolean }).pendingVinEnabled ?? true,
     hasPaypalSecret: !!paypalClientSecret?.trim(),
     hasRecaptchaSecret: !!recaptchaSecretKey?.trim(),
     hasGoogleSecret: !!googleClientSecret?.trim(),

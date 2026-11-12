@@ -120,6 +120,7 @@ import {
   sanitizeOwnerHistory,
   sanitizeServiceHistory,
   enrichRegistryHistoryDates,
+  ensureExportRegistryEvent,
   sanitizeRegistryHistory,
   sanitizeRecallHistory,
 } from "@/lib/report-display";
@@ -702,10 +703,14 @@ export default function VinPublic({ params }: Props) {
   const marketData = data.marketData ?? null;
   const registryHistory = sortHistoryNewestFirst(
     sanitizeRegistryHistory(
-      enrichRegistryHistoryDates(
-        repairDatedRecords(data.registryHistory, data.year),
-        [...(data.mileageHistory ?? []), ...(data.ownerHistory ?? [])],
-        data.year,
+      ensureExportRegistryEvent(
+        enrichRegistryHistoryDates(
+          repairDatedRecords(data.registryHistory, data.year),
+          [...(data.mileageHistory ?? []), ...(data.ownerHistory ?? [])],
+          data.year,
+        ),
+        data.mileageHistory,
+        data.vehicleExtras,
       ),
       data.year,
       { listingOdometer: data.odometer },

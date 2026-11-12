@@ -1884,7 +1884,8 @@ export async function ensureVinPayableForPayment(userId: string, vin: string): P
   const { isVinEligibleForManualPending } = await import("./pendingVinService.js");
   const eligiblePending = await isVinEligibleForManualPending(normalizedVin);
 
-  // not_found OR providers down/timeout → pending when decode is trustworthy (do not hard-fail checkout).
+  // not_found OR providers down/timeout → pending only when pending VINs are enabled
+  // and decode is trustworthy. When pending is disabled, no-record → VIN_NO_DATA (block pay).
   if ((probe.status === "not_found" || probe.status === "unavailable") && eligiblePending) {
     return { ok: true, mode: "manual_pending" };
   }

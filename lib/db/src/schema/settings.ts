@@ -43,6 +43,11 @@ export const systemSettingsTable = pgTable("system_settings", {
    * Uses the same Carstat API key. Default false — opt-in to avoid surprise token spend.
    */
   carstatUsaApiEnabled: boolean("carstat_usa_api_enabled").notNull().default(false),
+  /**
+   * When false, stop pending VIN flow: if providers have no record, checkout shows
+   * no-data and payment is blocked (no pending_manual / admin queue).
+   */
+  pendingVinEnabled: boolean("pending_vin_enabled").notNull().default(true),
   /** Partial blocks when maintenanceMode is false: free_decoder | checkout | vin_reports */
   maintenanceRestrictions: jsonb("maintenance_restrictions").$type<string[]>().notNull().default([]),
   maintenanceMessage: text("maintenance_message"),

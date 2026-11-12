@@ -996,6 +996,7 @@
   "registry_type_no_insurance": "Період без страховки",
   "registry_type_insurance_event": "Страхова подія",
   "registry_type_recall": "Відкликання (recall)",
+  "registry_type_export": "Експортна декларація",
   "registry_type_other": "Подія реєстру",
   "registry_field_production_country": "Країна виробництва",
   "registry_field_production_date": "Дата виробництва",

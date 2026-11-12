@@ -1006,6 +1006,7 @@
   "registry_type_no_insurance": "Perioadă neasigurată",
   "registry_type_insurance_event": "Eveniment asigurare",
   "registry_type_recall": "Rechemare",
+  "registry_type_export": "Declarație de export",
   "registry_type_other": "Eveniment registru",
   "registry_field_production_country": "Țara de producție",
   "registry_field_production_date": "Data producției",

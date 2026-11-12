@@ -78,6 +78,10 @@ import {
   invalidateCarstatUsaApiSettingsCache,
   setCarstatUsaApiEnabledCache,
 } from "../lib/carstatUsaApiSettingsCache.js";
+import {
+  invalidatePendingVinSettingsCache,
+  setPendingVinEnabledCache,
+} from "../lib/pendingVinSettingsCache.js";
 import { getEffectiveSystemSettings } from "../lib/systemSettings.js";
 import { sanitizeAdminSettings } from "../lib/adminSettings.js";
 import {
@@ -2184,6 +2188,7 @@ router.get("/admin/settings", requireAdmin, async (_req, res) => {
       getcarApiEnabled: true,
       getcarApiKeyConfigured: !!process.env["GETCARAPI_API_KEY"]?.trim(),
       carstatUsaApiEnabled: false,
+      pendingVinEnabled: true,
       freeVinDecoderEnabled: true, freeVinDecoderDailyLimit: 0, freeVinDecoderRequireSignIn: false,
       hasPaypalSecret: false, hasRecaptchaSecret: false, hasGoogleSecret: false, hasFacebookSecret: false, hasSmtpPass: false, hasPokSecret: false,
       googleButtonVisible: false, facebookButtonVisible: false,
@@ -2204,6 +2209,7 @@ router.patch("/admin/settings", requireAdmin, async (req, res) => {
     vinLookupEnabled: boolean;
     getcarApiEnabled: boolean;
     carstatUsaApiEnabled: boolean;
+    pendingVinEnabled: boolean;
     paypalClientId: string | null; paypalClientSecret: string | null;
     paypalSandbox: boolean; paypalEnableCards: boolean;
     pokMerchantId: string | null; pokKeyId: string | null; pokKeySecret: string | null;
@@ -2359,11 +2365,15 @@ router.patch("/admin/settings", requireAdmin, async (req, res) => {
     invalidateFreeDecoderSettingsCache();
     invalidateGetCarApiSettingsCache();
     invalidateCarstatUsaApiSettingsCache();
+    invalidatePendingVinSettingsCache();
     if (typeof updates.getcarApiEnabled === "boolean") {
       setGetCarApiEnabledCache(updates.getcarApiEnabled);
     }
     if (typeof updates.carstatUsaApiEnabled === "boolean") {
       setCarstatUsaApiEnabledCache(updates.carstatUsaApiEnabled);
+    }
+    if (typeof updates.pendingVinEnabled === "boolean") {
+      setPendingVinEnabledCache(updates.pendingVinEnabled);
     }
     if (
       "pokMerchantId" in updates
@@ -2387,6 +2397,7 @@ router.patch("/admin/settings", requireAdmin, async (req, res) => {
       maintenanceMode: updates.maintenanceMode ?? false,
       getcarApiEnabled: updates.getcarApiEnabled ?? true,
       carstatUsaApiEnabled: updates.carstatUsaApiEnabled ?? false,
+      pendingVinEnabled: updates.pendingVinEnabled ?? true,
       freeVinDecoderEnabled: updates.freeVinDecoderEnabled ?? true,
       freeVinDecoderDailyLimit: updates.freeVinDecoderDailyLimit ?? 0,
       freeVinDecoderRequireSignIn: updates.freeVinDecoderRequireSignIn ?? false,
@@ -2418,11 +2429,15 @@ router.patch("/admin/settings", requireAdmin, async (req, res) => {
     invalidateFreeDecoderSettingsCache();
     invalidateGetCarApiSettingsCache();
     invalidateCarstatUsaApiSettingsCache();
+    invalidatePendingVinSettingsCache();
     if (typeof updates.getcarApiEnabled === "boolean") {
       setGetCarApiEnabledCache(updates.getcarApiEnabled);
     }
     if (typeof updates.carstatUsaApiEnabled === "boolean") {
       setCarstatUsaApiEnabledCache(updates.carstatUsaApiEnabled);
+    }
+    if (typeof updates.pendingVinEnabled === "boolean") {
+      setPendingVinEnabledCache(updates.pendingVinEnabled);
     }
     if (
       "pokMerchantId" in updates

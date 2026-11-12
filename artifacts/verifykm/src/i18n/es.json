@@ -1006,6 +1006,7 @@
   "registry_type_no_insurance": "Período sin seguro",
   "registry_type_insurance_event": "Evento de seguro",
   "registry_type_recall": "Retirada",
+  "registry_type_export": "Declaración de exportación",
   "registry_type_other": "Evento de registro",
   "registry_field_production_country": "País de producción",
   "registry_field_production_date": "Fecha de producción",

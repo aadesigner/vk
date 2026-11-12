@@ -996,6 +996,7 @@
   "registry_type_no_insurance": "Период без страховки",
   "registry_type_insurance_event": "Страховое событие",
   "registry_type_recall": "Отзыв (recall)",
+  "registry_type_export": "Экспортная декларация",
   "registry_type_other": "Событие реестра",
   "registry_field_production_country": "Страна производства",
   "registry_field_production_date": "Дата производства",

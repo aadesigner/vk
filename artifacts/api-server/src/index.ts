@@ -12,6 +12,7 @@ import { patchSystemSettingsSchema } from "./lib/schemaPatches.js";
 import { getEffectiveSystemSettings, consolidateSystemSettingsRows } from "./lib/systemSettings.js";
 import { setGetCarApiEnabledCache } from "./lib/getcarApiSettingsCache.js";
 import { setCarstatUsaApiEnabledCache } from "./lib/carstatUsaApiSettingsCache.js";
+import { setPendingVinEnabledCache } from "./lib/pendingVinSettingsCache.js";
 
 process.on("uncaughtException", (err) => {
   logger.error({ err }, "Uncaught exception");
@@ -125,8 +126,11 @@ const server = app.listen(port, "0.0.0.0", async () => {
       if (typeof s?.carstatUsaApiEnabled === "boolean") {
         setCarstatUsaApiEnabledCache(s.carstatUsaApiEnabled);
       }
+      if (typeof s?.pendingVinEnabled === "boolean") {
+        setPendingVinEnabledCache(s.pendingVinEnabled);
+      }
     })
-    .catch((e) => logger.warn({ err: e }, "Failed to warm GetCarAPI / Carstat USA enabled cache"));
+    .catch((e) => logger.warn({ err: e }, "Failed to warm GetCarAPI / Carstat USA / pending VIN enabled cache"));
   void migrateCarstatBaseUrls().catch((e) =>
     logger.warn({ err: e }, "Failed to migrate Carstat provider base URLs"),
   );

@@ -1096,6 +1096,7 @@
   "registry_type_no_insurance": "Uninsured period",
   "registry_type_insurance_event": "Insurance event",
   "registry_type_recall": "Recall",
+  "registry_type_export": "Export declaration",
   "registry_type_other": "Event",
   "registry_field_production_country": "Production country",
   "registry_field_production_date": "Production date",

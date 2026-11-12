@@ -1064,6 +1064,7 @@
   "registry_type_no_insurance": "დაუზღვევი პერიოდი",
   "registry_type_insurance_event": "სადაზღვევო ღონისძიება",
   "registry_type_recall": "გავიხსენოთ",
+  "registry_type_export": "ექსპორტის დეკლარაცია",
   "registry_type_other": "რეესტრის ღონისძიება",
   "registry_field_production_country": "წარმოების ქვეყანა",
   "registry_field_production_date": "წარმოების თარიღი",
