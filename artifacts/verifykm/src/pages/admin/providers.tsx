@@ -129,6 +129,9 @@ export default function AdminProviders() {
   const [carstatUsaApiEnabled, setCarstatUsaApiEnabled] = useState(false);
   const [carstatUsaApiSaving, setCarstatUsaApiSaving] = useState(false);
   const [carstatUsaApiMsg, setCarstatUsaApiMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [carstatVhrApiEnabled, setCarstatVhrApiEnabled] = useState(false);
+  const [carstatVhrApiSaving, setCarstatVhrApiSaving] = useState(false);
+  const [carstatVhrApiMsg, setCarstatVhrApiMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pendingVinEnabled, setPendingVinEnabled] = useState(true);
   const [pendingVinSaving, setPendingVinSaving] = useState(false);
   const [pendingVinMsg, setPendingVinMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -144,6 +147,7 @@ export default function AdminProviders() {
         getcarApiEnabled?: boolean;
         getcarApiKeyConfigured?: boolean;
         carstatUsaApiEnabled?: boolean;
+        carstatVhrApiEnabled?: boolean;
         pendingVinEnabled?: boolean;
       }>;
     },
@@ -158,6 +162,9 @@ export default function AdminProviders() {
     }
     if (typeof adminSettings?.carstatUsaApiEnabled === "boolean") {
       setCarstatUsaApiEnabled(adminSettings.carstatUsaApiEnabled);
+    }
+    if (typeof adminSettings?.carstatVhrApiEnabled === "boolean") {
+      setCarstatVhrApiEnabled(adminSettings.carstatVhrApiEnabled);
     }
     if (typeof adminSettings?.pendingVinEnabled === "boolean") {
       setPendingVinEnabled(adminSettings.pendingVinEnabled);
@@ -253,6 +260,40 @@ export default function AdminProviders() {
       setCarstatUsaApiMsg({ ok: false, text: "Request failed." });
     } finally {
       setCarstatUsaApiSaving(false);
+    }
+  }
+
+  async function toggleCarstatVhrApi(next: boolean) {
+    setCarstatVhrApiSaving(true);
+    setCarstatVhrApiMsg(null);
+    const prev = carstatVhrApiEnabled;
+    setCarstatVhrApiEnabled(next);
+    try {
+      const resp = await fetch(`${basePath}/api/admin/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ carstatVhrApiEnabled: next }),
+      });
+      if (!resp.ok) {
+        setCarstatVhrApiEnabled(prev);
+        setCarstatVhrApiMsg({ ok: false, text: "Failed to update Carstat VHR API. Try again." });
+        return;
+      }
+      const saved = await resp.json() as { carstatVhrApiEnabled?: boolean };
+      if (typeof saved.carstatVhrApiEnabled === "boolean") setCarstatVhrApiEnabled(saved.carstatVhrApiEnabled);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      setCarstatVhrApiMsg({
+        ok: true,
+        text: next
+          ? "Carstat VHR enabled — auction/archive + Korean Insurance after Carstat local, before USA."
+          : "Carstat VHR disabled — lookups skip VHR reports.",
+      });
+    } catch {
+      setCarstatVhrApiEnabled(prev);
+      setCarstatVhrApiMsg({ ok: false, text: "Request failed." });
+    } finally {
+      setCarstatVhrApiSaving(false);
     }
   }
 
@@ -488,6 +529,57 @@ export default function AdminProviders() {
             {" "}· Docs:{" "}
             <a href="https://getcarapi.com/api/" target="_blank" rel="noreferrer" className="underline underline-offset-2">
               getcarapi.com/api
+            </a>
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* ── Carstat VHR V2 ──────────────────────────────────────────────────── */}
+      <Card className="border-2 border-sky-500/20">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 min-w-0">
+              <Globe className="h-5 w-5 text-sky-600 shrink-0" />
+              <div className="min-w-0">
+                <CardTitle className="text-lg">Carstat VHR V2 — auction / archive / KR insurance</CardTitle>
+                <CardDescription className="mt-1">
+                  Cascade after Carstat local, before USA. Free{" "}
+                  <code className="text-[11px]">POST /api/vhr/checks</code>; paid{" "}
+                  <code className="text-[11px]">POST /api/vhr/reports</code> (English JSON → verifykm report UI; buys at most one archive — prefer Alpha, else Beta — and/or Korean Insurance; permanently skips USA Insurance Auctions, US Dealer, Belarus Listing/Official; Inspections only with Korean Insurance — never alone).
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <Badge
+                variant={carstatVhrApiEnabled ? "default" : "secondary"}
+                className={carstatVhrApiEnabled ? "bg-[#ccebfe] text-[#075985] border-0" : ""}
+              >
+                {carstatVhrApiEnabled ? "Enabled" : "Disabled"}
+              </Badge>
+              <Switch
+                id="carstat-vhr-api-enabled"
+                checked={carstatVhrApiEnabled}
+                disabled={getcarApiLoading || carstatVhrApiSaving}
+                onCheckedChange={(v) => void toggleCarstatVhrApi(v)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {carstatVhrApiMsg && (
+            <p className={`text-sm ${carstatVhrApiMsg.ok ? "text-[#0088d4]" : "text-red-500"}`}>
+              {carstatVhrApiMsg.text}
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Reuses Carstat key above · Docs:{" "}
+            <a
+              href="https://carstat.dev/vhr"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2"
+            >
+              carstat.dev/vhr
             </a>
           </p>
         </CardContent>

@@ -365,6 +365,9 @@ export default function AdminLookups() {
                           <Badge variant={STATUS_VARIANTS[lookup.status] ?? "secondary"} className="text-[10px]">{lookup.status}</Badge>
                           {lookup.fromCache ? <Badge variant="outline" className="text-[10px]">cache</Badge> : null}
                           {lookup.providerName && <Badge variant="secondary" className="text-[10px]">{lookup.providerName}</Badge>}
+                          {(lookup.providerName === "carstat_vhr" || vd?.dataSource === "carstat_vhr") && (
+                            <Badge variant="outline" className="text-[10px]">VHR</Badge>
+                          )}
                           {(lookup.providerName === "carstat_usa" || vd?.dataSource === "carstat_usa") && (
                             <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">USA PDF</Badge>
                           )}
@@ -437,6 +440,9 @@ export default function AdminLookups() {
                         <td className="p-4 text-muted-foreground text-xs">
                           <div className="flex flex-col gap-1">
                             <span>{lookup.providerName ?? "—"}</span>
+                            {(lookup.providerName === "carstat_vhr" || vd?.dataSource === "carstat_vhr") && (
+                              <Badge variant="outline" className="text-[10px] w-fit">VHR</Badge>
+                            )}
                             {(lookup.providerName === "carstat_usa" || vd?.dataSource === "carstat_usa") && (
                               <Badge variant="outline" className="text-[10px] w-fit border-amber-400 text-amber-700">USA PDF</Badge>
                             )}

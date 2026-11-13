@@ -21,6 +21,7 @@ import {
 import { AnimatePresence } from "framer-motion";
 import { ReportReveal } from "@/components/report-reveal";
 import { CarstatUsaPdfReport } from "@/components/carstat-usa-pdf-report";
+import { CarstatVhrReport } from "@/components/carstat-vhr-report";
 
 import { translateDamageLabel } from "@/lib/translate-damage-label";
 import { translateTitleStatus } from "@/lib/translate-title-status";
@@ -238,8 +239,8 @@ type LookupData = {
   isFlooded?: boolean | null;
   floodCount?: number | null;
   floodLossAmount?: number | null;
-  /** Opaque: `"getcarapi"` → Events section; `"carstat_usa"` → PDF report viewer. */
-  dataSource?: "getcarapi" | "carstat_usa" | null;
+  /** Opaque: `"getcarapi"` → Events; `"carstat_usa"` → USA HTML/PDF viewer; `"carstat_vhr"` → VHR HTML. */
+  dataSource?: "getcarapi" | "carstat_usa" | "carstat_vhr" | null;
   pdfReport?: {
     type: "carfax" | "autocheck";
     pdfUrl?: string | null;
@@ -249,6 +250,30 @@ type LookupData = {
     reportId?: number | null;
     vehicle?: string | null;
     fetchedAt?: string;
+  } | null;
+  vhrReports?: Array<{
+    sourceId: number;
+    sourceName: string;
+    htmlUrl?: string | null;
+    jsonUrl?: string | null;
+    hasHtml?: boolean;
+    hasJson?: boolean;
+    reportId?: string | null;
+    requestId?: string | null;
+    fetchedAt?: string | null;
+    chargedUsd?: number | null;
+  }> | null;
+  vhrReport?: {
+    sourceId: number;
+    sourceName: string;
+    htmlUrl?: string | null;
+    jsonUrl?: string | null;
+    hasHtml?: boolean;
+    hasJson?: boolean;
+    reportId?: string | null;
+    requestId?: string | null;
+    fetchedAt?: string | null;
+    chargedUsd?: number | null;
   } | null;
   accidentCount?: number | null;
   titleStatus?: string;
@@ -710,6 +735,52 @@ export default function VinResult({ params }: Props) {
         />
       </div>
     );
+  }
+
+  // VHR reports are mapped into the normal structured report UI (mileage / auctions / etc.).
+  // Only fall back to the HTML iframe when JSON normalization produced no usable fields.
+  if (data?.dataSource === "carstat_vhr") {
+    const hasStructured =
+      !!(data.make && String(data.make).trim())
+      || typeof data.year === "number"
+      || (Array.isArray(data.mileageHistory) && data.mileageHistory.length > 0)
+      || (Array.isArray(data.auctionHistory) && data.auctionHistory.length > 0)
+      || (Array.isArray(data.accidents) && data.accidents.length > 0)
+      || (Array.isArray(data.insuranceClaims) && data.insuranceClaims.length > 0)
+      || (Array.isArray(data.vehicleExtras) && data.vehicleExtras.length > 0)
+      || (Array.isArray(data.photos) && data.photos.length > 0);
+    if (!hasStructured) {
+      const vhrList = (data.vhrReports?.length
+        ? data.vhrReports
+        : data.vhrReport
+          ? [data.vhrReport]
+          : []) as NonNullable<LookupData["vhrReports"]>;
+      if (vhrList.length) {
+        const vhrTitle = [data.year ? String(data.year) : null, data.make, data.model]
+          .filter(Boolean)
+          .join(" ")
+          || `${t("report_for")} ${lookup.vin}`;
+        return (
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-3">
+            <SEOHead title={seo.title} description={seo.description} lang={seo.lang} noIndex />
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild className="-ml-2 h-9 rounded-xl text-slate-600 hover:bg-white/70 hover:text-[#071018]">
+                <PrefetchLink href={pathFor(language, "dashboard")}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {t("back_to_dashboard")}
+                </PrefetchLink>
+              </Button>
+            </div>
+            <CarstatVhrReport
+              vin={lookup.vin}
+              lookupId={typeof lookup.id === "number" ? lookup.id : null}
+              vehicleTitle={vhrTitle}
+              reports={vhrList}
+            />
+          </div>
+        );
+      }
+    }
   }
 
   const insuranceClaims = sortHistoryNewestFirst(

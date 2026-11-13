@@ -24,6 +24,7 @@ import { translateTitleStatus } from "@/lib/translate-title-status";
 import { translateLotStatus } from "@/lib/translate-lot-status";
 import { SEOHead } from "@/components/seo";
 import { CarstatUsaPdfReport } from "@/components/carstat-usa-pdf-report";
+import { CarstatVhrReport } from "@/components/carstat-vhr-report";
 import { SITE_ORIGIN } from "@/lib/seo-config";
 import { buildLockedHistorySummary, buildVinPageSeo, lockedPreviewSignalsHaveFindings, type LockedPreviewSignals, type VinSeoLang } from "@workspace/vin-page-seo";
 import { PrintReportBranding } from "@/components/print-report-branding";
@@ -235,8 +236,8 @@ type VinPublicReport = {
   insuranceClaims?: InsuranceClaimEntry[] | null;
   registryHistory?: RegistryHistoryEntry[] | null;
   recallHistory?: RegistryHistoryEntry[] | null;
-  /** Opaque: `"getcarapi"` → Events; `"carstat_usa"` → PDF viewer. */
-  dataSource?: "getcarapi" | "carstat_usa" | null;
+  /** Opaque: `"getcarapi"` → Events; `"carstat_usa"` → PDF viewer; `"carstat_vhr"` → VHR HTML. */
+  dataSource?: "getcarapi" | "carstat_usa" | "carstat_vhr" | null;
   pdfReport?: {
     type: "carfax" | "autocheck";
     pdfUrl?: string | null;
@@ -246,6 +247,30 @@ type VinPublicReport = {
     reportId?: number | null;
     vehicle?: string | null;
     fetchedAt?: string;
+  } | null;
+  vhrReports?: Array<{
+    sourceId: number;
+    sourceName: string;
+    htmlUrl?: string | null;
+    jsonUrl?: string | null;
+    hasHtml?: boolean;
+    hasJson?: boolean;
+    reportId?: string | null;
+    requestId?: string | null;
+    fetchedAt?: string | null;
+    chargedUsd?: number | null;
+  }> | null;
+  vhrReport?: {
+    sourceId: number;
+    sourceName: string;
+    htmlUrl?: string | null;
+    jsonUrl?: string | null;
+    hasHtml?: boolean;
+    hasJson?: boolean;
+    reportId?: string | null;
+    requestId?: string | null;
+    fetchedAt?: string | null;
+    chargedUsd?: number | null;
   } | null;
   lookupId?: number | null;
   serviceHistory?: ServiceHistoryEntry[] | null;
@@ -710,6 +735,45 @@ export default function VinPublic({ params }: Props) {
         </div>
       </>
     );
+  }
+
+  // VHR → normal structured report UI when JSON mapped; HTML iframe only as last resort.
+  if (data.isUnlocked && data.dataSource === "carstat_vhr") {
+    const hasStructured =
+      !!(data.make && String(data.make).trim())
+      || typeof data.year === "number"
+      || (Array.isArray(data.mileageHistory) && data.mileageHistory.length > 0)
+      || (Array.isArray(data.auctionHistory) && data.auctionHistory.length > 0)
+      || (Array.isArray(data.accidents) && data.accidents.length > 0)
+      || (Array.isArray(data.insuranceClaims) && data.insuranceClaims.length > 0)
+      || (Array.isArray(data.vehicleExtras) && data.vehicleExtras.length > 0)
+      || (Array.isArray(data.photos) && data.photos.length > 0);
+    if (!hasStructured) {
+      const vhrList = data.vhrReports?.length
+        ? data.vhrReports
+        : data.vhrReport
+          ? [data.vhrReport]
+          : [];
+      if (vhrList.length) {
+        const vhrTitle = [data.year ? String(data.year) : null, data.make, data.model]
+          .filter(Boolean)
+          .join(" ")
+          || `${t("report_for")} ${vin}`;
+        return (
+          <>
+            {seoBlock}
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-3">
+              <CarstatVhrReport
+                vin={vin}
+                lookupId={data.lookupId ?? null}
+                vehicleTitle={vhrTitle}
+                reports={vhrList}
+              />
+            </div>
+          </>
+        );
+      }
+    }
   }
 
   const insuranceClaims = sortHistoryNewestFirst(

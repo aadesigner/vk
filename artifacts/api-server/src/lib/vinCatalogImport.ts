@@ -21,6 +21,24 @@ export function catalogHasDeliverableReport(data: unknown): boolean {
       }
     }
   }
+  // Carstat VHR — deliverable when structured report fields exist, or a json/html artifact URL.
+  if (d.dataSource === "carstat_vhr") {
+    if (typeof d.make === "string" && d.make.trim()) return d.fulfillmentPending !== true;
+    if (typeof d.year === "number" && Number.isFinite(d.year)) return d.fulfillmentPending !== true;
+    const historyArrays = [d.mileageHistory, d.auctionHistory, d.accidents, d.insuranceClaims, d.photos];
+    if (historyArrays.some((a) => Array.isArray(a) && a.length > 0)) {
+      return d.fulfillmentPending !== true;
+    }
+    const list = Array.isArray(d.vhrReports) ? d.vhrReports : null;
+    const hasArtifact = !!list?.some((r) => {
+      if (!r || typeof r !== "object" || Array.isArray(r)) return false;
+      const html = (r as { htmlUrl?: unknown }).htmlUrl;
+      const json = (r as { jsonUrl?: unknown }).jsonUrl;
+      return (typeof html === "string" && html.trim().length > 0)
+        || (typeof json === "string" && json.trim().length > 0);
+    });
+    if (hasArtifact) return d.fulfillmentPending !== true;
+  }
   return catalogDeliverableFromHint({
     fulfillmentPending: d.fulfillmentPending === true,
     accidentsLen: Array.isArray(d.accidents) ? d.accidents.length : 0,
@@ -95,6 +113,8 @@ export function reportNeedsPhotoBackfill(data: unknown): boolean {
   if (!data || typeof data !== "object" || Array.isArray(data)) return false;
   const d = data as Record<string, unknown>;
   if (d.fulfillmentPending === true) return false;
+  // VHR is an HTML-report product — a photo gallery is not guaranteed; never re-buy for photos.
+  if (d.dataSource === "carstat_vhr") return false;
   if (catalogHasPreviewPhoto(d)) return false;
 
   const country = String(d.country ?? "").toLowerCase();

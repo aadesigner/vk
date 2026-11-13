@@ -44,6 +44,11 @@ export const systemSettingsTable = pgTable("system_settings", {
    */
   carstatUsaApiEnabled: boolean("carstat_usa_api_enabled").notNull().default(false),
   /**
+   * When true, enable Carstat VHR V2 (auction/archive + Korean Insurance HTML reports).
+   * Uses the same Carstat API key. Default false — opt-in to avoid surprise VHR spend.
+   */
+  carstatVhrApiEnabled: boolean("carstat_vhr_api_enabled").notNull().default(false),
+  /**
    * When false, stop pending VIN flow: if providers have no record, checkout shows
    * no-data and payment is blocked (no pending_manual / admin queue).
    */

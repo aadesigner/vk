@@ -12,6 +12,7 @@ import { patchSystemSettingsSchema } from "./lib/schemaPatches.js";
 import { getEffectiveSystemSettings, consolidateSystemSettingsRows } from "./lib/systemSettings.js";
 import { setGetCarApiEnabledCache } from "./lib/getcarApiSettingsCache.js";
 import { setCarstatUsaApiEnabledCache } from "./lib/carstatUsaApiSettingsCache.js";
+import { setCarstatVhrApiEnabledCache } from "./lib/carstatVhrApiSettingsCache.js";
 import { setPendingVinEnabledCache } from "./lib/pendingVinSettingsCache.js";
 
 process.on("uncaughtException", (err) => {
@@ -125,6 +126,9 @@ const server = app.listen(port, "0.0.0.0", async () => {
       }
       if (typeof s?.carstatUsaApiEnabled === "boolean") {
         setCarstatUsaApiEnabledCache(s.carstatUsaApiEnabled);
+      }
+      if (typeof s?.carstatVhrApiEnabled === "boolean") {
+        setCarstatVhrApiEnabledCache(s.carstatVhrApiEnabled);
       }
       if (typeof s?.pendingVinEnabled === "boolean") {
         setPendingVinEnabledCache(s.pendingVinEnabled);
