@@ -1431,9 +1431,9 @@ export type VinExternalProbeResult =
   | { status: "unavailable"; reason: string };
 
 /**
- * Cascade (free checks only): GetCarAPI → Carstat local → Carstat VHR + USA (parallel, VHR preferred).
- * Earlier hits short-circuit later providers. Local catalog is checked by callers first.
- * Does not call paid report endpoints.
+ * Cascade (free checks only): GetCarAPI → Carstat local → Carstat VHR + USA.
+ * Preference order unchanged; free checks start in parallel so VHR/USA peeks
+ * do not wait for GetCar+local wall time. Does not call paid report endpoints.
  */
 export async function probeExternalVinAvailability(vin: string): Promise<VinExternalProbeResult> {
   const { checkGetCarApiExists, resolveGetCarApiConfig } = await import("./getcarApi.js");
@@ -1444,9 +1444,32 @@ export async function probeExternalVinAvailability(vin: string): Promise<VinExte
   let getCarMissed = true;
   let getCarDown = false;
 
-  // Admin disable / missing key → skip entirely (catalog → Carstat → pending).
-  if (await resolveGetCarApiConfig()) {
-    const gca = await checkGetCarApiExists(normalized);
+  const [getCarCfg, providerRows, vhrCfg, usaCfg] = await Promise.all([
+    resolveGetCarApiConfig(),
+    db.select().from(providersTable)
+      .where(and(eq(providersTable.isActive, true)))
+      .orderBy(providersTable.id)
+      .limit(1),
+    resolveCarstatVhrApiConfig(),
+    resolveCarstatUsaApiConfig(),
+  ]);
+  const provider = providerRows[0];
+
+  const gcaPromise = getCarCfg
+    ? checkGetCarApiExists(normalized)
+    : Promise.resolve(null);
+  const localPromise = provider?.apiKey?.trim()
+    ? checkLocalExists(normalized, provider.baseUrl, provider.apiKey)
+    : Promise.resolve(null);
+  const vhrPromise = vhrCfg
+    ? checkCarstatVhrAvailability(normalized, { phase: "probe" })
+    : Promise.resolve(null);
+  const usaPromise = usaCfg
+    ? checkCarstatUsaRecords(normalized, { phase: "probe" })
+    : Promise.resolve(null);
+
+  const gca = await gcaPromise;
+  if (gca) {
     if (gca.status === "exists") {
       return { status: "exists", source: "getcarapi" };
     }
@@ -1459,15 +1482,10 @@ export async function probeExternalVinAvailability(vin: string): Promise<VinExte
     }
   }
 
-  const [provider] = await db.select().from(providersTable)
-    .where(and(eq(providersTable.isActive, true)))
-    .orderBy(providersTable.id)
-    .limit(1);
-
-  // Outcome if Carstat USA is disabled / misses (unchanged GetCarAPI + Carstat semantics).
+  // Outcome if Carstat USA/VHR miss (unchanged GetCarAPI + Carstat semantics).
   let baseOutcome: VinExternalProbeResult;
-  if (provider?.apiKey?.trim()) {
-    const exists = await checkLocalExists(normalized, provider.baseUrl, provider.apiKey);
+  const exists = await localPromise;
+  if (exists) {
     if (exists.status === "exists") {
       return { status: "exists", source: "carstat" };
     }
@@ -1487,19 +1505,8 @@ export async function probeExternalVinAvailability(vin: string): Promise<VinExte
     baseOutcome = { status: "not_found" };
   }
 
-  // Carstat VHR + USA in parallel after local miss (free checks only; VHR preferred when both hit).
-  const [vhrCfg, usaCfg] = await Promise.all([
-    resolveCarstatVhrApiConfig(),
-    resolveCarstatUsaApiConfig(),
-  ]);
-  const [vhrResult, usaResult] = await Promise.all([
-    vhrCfg
-      ? checkCarstatVhrAvailability(normalized, { phase: "probe" })
-      : Promise.resolve(null),
-    usaCfg
-      ? checkCarstatUsaRecords(normalized)
-      : Promise.resolve(null),
-  ]);
+  // VHR + USA were already started with GetCar/local — await the in-flight probes.
+  const [vhrResult, usaResult] = await Promise.all([vhrPromise, usaPromise]);
 
   if (vhrResult?.status === "exists") {
     return { status: "exists", source: "carstat_vhr" };
