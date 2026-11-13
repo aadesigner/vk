@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   containsCyrillic,
+  containsHangul,
+  translateKoToEn,
   translateNormalizedReportRuToEn,
   translateRuToEn,
   translateVhrJsonRuToEn,
@@ -86,5 +88,16 @@ describe("carstatVhrRuTranslate", () => {
     expect((out as any).source.sections[0].items[1].data.owner_changes[0].type).toBe(
       "Change of Owner",
     );
+  });
+
+  it("translates Korean inspection summary boilerplate", () => {
+    expect(containsHangul("조수석휀다")).toBe(true);
+    expect(containsHangul("Issue")).toBe(false);
+    const out = translateKoToEn(
+      "비금속또는 탈부착 가능부품은 점검사항에서 제외되며 중고차특성상 부분판금도색부식은 있을수 있습니다.조수석휀다브라켓교환",
+    );
+    expect(out).not.toMatch(/[가-힣]/);
+    expect(out).toMatch(/Non-metal or detachable parts/i);
+    expect(out).toMatch(/Passenger-side fender bracket replaced/i);
   });
 });

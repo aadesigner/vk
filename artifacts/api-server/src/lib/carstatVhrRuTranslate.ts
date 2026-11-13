@@ -1,10 +1,71 @@
 /**
- * Translate Russian VHR string leaves → English before normalize.
+ * Translate Russian / Korean VHR string leaves → English before normalize.
  * Carstat often ships RU labels (fuel, color, ownership, KR option packages)
- * even when the report language is "en". Structural JSON keys stay English.
+ * and Korean inspection notes even when the report language is "en".
+ * Structural JSON keys stay English.
  */
 
 const CYRILLIC_RE = /[\u0400-\u04FF]/
+const HANGUL_RE = /[\uAC00-\uD7A3]/
+
+/** Longer Hangul phrases first — used-car inspection boilerplate + repair actions. */
+const KO_PHRASE_MAP: Array<[string, string]> = [
+  // Full common disclaimer (Carstat vehicle inspection conclusions.notes)
+  [
+    "비금속또는 탈부착 가능부품은 점검사항에서 제외되며 중고차특성상 부분판금도색부식은 있을수 있습니다",
+    "Non-metal or detachable parts are excluded from inspection items; due to the nature of used cars, partial panel repair, paint, or corrosion may be present",
+  ],
+  [
+    "비금속 또는 탈부착 가능부품은 점검사항에서 제외되며 중고차특성상 부분판금도색부식은 있을수 있습니다",
+    "Non-metal or detachable parts are excluded from inspection items; due to the nature of used cars, partial panel repair, paint, or corrosion may be present",
+  ],
+  ["점검사항에서 제외되며", "are excluded from inspection items, and"],
+  ["중고차특성상", "due to the nature of used cars,"],
+  ["부분판금도색부식은 있을수 있습니다", "partial panel repair, paint, or corrosion may be present"],
+  ["부분판금도색부식은 있을 수 있습니다", "partial panel repair, paint, or corrosion may be present"],
+  ["탈부착 가능부품", "detachable parts"],
+  ["탈부착가능부품", "detachable parts"],
+  ["점검사항", "inspection items"],
+  ["비금속", "Non-metal"],
+  ["조수석휀다브라켓교환", "Passenger-side fender bracket replaced"],
+  ["조수석 휀다 브라켓 교환", "Passenger-side fender bracket replaced"],
+  ["운전석휀다브라켓교환", "Driver-side fender bracket replaced"],
+  ["조수석휀다교환", "Passenger-side fender replaced"],
+  ["운전석휀다교환", "Driver-side fender replaced"],
+  ["앞범퍼교환", "Front bumper replaced"],
+  ["뒷범퍼교환", "Rear bumper replaced"],
+  ["본네트교환", "Bonnet replaced"],
+  ["후드교환", "Hood replaced"],
+  ["조수석휀다", "Passenger-side fender"],
+  ["운전석휀다", "Driver-side fender"],
+  ["휀다브라켓", "fender bracket"],
+  ["브라켓교환", "bracket replaced"],
+  ["판금도색", "panel repair and paint"],
+  ["부분판금", "partial panel repair"],
+  ["조수석", "Passenger-side"],
+  ["운전석", "Driver-side"],
+  ["앞범퍼", "Front bumper"],
+  ["뒷범퍼", "Rear bumper"],
+  ["본네트", "Bonnet"],
+  ["트렁크", "Trunk"],
+  ["도어", "Door"],
+  ["휀다", "Fender"],
+  ["펜더", "Fender"],
+  ["브라켓", "bracket"],
+  ["교환", "replaced"],
+  ["교체", "replaced"],
+  ["수리", "repaired"],
+  ["도색", "painted"],
+  ["판금", "panel repair"],
+  ["용접", "welded"],
+  ["부식", "corrosion"],
+  ["양호", "Good"],
+  ["없음", "None"],
+  ["있음", "Present"],
+  ["불량", "Poor"],
+  ["정상", "Normal"],
+  ["이상", "Issue"],
+];
 
 /** Longer phrases first — exact (case-insensitive) replacements. */
 const PHRASE_MAP: Array<[string, string]> = [
@@ -155,6 +216,10 @@ export function containsCyrillic(text: string): boolean {
   return CYRILLIC_RE.test(text);
 }
 
+export function containsHangul(text: string): boolean {
+  return HANGUL_RE.test(text);
+}
+
 /** True if any string leaf in the payload still has Cyrillic. */
 export function payloadContainsCyrillic(value: unknown, depth = 0): boolean {
   if (depth > 40) return false;
@@ -163,6 +228,19 @@ export function payloadContainsCyrillic(value: unknown, depth = 0): boolean {
   if (value && typeof value === "object") {
     return Object.values(value as Record<string, unknown>).some((v) =>
       payloadContainsCyrillic(v, depth + 1),
+    );
+  }
+  return false;
+}
+
+/** True if any string leaf in the payload still has Hangul. */
+export function payloadContainsHangul(value: unknown, depth = 0): boolean {
+  if (depth > 40) return false;
+  if (typeof value === "string") return containsHangul(value);
+  if (Array.isArray(value)) return value.some((v) => payloadContainsHangul(v, depth + 1));
+  if (value && typeof value === "object") {
+    return Object.values(value as Record<string, unknown>).some((v) =>
+      payloadContainsHangul(v, depth + 1),
     );
   }
   return false;
@@ -205,6 +283,25 @@ export function translateRuToEn(text: string): string {
   return cleanupTranslated(out);
 }
 
+/** Translate a single KO (or mixed) inspection/note string. Leaves non-Hangul text unchanged. */
+export function translateKoToEn(text: string): string {
+  if (!text || !containsHangul(text)) return text;
+
+  let out = text.trim();
+  // Carstat often glues the finding onto the disclaimer with no space/period.
+  out = out.replace(/습니다\./g, "습니다. ").replace(/습니다([가-힣])/g, "습니다. $1");
+
+  const sorted = [...KO_PHRASE_MAP].sort((a, b) => b[0].length - a[0].length);
+  for (const [src, dst] of sorted) {
+    const re = new RegExp(src.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+    out = out.replace(re, dst);
+  }
+
+  return cleanupTranslated(out)
+    .replace(/\.\s*\./g, ".")
+    .trim();
+}
+
 function cleanupTranslated(text: string): string {
   return text
     .replace(/\s{2,}/g, " ")
@@ -217,12 +314,16 @@ export function translateVhrJsonRuToEn<T>(payload: T): T {
   return walk(payload) as T;
 }
 
+export function translateVhrJsonKoToEn<T>(payload: T): T {
+  return walkKo(payload) as T;
+}
+
 /**
  * Last-mile pass for already-normalized reports (DB cache / local Carstat).
  * Translates human-facing string leaves; skips URLs and pure codes.
  */
 export function translateNormalizedReportRuToEn<T extends Record<string, unknown>>(data: T): T {
-  if (!payloadContainsCyrillic(data)) return data;
+  if (!payloadContainsCyrillic(data) && !payloadContainsHangul(data)) return data;
   return walkNormalized(data) as T;
 }
 
@@ -239,11 +340,26 @@ function walk(value: unknown): unknown {
   return value;
 }
 
+function walkKo(value: unknown): unknown {
+  if (typeof value === "string") return translateKoToEn(value);
+  if (Array.isArray(value)) return value.map(walkKo);
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = walkKo(v);
+    }
+    return out;
+  }
+  return value;
+}
+
 function walkNormalized(value: unknown, keyHint = ""): unknown {
   if (typeof value === "string") {
     if (/^https?:\/\//i.test(value)) return value;
-    if (!containsCyrillic(value)) return value;
-    return translateRuToEn(value);
+    let out = value;
+    if (containsCyrillic(out)) out = translateRuToEn(out);
+    if (containsHangul(out)) out = translateKoToEn(out);
+    return out;
   }
   if (Array.isArray(value)) return value.map((v) => walkNormalized(v, keyHint));
   if (value && typeof value === "object") {

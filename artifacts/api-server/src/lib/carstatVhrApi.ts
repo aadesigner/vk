@@ -29,6 +29,8 @@ import {
 } from "./carstatVhrNormalize.js";
 import {
   payloadContainsCyrillic,
+  payloadContainsHangul,
+  translateVhrJsonKoToEn,
   translateVhrJsonRuToEn,
 } from "./carstatVhrRuTranslate.js";
 
@@ -710,44 +712,59 @@ export async function fetchCarstatVhrReport(
     toBuy = check.selectedSources;
   }
 
+  // Buy selected sources in parallel (KR 68 + inspections 4 is common). Sequential
+  // waits stacked two generation polls and often tripped admin grant HTTP 502s.
+  const settled = await Promise.all(
+    toBuy.map(async (selected) => {
+      try {
+        const report = await purchaseOneVhrSource(cfg, normalized, selected);
+        let jsonPayload: unknown = null;
+        if (report.jsonUrl) {
+          const payload = await fetchVhrJsonPayload(report.jsonUrl);
+          if (payload) {
+            // RU / Hangul string leaves → English before normalize.
+            // Carstat often ships RU option labels and Korean inspection notes even when language=en.
+            let next = payload;
+            const needsRuTranslate =
+              selected.language === "ru"
+              || selected.sourceId === VHR_KOREAN_INSURANCE_ID
+              || payloadContainsCyrillic(next);
+            if (needsRuTranslate) next = translateVhrJsonRuToEn(next);
+            if (payloadContainsHangul(next)) next = translateVhrJsonKoToEn(next);
+            jsonPayload = next;
+          }
+        }
+        logger.info({
+          msg: "carstat_vhr_report_ok",
+          vin: normalized,
+          sourceId: selected.sourceId,
+          language: selected.language,
+          hasHtml: !!report.htmlUrl,
+          hasJson: !!report.jsonUrl,
+          jsonLoaded: jsonPayload != null,
+        });
+        return { ok: true as const, report, jsonPayload };
+      } catch (err) {
+        logger.warn({
+          msg: "carstat_vhr_report_one_failed",
+          vin: normalized,
+          sourceId: selected.sourceId,
+          err: err instanceof Error ? err.message : String(err),
+        });
+        return { ok: false as const, err };
+      }
+    }),
+  );
+
   const reports: CarstatVhrReport[] = [];
   const jsonPayloads: unknown[] = [];
   const errors: unknown[] = [];
-
-  for (const selected of toBuy) {
-    try {
-      const report = await purchaseOneVhrSource(cfg, normalized, selected);
-      reports.push(report);
-      if (report.jsonUrl) {
-        const payload = await fetchVhrJsonPayload(report.jsonUrl);
-        if (payload) {
-          // RU (or mixed Cyrillic) string leaves → English before normalize.
-          // Carstat often ships RU option/body labels even when language=en (Alpha/Beta/68).
-          const needsRuTranslate =
-            selected.language === "ru"
-            || selected.sourceId === VHR_KOREAN_INSURANCE_ID
-            || payloadContainsCyrillic(payload);
-          jsonPayloads.push(needsRuTranslate ? translateVhrJsonRuToEn(payload) : payload);
-        }
-      }
-      logger.info({
-        msg: "carstat_vhr_report_ok",
-        vin: normalized,
-        sourceId: selected.sourceId,
-        language: selected.language,
-        hasHtml: !!report.htmlUrl,
-        hasJson: !!report.jsonUrl,
-        jsonLoaded: jsonPayloads.length > 0,
-      });
-    } catch (err) {
-      errors.push(err);
-      logger.warn({
-        msg: "carstat_vhr_report_one_failed",
-        vin: normalized,
-        sourceId: selected.sourceId,
-        err: err instanceof Error ? err.message : String(err),
-      });
-      // Continue to next selected source — do not re-POST the failed one.
+  for (const row of settled) {
+    if (row.ok) {
+      reports.push(row.report);
+      if (row.jsonPayload != null) jsonPayloads.push(row.jsonPayload);
+    } else {
+      errors.push(row.err);
     }
   }
 

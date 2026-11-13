@@ -10,6 +10,7 @@ import {
 } from "./carstatDemoPhotos.js";
 import {
   payloadContainsCyrillic,
+  translateKoToEn,
   translateNormalizedReportRuToEn,
   translateRuToEn,
   translateVhrJsonRuToEn,
@@ -283,6 +284,35 @@ function titleCaseLabel(raw: string | null): string | null {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
+ * Carstat inspection rows often ship map meta as the description:
+ * "Marked in abnormal body parts section · Body map position 31: Replaced"
+ * Keep "Front fender: Replaced" — drop the body-map crumbs.
+ */
+export function simplifyInspectionAccidentDescription(
+  part: string | null | undefined,
+  rawDesc: string | null | undefined,
+): string {
+  const partLabel = (part ?? "").trim();
+  let desc = (rawDesc ?? "").trim();
+  desc = desc
+    .replace(/Marked in abnormal body parts? section\s*[·•|,:\-]?\s*/gi, "")
+    .replace(/Body map positions?\s*\d+\s*:?\s*/gi, "")
+    .replace(/^\s*[·•|,:\-]\s*/g, "")
+    .replace(/\s*[·•]\s*/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  const actionMatch = desc.match(
+    /\b(Repaired or welded|Replaced|Repaired|Repainted|Welded|Removed|Damaged)\b/i,
+  );
+  let action = (actionMatch?.[1] ?? desc).trim();
+  if (actionMatch?.[1]) {
+    action = action.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\s+Or\s+/g, " or ");
+  }
+  if (partLabel && action) return `${partLabel}: ${action}`;
+  return partLabel || action || "Inspection finding";
 }
 
 function prettyMarketplace(raw: string | null): string | null {
@@ -1288,7 +1318,7 @@ export function normalizeCarstatVhrJsonPayloads(
                 if (action && /replac|repair|repaint|accident/i.test(action)) {
                   accidents.push({
                     date: inspDate,
-                    description: `${part}: ${action}`,
+                    description: simplifyInspectionAccidentDescription(part, action),
                     type: "inspection",
                     primaryDamage: part,
                     country: "KR",
@@ -1469,7 +1499,10 @@ export function normalizeCarstatVhrJsonPayloads(
             }
             accidents.push({
               date: inspDate,
-              description: [label, desc && !isPresentFinding(desc) ? desc : null].filter(Boolean).join(": ") || label,
+              description: simplifyInspectionAccidentDescription(
+                label,
+                desc && !isPresentFinding(desc) ? desc : null,
+              ),
               type: str(claim.type_key) ?? "inspection",
               primaryDamage: label,
               country: country ?? "KR",
@@ -1553,7 +1586,7 @@ export function normalizeCarstatVhrJsonPayloads(
             if (looksAccident) {
               accidents.push({
                 date: inspDate,
-                description: `${label}: ${desc}`,
+                description: simplifyInspectionAccidentDescription(label, desc),
                 type: "inspection",
                 primaryDamage: label,
                 severity: str(row.accident_relevance_key),
@@ -1582,7 +1615,8 @@ export function normalizeCarstatVhrJsonPayloads(
               : null;
           if (conclusions) {
             const score = str(conclusions.evaluation_score);
-            const notes = str(conclusions.notes);
+            const notesRaw = str(conclusions.notes);
+            const notes = notesRaw ? translateKoToEn(translateRuToEn(notesRaw)) : null;
             const overall = titleCaseLabel(str(conclusions.overall_result_key));
             const accidentStatus = titleCaseLabel(str(conclusions.accident_status_key));
             pushExtra(vehicleExtras, "inspection_summary", "Inspection summary", [score, notes, overall].filter(Boolean).join(" — ") || null, inspDate);
@@ -2119,16 +2153,36 @@ export function normalizeCarstatVhrJsonPayloads(
             pushExtra(vehicleExtras, "kr_export_color", "Export color", str(exportData.color_name));
             pushExtra(vehicleExtras, "kr_export_seats", "Seats", exportData.seats_count);
             pushExtra(vehicleExtras, "kr_export_engine", "Engine displacement", exportData.engine_displacement != null ? `${exportData.engine_displacement} cc` : null);
-            pushExtra(
-              vehicleExtras,
-              "kr_export_total_loss",
-              "Export total loss",
+            const exportTotalLossDesc =
               exportData.is_total_loss === true
                 ? (str(exportData.total_loss_description) ?? "Yes")
                 : exportData.is_total_loss === false
                   ? "No"
-                  : null,
+                  : null;
+            pushExtra(
+              vehicleExtras,
+              "kr_export_total_loss",
+              "Export total loss",
+              exportTotalLossDesc,
             );
+            // Export declaration total-loss flag drives salvage / total-loss title (same as KR special_conditions).
+            if (exportData.is_total_loss === true) {
+              isSalvage = true;
+              registryHistory.push({
+                date: exportDate,
+                type: "total_loss",
+                title: "Total loss",
+                subtitle: str(exportData.total_loss_description) ?? "Recorded on export declaration",
+              });
+              accidents.push({
+                date: exportDate,
+                description: "Total loss recorded on Korean export declaration",
+                type: "total_loss",
+                country: "KR",
+              });
+            } else if (exportData.is_total_loss === false && isSalvage == null) {
+              isSalvage = false;
+            }
             if (exportData.length != null || exportData.width != null || exportData.height != null) {
               pushExtra(
                 vehicleExtras,
@@ -2394,8 +2448,26 @@ export function normalizeCarstatVhrJsonPayloads(
   }
 
   const vin = vinEarly;
-  // decodedCountry already set from early WMI decode; keep country authoritative.
-  if (decodedCountry) country = decodedCountry;
+  // WMI decode is manufacturing origin (WDD → Germany). Catalog `country` is the
+  // report market. Real Korean insurance history on an EU import must stay KR —
+  // do not overwrite with the plant country. NA-origin VINs keep WMI (KR stubs cleaned below).
+  const hasKoreanMarketEvidence =
+    sawKoreanInsurance
+    && (
+      koreanVinEarly
+      || insuranceClaims.some((c) => {
+        const ccy = String(c.currency ?? "").toUpperCase();
+        return ccy === "KRW" || (typeof c.lossAmount === "number" && c.lossAmount > 0);
+      })
+      || accidents.some((a) => /^KR$/i.test(String(a.country ?? "")))
+    );
+  if (hasKoreanMarketEvidence && !isNorthAmericanCountry(decodedCountry)) {
+    country = "KR";
+  } else if (decodedCountry) {
+    country = decodedCountry;
+  } else if (hasKoreanMarketEvidence) {
+    country = "KR";
+  }
 
   // Korean insurance identity wins for Korean VINs / KR reports (amazing integrated merge).
   const koreanVin = koreanVinEarly;

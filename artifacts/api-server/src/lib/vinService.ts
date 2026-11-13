@@ -1344,22 +1344,48 @@ export async function grantVinReportToUser(
     }
   }
 
-  const data = await fetchFromProvider(normalizedVin, provider.baseUrl, provider.apiKey);
+  // Prefer a fulfill-phase VHR hit before the short probe cascade — gift grants of
+  // KR insurance (+ inspections) were timing out (HTTP 502) while probe soft-missed
+  // then bought sources sequentially.
+  let data: NormalizedVinData | null = null;
+  let providerName = provider.name;
+  try {
+    const { checkCarstatVhrAvailability, fetchCarstatVhrReport, resolveCarstatVhrApiConfig } =
+      await import("./carstatVhrApi.js");
+    if (await resolveCarstatVhrApiConfig()) {
+      const vhr = await checkCarstatVhrAvailability(normalizedVin, { phase: "fulfill" });
+      if (vhr.status === "exists") {
+        data = await fetchCarstatVhrReport(normalizedVin, vhr.selectedSources);
+        providerName = "Carstat VHR";
+      }
+    }
+  } catch (err) {
+    logger.warn({ msg: "admin_grant_vhr_direct_failed", vin: normalizedVin, err });
+  }
+  if (!data) {
+    data = await fetchFromProvider(normalizedVin, provider.baseUrl, provider.apiKey);
+  }
   const currentRate = await getCurrentKrwPerUsd();
   const stamped = applyFrozenKrwPerUsd(data as unknown as Record<string, unknown>, { currentRate });
   const [lookup] = await db.transaction(async (tx) => {
-    await upsertVinCatalog(normalizedVin, provider.name, stamped);
+    await upsertVinCatalog(normalizedVin, providerName, stamped);
     return tx.insert(vinLookupsTable).values({
       vin: normalizedVin,
       userId,
       status: "complete",
       data: stamped,
-      providerName: provider.name,
+      providerName,
       fromCache: false,
       paymentId: null,
     }).returning();
   });
-  logger.info({ msg: "admin_grant_vin", source: "provider", vin: normalizedVin, userId, lookupId: lookup.id });
+  logger.info({
+    msg: "admin_grant_vin",
+    source: providerName === "Carstat VHR" ? "carstat_vhr" : "provider",
+    vin: normalizedVin,
+    userId,
+    lookupId: lookup.id,
+  });
   return { status: "created", lookupId: lookup.id, fromCache: false, vin: normalizedVin };
 }
 

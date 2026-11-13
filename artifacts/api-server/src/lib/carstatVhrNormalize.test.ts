@@ -3,6 +3,7 @@ import {
   hasStructuredVhrReport,
   normalizeCarstatVhrJsonPayloads,
   parseVehicleTitle,
+  simplifyInspectionAccidentDescription,
 } from "./carstatVhrNormalize.js";
 
 describe("carstatVhrNormalize", () => {
@@ -836,6 +837,40 @@ describe("carstatVhrNormalize", () => {
     expect(out.registryHistory?.some((e) => e.type === "first_registration" && e.date === "2021-03-17")).toBe(true);
     expect(out.registryHistory?.some((e) => e.type === "export" && e.date === "2026-02-01")).toBe(true);
     expect(out.registryHistory?.some((e) => e.type === "no_insurance")).toBe(true);
+    expect(out.vehicleExtras?.some((x) => x.label === "Export total loss" && x.value === "No")).toBe(true);
+  });
+
+  it("flags salvage when export declaration marks total loss", () => {
+    const out = normalizeCarstatVhrJsonPayloads([
+      {
+        schema_version: 2,
+        vin: "KNAF241BEMA915413",
+        source: {
+          id: 68,
+          sections: [{
+            type: "korean_insurance",
+            items: [{
+              korea_section: "export_declaration",
+              data: {
+                status: "done",
+                data: {
+                  export_date: "2026-02-01",
+                  model_name: "K3",
+                  is_total_loss: true,
+                  total_loss_description: "Economic total loss",
+                  mileage: 106526,
+                },
+              },
+            }],
+          }],
+        },
+      },
+    ], { vin: "KNAF241BEMA915413" });
+
+    expect(out.isSalvage).toBe(true);
+    expect(out.vehicleExtras?.some((x) => x.label === "Export total loss" && /Economic total loss|Yes/i.test(x.value ?? ""))).toBe(true);
+    expect(out.accidents?.some((a) => a.type === "total_loss")).toBe(true);
+    expect(out.registryHistory?.some((e) => e.type === "total_loss")).toBe(true);
   });
 
   it("does not let korean_insurance car_info overwrite US WMI identity/country", () => {
@@ -1226,5 +1261,46 @@ describe("carstatVhrNormalize", () => {
     expect(out.marketData?.estimatedValue).toBe(19700);
     expect(out.marketData?.lastAuctionPrice).toBe(11550);
     expect(out.country).toMatch(/United States|US/i);
+  });
+
+  it("simplifies body-map inspection accident titles", () => {
+    expect(
+      simplifyInspectionAccidentDescription(
+        "Front fender",
+        "Marked in abnormal body parts section · Body map position 31: Replaced",
+      ),
+    ).toBe("Front fender: Replaced");
+    expect(
+      simplifyInspectionAccidentDescription("Front Bumper", "Cosmetic repair"),
+    ).toBe("Front Bumper: Cosmetic repair");
+  });
+
+  it("keeps KR as catalog country for EU WMI cars with real Korean insurance", () => {
+    const out = normalizeCarstatVhrJsonPayloads([
+      {
+        schema_version: 2,
+        vin: "WDDHF0CB9EA796317",
+        source: {
+          id: 68,
+          sections: [
+            {
+              type: "korean_insurance",
+              items: [{
+                korea_section: "accidents_detail",
+                data: {
+                  items: [{
+                    date: "2021-06-15",
+                    center: [{ type: "1", paid: 850000, parts: 400000, labor: 300000, paint: 150000 }],
+                  }],
+                },
+              }],
+            },
+          ],
+        },
+      },
+    ], { vin: "WDDHF0CB9EA796317" });
+
+    expect(out.country).toMatch(/^KR$|Korea/i);
+    expect(out.accidents?.length).toBeGreaterThanOrEqual(1);
   });
 });
