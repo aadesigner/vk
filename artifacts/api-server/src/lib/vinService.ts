@@ -1455,24 +1455,26 @@ export async function probeExternalVinAvailability(vin: string): Promise<VinExte
   ]);
   const provider = providerRows[0];
 
-  const gcaPromise = getCarCfg
-    ? checkGetCarApiExists(normalized)
-    : Promise.resolve(null);
-  const localPromise = provider?.apiKey?.trim()
-    ? checkLocalExists(normalized, provider.baseUrl, provider.apiKey)
-    : Promise.resolve(null);
-  const vhrPromise = vhrCfg
-    ? checkCarstatVhrAvailability(normalized, { phase: "probe" })
-    : Promise.resolve(null);
-  const usaPromise = usaCfg
-    ? checkCarstatUsaRecords(normalized, { phase: "probe" })
-    : Promise.resolve(null);
+  // Await every free check together, then pick by preference (GetCar → local → VHR → USA).
+  const [gca, exists, vhrResult, usaResult] = await Promise.all([
+    getCarCfg
+      ? checkGetCarApiExists(normalized, { phase: "probe" })
+      : Promise.resolve(null),
+    provider?.apiKey?.trim()
+      ? checkLocalExists(normalized, provider.baseUrl, provider.apiKey, { phase: "probe" })
+      : Promise.resolve(null),
+    vhrCfg
+      ? checkCarstatVhrAvailability(normalized, { phase: "probe" })
+      : Promise.resolve(null),
+    usaCfg
+      ? checkCarstatUsaRecords(normalized, { phase: "probe" })
+      : Promise.resolve(null),
+  ]);
 
-  const gca = await gcaPromise;
+  if (gca?.status === "exists") {
+    return { status: "exists", source: "getcarapi" };
+  }
   if (gca) {
-    if (gca.status === "exists") {
-      return { status: "exists", source: "getcarapi" };
-    }
     if (gca.status === "not_found") {
       getCarMissed = true;
     } else {
@@ -1482,17 +1484,15 @@ export async function probeExternalVinAvailability(vin: string): Promise<VinExte
     }
   }
 
-  // Outcome if Carstat USA/VHR miss (unchanged GetCarAPI + Carstat semantics).
+  if (exists?.status === "exists") {
+    return { status: "exists", source: "carstat" };
+  }
+
   let baseOutcome: VinExternalProbeResult;
-  const exists = await localPromise;
   if (exists) {
-    if (exists.status === "exists") {
-      return { status: "exists", source: "carstat" };
-    }
     if (exists.status === "not_found") {
       baseOutcome = { status: "not_found" };
     } else if (getCarMissed) {
-      // Carstat down: if GetCarAPI already said not_found, treat as not_found → pending path.
       baseOutcome = { status: "not_found" };
     } else {
       baseOutcome = { status: "unavailable", reason: exists.reason || PUBLIC_VIN_CHECK_UNAVAILABLE };
@@ -1504,9 +1504,6 @@ export async function probeExternalVinAvailability(vin: string): Promise<VinExte
   } else {
     baseOutcome = { status: "not_found" };
   }
-
-  // VHR + USA were already started with GetCar/local — await the in-flight probes.
-  const [vhrResult, usaResult] = await Promise.all([vhrPromise, usaPromise]);
 
   if (vhrResult?.status === "exists") {
     return { status: "exists", source: "carstat_vhr" };
@@ -1648,11 +1645,22 @@ function writeLocalExistsCache(vin: string, providerBaseUrl: string, result: Loc
   });
 }
 
+/** Checkout peek budget — keep short so a slow local-exists cannot block VHR/USA. */
+const LOCAL_EXISTS_PROBE_TIMEOUT_MS = Math.max(
+  1_500,
+  Number(process.env.CARSTAT_LOCAL_PROBE_TIMEOUT_MS ?? 3_500) || 3_500,
+);
+const LOCAL_EXISTS_TIMEOUT_MS = Math.max(
+  3_000,
+  Number(process.env.CARSTAT_LOCAL_EXISTS_TIMEOUT_MS ?? 8_000) || 8_000,
+);
+
 /** Strict pre-payment gate — local-exists only, no fail-open. */
 export async function checkLocalExists(
   vin: string,
   providerBaseUrl: string,
   apiKey: string,
+  opts?: { phase?: "probe" | "fulfill" },
 ): Promise<LocalExistsResult> {
   const base = normalizeProviderBaseUrl(providerBaseUrl);
   const cached = readLocalExistsCache(vin, base);
@@ -1663,9 +1671,10 @@ export async function checkLocalExists(
 
   const url = localExistsUrl(base, vin);
   const headers = providerHeaders(apiKey);
+  const timeoutMs = opts?.phase === "probe" ? LOCAL_EXISTS_PROBE_TIMEOUT_MS : LOCAL_EXISTS_TIMEOUT_MS;
 
   try {
-    const res = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(timeoutMs) });
     const text = await res.text();
 
     if (res.ok) {

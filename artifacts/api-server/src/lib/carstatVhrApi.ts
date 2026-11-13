@@ -71,11 +71,11 @@ const CHECK_ATTEMPT_TIMEOUT_MS = Math.max(
   Number(process.env.CARSTAT_VHR_CHECK_TIMEOUT_MS ?? 15_000) || 15_000,
 );
 /** Pre-pay peek/probe must stay snappy — never sit on VHR 202 polling.
- *  Default was 2.5s; Carstat often lands ~2–4s with status "partial", so a tight
- *  budget soft-misses real KR hits and routes paid VINs to manual pending. */
+ *  ~4s covers most Carstat "partial" first responses; payment-time fulfill
+ *  recheck still catches slow KR hits that soft-miss here. */
 const PROBE_CHECK_BUDGET_MS = Math.max(
   1_500,
-  Number(process.env.CARSTAT_VHR_PROBE_BUDGET_MS ?? 6_000) || 6_000,
+  Number(process.env.CARSTAT_VHR_PROBE_BUDGET_MS ?? 4_000) || 4_000,
 );
 const REPORT_ATTEMPT_TIMEOUT_MS = Math.max(
   8_000,

@@ -34,13 +34,17 @@ function collectDatedReadings(input: MileageSourceInput): DatedReading[] {
     if (km != null && km > 0) out.push({ km, date });
   };
 
+  // Prefer a dated history row for the listing odometer (including na_auction).
+  // Skipping auction here dropped the "last recorded" date beside the primary km.
   if (input.odometer != null && input.odometer > 0) {
-    const listingMatch = input.mileageHistory?.find((e) => e.odometer === input.odometer);
-    add(input.odometer, (listingMatch as { date?: string | null } | undefined)?.date);
+    const datedMatch = input.mileageHistory?.find(
+      (e) => e.odometer === input.odometer && !!e.date?.trim(),
+    );
+    const anyMatch = input.mileageHistory?.find((e) => e.odometer === input.odometer);
+    add(input.odometer, datedMatch?.date ?? anyMatch?.date);
   }
 
   for (const entry of input.mileageHistory ?? []) {
-    if (entry.source === "na_auction") continue;
     add(entry.odometer, entry.date);
   }
 
@@ -83,8 +87,9 @@ export function resolveLatestOdometerRecordedDate(input: MileageSourceInput): st
   if (km == null) return null;
 
   const readings = collectDatedReadings(input);
-  const matching = readings.filter((r) => r.km === km);
-  const dated = newestDatedReading(matching.length > 0 ? matching : readings);
+  // Only use a date from the same km as the primary reading — never fall back to an
+  // older/different odometer's date (that looked like a missing "last recorded" date).
+  const dated = newestDatedReading(readings.filter((r) => r.km === km));
   const raw = dated?.date?.trim();
   return raw || null;
 }

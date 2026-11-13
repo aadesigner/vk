@@ -632,18 +632,32 @@ function refineColonTitleEvent(input: {
 /** @deprecated Use refineColonTitleEvent — kept name for call-site clarity in tests. */
 const refineFirstRegistrationEvent = refineColonTitleEvent;
 
+/** Checkout peek uses a short timeout; fulfillment may wait longer. */
+const GETCAR_PROBE_TIMEOUT_MS = Math.max(
+  1_500,
+  Number(process.env.GETCAR_PROBE_TIMEOUT_MS ?? 3_500) || 3_500,
+);
+const GETCAR_CHECK_TIMEOUT_MS = Math.max(
+  3_000,
+  Number(process.env.GETCAR_CHECK_TIMEOUT_MS ?? 8_000) || 8_000,
+);
+
 /** Free existence probe — never charges credits. */
-export async function checkGetCarApiExists(vin: string): Promise<GetCarApiCheckResult> {
+export async function checkGetCarApiExists(
+  vin: string,
+  opts?: { phase?: "probe" | "fulfill" },
+): Promise<GetCarApiCheckResult> {
   const cfg = await resolveGetCarApiConfig();
   if (!cfg) return { status: "unavailable", reason: "GetCarAPI not configured" };
 
   const normalized = vin.trim().toUpperCase();
   const url = `${cfg.baseUrl}/api/v1/vin/check/${encodeURIComponent(normalized)}`;
+  const timeoutMs = opts?.phase === "probe" ? GETCAR_PROBE_TIMEOUT_MS : GETCAR_CHECK_TIMEOUT_MS;
 
   try {
     const res = await fetch(url, {
       headers: bearerHeaders(cfg.apiKey),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     const text = await res.text();
     let body: Record<string, unknown> | null = null;
