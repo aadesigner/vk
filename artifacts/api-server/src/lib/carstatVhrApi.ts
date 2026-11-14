@@ -1,17 +1,21 @@
 /**
  * Carstat VHR V2 — multi-source vehicle history reports.
  * Docs: https://carstat.dev/vhr
- * Auth: same Carstat x-api-key. Free POST /checks; paid POST /reports per source.
+ * Auth: same Carstat x-api-key. Free POST /checks (except KR source 68
+ * availability checks are metered); paid POST /reports per source.
  *
  * Buy at most one archive: prefer Archive Alpha (2), else Archive Beta (3) —
  * never both. Plus Korean Insurance (68) when available. Vehicle Inspections (4)
- * only with KR — never inspections alone.
+ * with Korean Insurance (68) and/or Vehicle History (5) — never inspections alone.
  * Korean Insurance may stand alone or with archive.
- * Fallback: Vehicle History (5).
+ * Fallback: Vehicle History (5) (± inspections when both match).
  * Never buy: USA Insurance Auctions (1), US Dealer Listings (6),
  * Belarus Listing History (35), Belarus Official History (36).
  * Prefer English JSON; Korean Insurance (68) may be ru-only — we buy RU and
  * translate string leaves to English before normalize. HTML is secondary only.
+ *
+ * KR check quota: peeks never ask source 68. Fulfill includes 68 only when
+ * quota allows; otherwise force:true 68 for Korean-market VINs (± companions).
  */
 import { and, eq } from "drizzle-orm";
 import { db, providersTable } from "@workspace/db";
@@ -33,6 +37,14 @@ import {
   translateVhrJsonKoToEn,
   translateVhrJsonRuToEn,
 } from "./carstatVhrRuTranslate.js";
+import {
+  canIncludeKoreanInsuranceInCheck,
+  getKoreanInsuranceCheckQuota,
+  isForceKoreanInsuranceVin,
+  markKoreanInsuranceCheckQuotaExhausted,
+  recordKoreanInsuranceCheckSpent,
+  recordKoreanInsuranceReportPaid,
+} from "./carstatVhrQuota.js";
 
 const DEFAULT_BASE = "https://carstat.dev";
 const VHR_API_PATH = "/api/vhr";
@@ -65,6 +77,31 @@ export const VHR_BELARUS_LISTING_HISTORY_ID = 35;
 export const VHR_BELARUS_OFFICIAL_HISTORY_ID = 36;
 /** Single-buy fallback when auction/archive and KR are missing. */
 export const VHR_FALLBACK_SOURCE_IDS = [5] as const;
+/**
+ * Sources safe to ask on peek / when KR quota is low.
+ * Never includes 68 — asking 68 burns Korean Insurance check quota.
+ */
+export const VHR_NON_KR_CHECK_SOURCE_IDS = [
+  ...VHR_AUCTION_ARCHIVE_IDS,
+  VHR_VEHICLE_INSPECTIONS_ID,
+  ...VHR_FALLBACK_SOURCE_IDS,
+] as const;
+
+/** Exists-check reuse window (peek→pay). Kept hours—not days—to bound RAM. */
+const CHECK_CACHE_TTL_MS = Math.max(
+  60_000,
+  Number(process.env.CARSTAT_VHR_CHECK_CACHE_MS ?? 6 * 60 * 60 * 1000) || 6 * 60 * 60 * 1000,
+);
+/** Companion/inspections signals only need to survive checkout→payment. */
+const MARKET_SIGNAL_TTL_MS = Math.max(
+  60_000,
+  Number(process.env.CARSTAT_VHR_MARKET_SIGNAL_CACHE_MS ?? 2 * 60 * 60 * 1000) || 2 * 60 * 60 * 1000,
+);
+/** Hard cap for in-memory VHR maps (expired entries pruned first). */
+const VHR_CACHE_MAX_ENTRIES = Math.max(
+  64,
+  Number(process.env.CARSTAT_VHR_CACHE_MAX_ENTRIES ?? 800) || 800,
+);
 
 const CHECK_ATTEMPT_TIMEOUT_MS = Math.max(
   8_000,
@@ -122,6 +159,258 @@ export type CarstatVhrCheckResult =
   | { status: "unavailable"; reason: string };
 
 export type CarstatVhrConfig = { apiKey: string; baseUrl: string };
+
+type CachedVhrCheck = {
+  expiresAt: number;
+  includedKorean: boolean;
+  result: Extract<CarstatVhrCheckResult, { status: "exists" }>;
+};
+const vhrCheckCache = new Map<string, CachedVhrCheck>();
+
+function pruneExpiredMapEntries<T extends { expiresAt: number }>(
+  map: Map<string, T>,
+  now: number,
+): void {
+  for (const [key, value] of map) {
+    if (value.expiresAt <= now) map.delete(key);
+  }
+}
+
+/** Drop oldest entries after TTL prune so peek traffic cannot grow Maps without bound. */
+function enforceMapMaxSize<T>(map: Map<string, T>, maxEntries: number): void {
+  if (map.size <= maxEntries) return;
+  const overflow = map.size - maxEntries;
+  let removed = 0;
+  for (const key of map.keys()) {
+    map.delete(key);
+    removed += 1;
+    if (removed >= overflow) break;
+  }
+}
+
+function checkCacheKey(vin: string, includedKorean: boolean): string {
+  return `${vin}|kr:${includedKorean ? 1 : 0}`;
+}
+
+function readCachedVhrCheck(
+  vin: string,
+  needKorean: boolean,
+): Extract<CarstatVhrCheckResult, { status: "exists" }> | null {
+  const now = Date.now();
+  // Prefer a cache entry that already asked KR when we need KR.
+  const keys = needKorean
+    ? [checkCacheKey(vin, true)]
+    : [checkCacheKey(vin, false), checkCacheKey(vin, true)];
+  for (const key of keys) {
+    const hit = vhrCheckCache.get(key);
+    if (!hit) continue;
+    if (hit.expiresAt <= now) {
+      vhrCheckCache.delete(key);
+      continue;
+    }
+    if (needKorean && !hit.includedKorean) continue;
+    // Refresh insertion order for simple LRU-ish retention under cap.
+    vhrCheckCache.delete(key);
+    vhrCheckCache.set(key, hit);
+    return hit.result;
+  }
+  return null;
+}
+
+function writeCachedVhrCheck(
+  vin: string,
+  includedKorean: boolean,
+  result: Extract<CarstatVhrCheckResult, { status: "exists" }>,
+): void {
+  const now = Date.now();
+  pruneExpiredMapEntries(vhrCheckCache, now);
+  const key = checkCacheKey(vin, includedKorean);
+  vhrCheckCache.delete(key);
+  vhrCheckCache.set(key, {
+    expiresAt: now + CHECK_CACHE_TTL_MS,
+    includedKorean,
+    result,
+  });
+  enforceMapMaxSize(vhrCheckCache, VHR_CACHE_MAX_ENTRIES);
+}
+
+/** Synthetic selection used when buying source 68 with force:true (no prior check). */
+export function forceKoreanInsuranceSelectedSource(): CarstatVhrSelectedSource {
+  return {
+    sourceId: VHR_KOREAN_INSURANCE_ID,
+    sourceName: "Korean Insurance History",
+    priceUsd: 0,
+    language: "en",
+  };
+}
+
+type VhrMarketSignalCache = {
+  expiresAt: number;
+  hasInspections: boolean;
+  /**
+   * Buyable non-68 companions from a check that already ran (peek/fulfill).
+   * Used when force-buying 68 so we still purchase inspections/archive together.
+   */
+  companionSources: CarstatVhrSelectedSource[];
+};
+const vhrMarketSignalCache = new Map<string, VhrMarketSignalCache>();
+
+export function looksLikeKoreanMarketCountry(country: unknown): boolean {
+  const s = String(country ?? "").trim();
+  if (!s) return false;
+  return /korea|\bKR\b|south\s*korea|대한민국|한국/i.test(s);
+}
+
+/** Free (non-68) VHR signals that imply a Korean-market dossier is worth force-buying. */
+export function hasKoreanMarketVhrSignal(sources: VhrSourceCheck[]): boolean {
+  return sources.some((s) => s.id === VHR_VEHICLE_INSPECTIONS_ID && s.hasData);
+}
+
+function companionSourcesFromCheck(sources: VhrSourceCheck[]): CarstatVhrSelectedSource[] {
+  const eligible = sources.filter(isVhrSourceEligible);
+  const companions: CarstatVhrSelectedSource[] = [];
+  const toSelected = (s: VhrSourceCheck): CarstatVhrSelectedSource => ({
+    sourceId: s.id,
+    sourceName: s.name,
+    priceUsd: s.priceUsd,
+    language: pickLanguage(s.availableLanguages, s.id),
+  });
+  const archive = pickBestAuctionArchive(eligible);
+  if (archive) companions.push(toSelected(archive));
+  // History is remembered for selectVhrSourcesToBuy (5+4 without KR). Force-68
+  // lists intentionally omit 5 so inspections pair with either 68 or 5, not both.
+  const history = eligible.find((s) => s.id === VHR_FALLBACK_SOURCE_IDS[0]);
+  if (!archive && history) companions.push(toSelected(history));
+  const inspections = eligible.find((s) => s.id === VHR_VEHICLE_INSPECTIONS_ID);
+  if (inspections) companions.push(toSelected(inspections));
+  return companions;
+}
+
+function rememberVhrMarketSignals(vin: string, sources: VhrSourceCheck[]): void {
+  const now = Date.now();
+  pruneExpiredMapEntries(vhrMarketSignalCache, now);
+  const companionSources = companionSourcesFromCheck(sources);
+  vhrMarketSignalCache.delete(vin);
+  vhrMarketSignalCache.set(vin, {
+    expiresAt: now + MARKET_SIGNAL_TTL_MS,
+    hasInspections: companionSources.some((s) => s.sourceId === VHR_VEHICLE_INSPECTIONS_ID),
+    companionSources,
+  });
+  enforceMapMaxSize(vhrMarketSignalCache, VHR_CACHE_MAX_ENTRIES);
+}
+
+function readVhrMarketInspectionsSignal(vin: string): boolean | null {
+  const hit = vhrMarketSignalCache.get(vin);
+  if (!hit) return null;
+  if (hit.expiresAt <= Date.now()) {
+    vhrMarketSignalCache.delete(vin);
+    return null;
+  }
+  return hit.hasInspections;
+}
+
+function readVhrMarketCompanions(vin: string): CarstatVhrSelectedSource[] {
+  const hit = vhrMarketSignalCache.get(vin);
+  if (!hit) return [];
+  if (hit.expiresAt <= Date.now()) {
+    vhrMarketSignalCache.delete(vin);
+    return [];
+  }
+  return hit.companionSources.filter((s) => s.sourceId !== VHR_KOREAN_INSURANCE_ID);
+}
+
+/**
+ * Force-68 buy list: archive (if known) + forced 68 + inspections (if known).
+ * Inspections pair with either 68 or Vehicle History (5) — never both as partners.
+ * When forcing 68, do not also buy source 5.
+ */
+export function buildForcedKoreanBuyList(vin: string): CarstatVhrSelectedSource[] {
+  const companions = readVhrMarketCompanions(vin);
+  const archive = companions.filter((s) =>
+    (VHR_AUCTION_ARCHIVE_IDS as readonly number[]).includes(s.sourceId),
+  );
+  const inspections = companions.filter((s) => s.sourceId === VHR_VEHICLE_INSPECTIONS_ID);
+  return [...archive, forceKoreanInsuranceSelectedSource(), ...inspections];
+}
+
+/** Test helper — seed companion cache as a peek/check would. */
+export function __rememberVhrMarketSignalsForTests(
+  vin: string,
+  sources: VhrSourceCheck[],
+): void {
+  rememberVhrMarketSignals(vin.trim().toUpperCase(), sources);
+}
+
+/** Merge forced 68 + cached companions into an existing selection (no dupes). */
+export function mergeForcedKoreanIntoSelection(
+  vin: string,
+  existing: CarstatVhrSelectedSource[],
+): CarstatVhrSelectedSource[] {
+  const byId = new Map<number, CarstatVhrSelectedSource>();
+  for (const s of existing) byId.set(s.sourceId, s);
+  for (const s of buildForcedKoreanBuyList(vin)) {
+    if (!byId.has(s.sourceId)) byId.set(s.sourceId, s);
+  }
+  const merged = [...byId.values()];
+  const order = (id: number) => {
+    if ((VHR_AUCTION_ARCHIVE_IDS as readonly number[]).includes(id)) return 0;
+    if (id === VHR_FALLBACK_SOURCE_IDS[0]) return 1;
+    if (id === VHR_KOREAN_INSURANCE_ID) return 2;
+    if (id === VHR_VEHICLE_INSPECTIONS_ID) return 3;
+    return 4;
+  };
+  return merged.sort((a, b) => order(a.sourceId) - order(b.sourceId));
+}
+
+/**
+ * When KR check quota is low, decide whether to force-buy source 68 without a check.
+ *
+ * Cheap by design — never used on checkout peek, and never starts a new VHR
+ * /checks round-trip (that would slow pay/grant and risk double work). Relies on:
+ * - Korean WMI (K*)
+ * - sync WMI country decode
+ * - one catalog row read (Korea country already stored)
+ * - inspections signal remembered from a check that already ran (peek or fulfill)
+ */
+export async function shouldForceKoreanInsuranceReport(
+  vin: string,
+): Promise<{ force: boolean; reason: string }> {
+  const normalized = vin.trim().toUpperCase();
+  if (isForceKoreanInsuranceVin(normalized)) {
+    return { force: true, reason: "korean_wmi" };
+  }
+
+  // Sync — no I/O. Import WMI country only (e.g. still "Germany" for WDD…).
+  try {
+    const { decodeCountry } = await import("@workspace/vin-decode");
+    if (looksLikeKoreanMarketCountry(decodeCountry(normalized))) {
+      return { force: true, reason: "decode_country_korea" };
+    }
+  } catch {
+    // ignore
+  }
+
+  // Already collected during peek/fulfill check — Map lookup only.
+  if (readVhrMarketInspectionsSignal(normalized) === true) {
+    return { force: true, reason: "vhr_inspections_signal" };
+  }
+
+  // Single DB read — only path with I/O; skipped when WMI/cache already matched.
+  try {
+    const { getCatalogVin } = await import("./vinService.js");
+    const catalog = await getCatalogVin(normalized);
+    const data = (catalog?.data && typeof catalog.data === "object" && !Array.isArray(catalog.data))
+      ? (catalog.data as Record<string, unknown>)
+      : null;
+    if (looksLikeKoreanMarketCountry(data?.country)) {
+      return { force: true, reason: "catalog_country_korea" };
+    }
+  } catch {
+    // ignore catalog failures
+  }
+
+  return { force: false, reason: "no_korean_market_signal" };
+}
 
 type VhrSourceCheck = {
   id: number;
@@ -211,13 +500,46 @@ export function parseVhrSourceCheck(raw: Record<string, unknown>): VhrSourceChec
     raw.preview && typeof raw.preview === "object" && !Array.isArray(raw.preview)
       ? (raw.preview as Record<string, unknown>)
       : {};
+  const statusRaw = str(raw.status) ?? str(preview.status);
+  const statusLower = (statusRaw ?? "").toLowerCase();
+  if (
+    statusLower.includes("check_quota_exhausted")
+    || statusLower === "client_check_quota_exhausted"
+  ) {
+    if (id === VHR_KOREAN_INSURANCE_ID) {
+      markKoreanInsuranceCheckQuotaExhausted(statusLower);
+    }
+    return {
+      id,
+      name: str(raw.name) ?? `Source ${id}`,
+      priceUsd: num(raw.price_usd ?? raw.priceUsd ?? raw.price),
+      availableFormats: [],
+      availableLanguages: langs,
+      recordsCount: 0,
+      hasData: false,
+    };
+  }
+  // not_checked = we did not ask this source — never treat as hasData.
+  if (statusLower === "not_checked" || statusLower === "not_found" || statusLower === "error") {
+    return {
+      id,
+      name: str(raw.name) ?? `Source ${id}`,
+      priceUsd: num(raw.price_usd ?? raw.priceUsd ?? raw.price),
+      availableFormats: formats,
+      availableLanguages: langs,
+      recordsCount: 0,
+      hasData: false,
+    };
+  }
   const recordsCount = num(preview.records_count ?? preview.recordsCount ?? raw.records_count);
+  // Orderable when formats present and no failure status (docs), or preview says has data.
   const hasData =
     preview.has_data === true
     || preview.exists === true
     || preview.hasData === true
     || (typeof preview.status === "string" && preview.status.toLowerCase() !== "not_found")
-    || recordsCount > 0;
+    || recordsCount > 0
+    || (formats.length > 0 && !statusLower && preview.has_data !== false && preview.exists !== false);
   return {
     id,
     name: str(raw.name) ?? `Source ${id}`,
@@ -275,8 +597,8 @@ export function pickAllAuctionArchives(
  * Select sources to purchase:
  * - at most one archive: Alpha (2) preferred, else Beta (3) — never both
  * - Korean Insurance (68) when available (alone OK, or with archive)
- * - Vehicle Inspections (4) only when Korean Insurance is also selected
- * - never inspections alone
+ * - Vehicle Inspections (4) with either Korean Insurance (68) or Vehicle History (5)
+ *   — never both 68+5 as the inspections partner; never inspections alone
  * - never USA Insurance Auctions (1) / US Dealer (6) / Belarus Listing (35) / Belarus Official (36)
  * - else fallback Vehicle History (5)
  */
@@ -295,14 +617,18 @@ export function selectVhrSourcesToBuy(sources: VhrSourceCheck[]): CarstatVhrSele
   if (archive) selected.push(toSelected(archive));
 
   const korean = eligible.find((s) => s.id === VHR_KOREAN_INSURANCE_ID);
-  if (korean) {
-    selected.push(toSelected(korean));
-    const inspections = eligible.find((s) => s.id === VHR_VEHICLE_INSPECTIONS_ID);
-    if (inspections) selected.push(toSelected(inspections));
-  }
-  // Inspections without Korean Insurance are intentionally ignored.
+  const inspections = eligible.find((s) => s.id === VHR_VEHICLE_INSPECTIONS_ID);
+  const history = eligible.find((s) => s.id === VHR_FALLBACK_SOURCE_IDS[0]);
 
-  if (!selected.length) {
+  if (korean) {
+    // Prefer KR insurance as the inspections partner (not Vehicle History).
+    selected.push(toSelected(korean));
+    if (inspections) selected.push(toSelected(inspections));
+  } else if (!selected.length && history) {
+    // No archive/KR — Vehicle History alone, or with inspections when both match.
+    selected.push(toSelected(history));
+    if (inspections) selected.push(toSelected(inspections));
+  } else if (!selected.length) {
     for (const id of VHR_FALLBACK_SOURCE_IDS) {
       const fb = eligible.find((s) => s.id === id);
       if (fb) {
@@ -311,6 +637,7 @@ export function selectVhrSourcesToBuy(sources: VhrSourceCheck[]): CarstatVhrSele
       }
     }
   }
+  // Inspections alone (no 68 and no 5) stay unselected.
 
   return selected;
 }
@@ -433,10 +760,47 @@ function extractSourcesFromBody(body: Record<string, unknown>): VhrSourceCheck[]
   return out;
 }
 
-/** Free availability check + source selection. */
+export type CarstatVhrCheckOptions = {
+  phase?: CarstatVhrCheckPhase;
+  /**
+   * Explicit source filter. When omitted:
+   * - probe → non-KR sources only (never burns KR quota)
+   * - fulfill → includes 68 only when KR check quota allows
+   */
+  sourceIds?: number[];
+  /** Force include/exclude Korean Insurance (68). Overrides default phase policy. */
+  includeKoreanInsurance?: boolean;
+};
+
+function resolveCheckSourceIds(
+  phase: CarstatVhrCheckPhase,
+  opts?: CarstatVhrCheckOptions,
+): { sourceIds: number[]; includedKorean: boolean } {
+  if (opts?.sourceIds?.length) {
+    const sourceIds = [...new Set(opts.sourceIds.map((n) => Number(n)).filter((n) => n > 0))];
+    return {
+      sourceIds,
+      includedKorean: sourceIds.includes(VHR_KOREAN_INSURANCE_ID),
+    };
+  }
+  const wantKr = opts?.includeKoreanInsurance
+    ?? (phase === "fulfill" && canIncludeKoreanInsuranceInCheck());
+  if (wantKr) {
+    return {
+      sourceIds: [...VHR_NON_KR_CHECK_SOURCE_IDS, VHR_KOREAN_INSURANCE_ID],
+      includedKorean: true,
+    };
+  }
+  return {
+    sourceIds: [...VHR_NON_KR_CHECK_SOURCE_IDS],
+    includedKorean: false,
+  };
+}
+
+/** Free availability check + source selection (KR 68 only when explicitly allowed). */
 export async function checkCarstatVhrAvailability(
   vin: string,
-  opts?: { phase?: CarstatVhrCheckPhase },
+  opts?: CarstatVhrCheckOptions,
 ): Promise<CarstatVhrCheckResult> {
   const cfg = await resolveCarstatVhrApiConfig();
   if (!cfg) {
@@ -451,6 +815,40 @@ export async function checkCarstatVhrAvailability(
   const pollBudgetMs = phase === "probe" ? 0 : MAX_POLL_MS;
 
   const normalized = vin.trim().toUpperCase();
+
+  // Refresh KR quota before decide-include on fulfill.
+  if (phase === "fulfill" && opts?.includeKoreanInsurance !== false && !opts?.sourceIds?.length) {
+    await getKoreanInsuranceCheckQuota(cfg);
+  }
+
+  const { sourceIds, includedKorean } = resolveCheckSourceIds(phase, opts);
+
+  if (includedKorean && !canIncludeKoreanInsuranceInCheck()) {
+    logger.info({
+      msg: "carstat_vhr_check_kr_skipped_quota",
+      vin: normalized,
+      phase,
+    });
+    // Fall back to non-KR sources only.
+    return checkCarstatVhrAvailability(normalized, {
+      phase,
+      includeKoreanInsurance: false,
+      sourceIds: [...VHR_NON_KR_CHECK_SOURCE_IDS],
+    });
+  }
+
+  const cached = readCachedVhrCheck(normalized, includedKorean);
+  if (cached) {
+    logger.info({
+      msg: "carstat_vhr_check_cache_hit",
+      vin: normalized,
+      selected: cached.selectedSources.map((s) => s.sourceId),
+      includedKorean,
+      phase,
+    });
+    return cached;
+  }
+
   const url = `${vhrBase(cfg.baseUrl)}/checks`;
   const started = Date.now();
 
@@ -458,7 +856,7 @@ export async function checkCarstatVhrAvailability(
     const res = await fetch(url, {
       method: "POST",
       headers: providerHeaders(cfg.apiKey),
-      body: JSON.stringify({ vin: normalized }),
+      body: JSON.stringify({ vin: normalized, source_ids: sourceIds }),
       signal: AbortSignal.timeout(attemptTimeoutMs),
     });
     const text = await res.text();
@@ -472,6 +870,7 @@ export async function checkCarstatVhrAvailability(
         status: res.status,
         body: text.slice(0, 160),
         phase,
+        includedKorean,
       });
       // Probe soft-miss so checkout can fall through to USA / pending.
       return phase === "probe"
@@ -500,6 +899,7 @@ export async function checkCarstatVhrAvailability(
       } else {
         // Use whatever sources arrived on the first response; else soft-miss for probe.
         const early = extractSourcesFromBody(body);
+        rememberVhrMarketSignals(normalized, early);
         if (!selectVhrSourcesToBuy(early).length) {
           logger.info({
             msg: "carstat_vhr_check_probe_pending_skip",
@@ -507,6 +907,8 @@ export async function checkCarstatVhrAvailability(
             httpStatus: res.status,
             status,
             elapsedMs: Date.now() - started,
+            includedKorean,
+            hasKrMarketSignal: hasKoreanMarketVhrSignal(early),
           });
           return { status: "not_found" };
         }
@@ -519,13 +921,19 @@ export async function checkCarstatVhrAvailability(
         status: res.status,
         body: text.slice(0, 160),
         phase,
+        includedKorean,
       });
       return phase === "probe"
         ? { status: "not_found" }
         : { status: "unavailable", reason: PUBLIC_UNAVAILABLE };
     }
 
+    if (includedKorean) {
+      recordKoreanInsuranceCheckSpent();
+    }
+
     const sources = extractSourcesFromBody(finalBody);
+    rememberVhrMarketSignals(normalized, sources);
     const selected = selectVhrSourcesToBuy(sources);
     if (!selected.length) {
       logger.info({
@@ -533,24 +941,40 @@ export async function checkCarstatVhrAvailability(
         vin: normalized,
         sourceCount: sources.length,
         phase,
+        includedKorean,
+        hasKrMarketSignal: hasKoreanMarketVhrSignal(sources),
         elapsedMs: Date.now() - started,
       });
       return { status: "not_found" };
     }
 
     const totalPriceUsd = selected.reduce((sum, s) => sum + s.priceUsd, 0);
+    const result: Extract<CarstatVhrCheckResult, { status: "exists" }> = {
+      status: "exists",
+      selectedSources: selected,
+      totalPriceUsd,
+    };
+    writeCachedVhrCheck(normalized, includedKorean, result);
     logger.info({
       msg: "carstat_vhr_check_ok",
       vin: normalized,
       selected: selected.map((s) => s.sourceId),
       totalPriceUsd,
       phase,
+      includedKorean,
+      sourceIds,
       elapsedMs: Date.now() - started,
     });
-    return { status: "exists", selectedSources: selected, totalPriceUsd };
+    return result;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    logger.warn({ msg: "carstat_vhr_check_failed", vin: normalized, err: msg, phase });
+    logger.warn({
+      msg: "carstat_vhr_check_failed",
+      vin: normalized,
+      err: msg,
+      phase,
+      includedKorean,
+    });
     // Timeouts during probe must not stall checkout or block USA/pending.
     return phase === "probe"
       ? { status: "not_found" }
@@ -562,8 +986,13 @@ async function purchaseOneVhrSource(
   cfg: CarstatVhrConfig,
   vin: string,
   selected: CarstatVhrSelectedSource,
+  opts?: { force?: boolean },
 ): Promise<CarstatVhrReport> {
   const url = `${vhrBase(cfg.baseUrl)}/reports`;
+  // force:true is only valid / needed for Korean Insurance (68) without a prior check.
+  const force =
+    opts?.force === true
+    && selected.sourceId === VHR_KOREAN_INSURANCE_ID;
   const res = await fetch(url, {
     method: "POST",
     headers: providerHeaders(cfg.apiKey),
@@ -574,6 +1003,7 @@ async function purchaseOneVhrSource(
       formats: ["json", "html"],
       // Prefer EN; KR insurance may only offer RU (translated after fetch).
       language: selected.language === "ru" ? "ru" : "en",
+      ...(force ? { force: true } : {}),
     }),
     signal: AbortSignal.timeout(REPORT_ATTEMPT_TIMEOUT_MS),
   });
@@ -686,8 +1116,10 @@ async function fetchVhrJsonPayload(jsonUrl: string): Promise<unknown | null> {
 }
 
 /**
- * Sequential purchase of selected VHR sources.
- * Partial success (at least one HTML report) is delivered.
+ * Purchase selected VHR sources (parallel).
+ * Partial success (at least one report) is delivered.
+ * When KR check quota is low, force-buy source 68 for Korean-market VINs
+ * (K* WMI, Korea country from decode/catalog, or free inspections signal).
  */
 export async function fetchCarstatVhrReport(
   vin: string,
@@ -701,15 +1133,67 @@ export async function fetchCarstatVhrReport(
   }
 
   const normalized = vin.trim().toUpperCase();
-  let toBuy = selectedSources;
-  if (!toBuy?.length) {
-    const check = await checkCarstatVhrAvailability(normalized);
-    if (check.status !== "exists") {
-      throw Object.assign(new Error("No vehicle history data found for this VIN in our database."), {
-        code: "VIN_NO_DATA",
+  let toBuy = selectedSources ? [...selectedSources] : [];
+  let forceKorean = false;
+  // Evaluate at most once — never on peek; uses cache from the check below when present.
+  let forceGate: Awaited<ReturnType<typeof shouldForceKoreanInsuranceReport>> | null = null;
+  const getForceGate = async () => {
+    if (!forceGate) forceGate = await shouldForceKoreanInsuranceReport(normalized);
+    return forceGate;
+  };
+
+  if (!toBuy.length) {
+    await getKoreanInsuranceCheckQuota(cfg);
+    const check = await checkCarstatVhrAvailability(normalized, { phase: "fulfill" });
+    if (check.status === "exists") {
+      toBuy = [...check.selectedSources];
+    } else {
+      const gate = await getForceGate();
+      if (gate.force) {
+        forceKorean = true;
+        // Pair forced 68 with inspections/archive remembered from peek/check (never inspections alone).
+        toBuy = buildForcedKoreanBuyList(normalized);
+        logger.info({
+          msg: "carstat_vhr_force_68_no_check",
+          vin: normalized,
+          reason: gate.reason,
+          checkStatus: check.status,
+          selected: toBuy.map((s) => s.sourceId),
+          canSpendKrCheck: canIncludeKoreanInsuranceInCheck(),
+        });
+      } else {
+        throw Object.assign(new Error("No vehicle history data found for this VIN in our database."), {
+          code: "VIN_NO_DATA",
+        });
+      }
+    }
+  } else if (
+    toBuy.some((s) => s.sourceId === VHR_KOREAN_INSURANCE_ID)
+    && !canIncludeKoreanInsuranceInCheck()
+  ) {
+    // Selection includes 68 but we never confirmed via check under low quota → force.
+    forceKorean = true;
+    // Still attach known inspections/archive companions.
+    toBuy = mergeForcedKoreanIntoSelection(normalized, toBuy);
+  }
+
+  // Archives/etc. selected without 68 under low quota — attach force-68 + inspections when Korean-market.
+  if (
+    !forceKorean
+    && !toBuy.some((s) => s.sourceId === VHR_KOREAN_INSURANCE_ID)
+    && !canIncludeKoreanInsuranceInCheck()
+  ) {
+    const gate = await getForceGate();
+    if (gate.force) {
+      forceKorean = true;
+      toBuy = mergeForcedKoreanIntoSelection(normalized, toBuy);
+      logger.info({
+        msg: "carstat_vhr_force_68_attach",
+        vin: normalized,
+        reason: gate.reason,
+        selected: toBuy.map((s) => s.sourceId),
       });
     }
-    toBuy = check.selectedSources;
   }
 
   // Buy selected sources in parallel (KR 68 + inspections 4 is common). Sequential
@@ -717,7 +1201,11 @@ export async function fetchCarstatVhrReport(
   const settled = await Promise.all(
     toBuy.map(async (selected) => {
       try {
-        const report = await purchaseOneVhrSource(cfg, normalized, selected);
+        const useForce =
+          forceKorean && selected.sourceId === VHR_KOREAN_INSURANCE_ID;
+        const report = await purchaseOneVhrSource(cfg, normalized, selected, {
+          force: useForce,
+        });
         let jsonPayload: unknown = null;
         if (report.jsonUrl) {
           const payload = await fetchVhrJsonPayload(report.jsonUrl);
@@ -734,11 +1222,16 @@ export async function fetchCarstatVhrReport(
             jsonPayload = next;
           }
         }
+        if (selected.sourceId === VHR_KOREAN_INSURANCE_ID) {
+          recordKoreanInsuranceReportPaid();
+          void getKoreanInsuranceCheckQuota(cfg, { force: true });
+        }
         logger.info({
           msg: "carstat_vhr_report_ok",
           vin: normalized,
           sourceId: selected.sourceId,
           language: selected.language,
+          force: useForce,
           hasHtml: !!report.htmlUrl,
           hasJson: !!report.jsonUrl,
           jsonLoaded: jsonPayload != null,

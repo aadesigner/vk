@@ -1350,13 +1350,28 @@ export async function grantVinReportToUser(
   let data: NormalizedVinData | null = null;
   let providerName = provider.name;
   try {
-    const { checkCarstatVhrAvailability, fetchCarstatVhrReport, resolveCarstatVhrApiConfig } =
-      await import("./carstatVhrApi.js");
+    const {
+      buildForcedKoreanBuyList,
+      checkCarstatVhrAvailability,
+      fetchCarstatVhrReport,
+      resolveCarstatVhrApiConfig,
+      shouldForceKoreanInsuranceReport,
+    } = await import("./carstatVhrApi.js");
     if (await resolveCarstatVhrApiConfig()) {
       const vhr = await checkCarstatVhrAvailability(normalizedVin, { phase: "fulfill" });
       if (vhr.status === "exists") {
         data = await fetchCarstatVhrReport(normalizedVin, vhr.selectedSources);
         providerName = "Carstat VHR";
+      } else {
+        const forceGate = await shouldForceKoreanInsuranceReport(normalizedVin);
+        if (forceGate.force) {
+          // Forced 68 + cached companions (inspections/archive) — no second /checks.
+          data = await fetchCarstatVhrReport(
+            normalizedVin,
+            buildForcedKoreanBuyList(normalizedVin),
+          );
+          providerName = "Carstat VHR";
+        }
       }
     }
   } catch (err) {

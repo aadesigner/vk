@@ -110,6 +110,15 @@ export type ExtendedStats = {
   salesBySource?: Record<DashboardPeriod, SalesBySourceStat[]>;
   salesByChannel?: Record<DashboardPeriod, SalesByChannelStat[]>;
   signupsByChannel?: Record<DashboardPeriod, SignupsByChannelStat[]>;
+  /** Carstat Korean Insurance (source 68) availability-check remaining. */
+  koreanInsuranceChecks?: {
+    remaining: number | null;
+    canSpend: boolean;
+    exhausted: boolean;
+    spentSinceRefill: number;
+    fetchedAt: string | null;
+    source: string;
+  } | null;
 };
 
 export function slicePeriodBreakdown<T>(

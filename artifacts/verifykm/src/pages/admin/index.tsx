@@ -664,6 +664,27 @@ export default function AdminOverview() {
     ? new Date(dataUpdatedAt).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })
     : null;
 
+  const krQuota = stats?.koreanInsuranceChecks ?? null;
+  const krRemaining = krQuota?.remaining ?? null;
+  const krLow =
+    krQuota != null
+    && (krQuota.exhausted || !krQuota.canSpend || (krRemaining != null && krRemaining <= 2));
+  const krCritical = Boolean(krQuota?.exhausted || (krRemaining != null && krRemaining <= 0));
+  const krCapacity = (() => {
+    if (krRemaining == null || !krQuota) return null;
+    const pack = Math.max(10, krRemaining + Math.max(0, krQuota.spentSinceRefill));
+    return pack;
+  })();
+  const krFillPct =
+    krRemaining != null && krCapacity != null && krCapacity > 0
+      ? Math.max(0, Math.min(100, Math.round((krRemaining / krCapacity) * 100)))
+      : null;
+  const krStatusLabel = krCritical
+    ? "Exhausted"
+    : krLow
+      ? "Force after pay"
+      : "Ready";
+
   const statsRefreshing = isFetching || dashboardRefreshing;
 
   const handleDashboardRefresh = useCallback(async () => {
@@ -699,26 +720,98 @@ export default function AdminOverview() {
         <div className="flex items-start justify-between gap-3 pb-1">
           <div className="min-w-0">
             <h1 className="text-xl md:text-2xl font-bold tracking-tight">Dashboard</h1>
-            {lastUpdated && (
-              <p className="text-xs md:text-sm text-muted-foreground mt-1.5 flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-30" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-                </span>
-                Live · updated {lastUpdated}
+            {(lastUpdated || krQuota != null) && (
+              <p className="text-xs md:text-sm text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                {lastUpdated && (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-30" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                    </span>
+                    Live · updated {lastUpdated}
+                  </span>
+                )}
+                {krQuota != null && (
+                  <span
+                    className={cn(
+                      "sm:hidden tabular-nums",
+                      krCritical && "text-red-600 dark:text-red-400",
+                      !krCritical && krLow && "text-amber-700 dark:text-amber-400",
+                    )}
+                  >
+                    {lastUpdated ? "· " : ""}
+                    KR {krRemaining == null ? "—" : krRemaining} · {krStatusLabel}
+                  </span>
+                )}
               </p>
             )}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => { void handleDashboardRefresh(); }}
-            disabled={statsRefreshing}
-            className="h-9 md:h-10 gap-1.5 px-3 text-xs md:text-sm shrink-0"
-          >
-            <RefreshCw className={cn("h-4 w-4", statsRefreshing && "animate-spin")} />
-            <span className="hidden sm:inline">Refresh</span>
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            {krQuota != null && (
+              <div
+                className={cn(
+                  "hidden sm:flex items-center gap-2 rounded-md border px-2.5 py-1.5",
+                  krCritical
+                    ? "border-red-500/35 bg-red-500/[0.04]"
+                    : krLow
+                      ? "border-amber-500/35 bg-amber-500/[0.04]"
+                      : "border-border/50 bg-card",
+                )}
+                title="Korean Insurance availability checks. At ≤2 we force-buy after pay."
+              >
+                <span className="text-[11px] text-muted-foreground whitespace-nowrap">KR checks</span>
+                <span
+                  className={cn(
+                    "text-sm font-semibold tabular-nums leading-none",
+                    krCritical && "text-red-600 dark:text-red-400",
+                    !krCritical && krLow && "text-amber-700 dark:text-amber-400",
+                  )}
+                >
+                  {krRemaining == null ? "—" : krRemaining}
+                </span>
+                {krFillPct != null && (
+                  <div
+                    className="w-14 h-1 rounded-full bg-muted overflow-hidden"
+                    role="meter"
+                    aria-label="Korean Insurance checks remaining"
+                    aria-valuemin={0}
+                    aria-valuemax={krCapacity ?? 10}
+                    aria-valuenow={krRemaining ?? 0}
+                  >
+                    <div
+                      className={cn(
+                        "h-full rounded-full",
+                        krCritical ? "bg-red-500" : krLow ? "bg-amber-500" : "bg-primary",
+                      )}
+                      style={{ width: `${krFillPct}%` }}
+                    />
+                  </div>
+                )}
+                <span
+                  className={cn(
+                    "text-[10px] font-medium whitespace-nowrap",
+                    krCritical
+                      ? "text-red-700 dark:text-red-400"
+                      : krLow
+                        ? "text-amber-800 dark:text-amber-400"
+                        : "text-muted-foreground",
+                  )}
+                >
+                  {krStatusLabel}
+                </span>
+              </div>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { void handleDashboardRefresh(); }}
+              disabled={statsRefreshing}
+              className="h-9 md:h-10 gap-1.5 px-3 text-xs md:text-sm shrink-0"
+            >
+              <RefreshCw className={cn("h-4 w-4", statsRefreshing && "animate-spin")} />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+          </div>
         </div>
 
         {/* Pending alert */}

@@ -706,6 +706,33 @@ async function loadAdminStatsPayload() {
     });
   })();
 
+  let koreanInsuranceChecks: {
+    remaining: number | null;
+    canSpend: boolean;
+    exhausted: boolean;
+    spentSinceRefill: number;
+    fetchedAt: string | null;
+    source: string;
+  } | null = null;
+  try {
+    const { resolveCarstatVhrApiConfig } = await import("../lib/carstatVhrApi.js");
+    const { getKoreanInsuranceCheckQuota } = await import("../lib/carstatVhrQuota.js");
+    const cfg = await resolveCarstatVhrApiConfig();
+    if (cfg) {
+      const q = await getKoreanInsuranceCheckQuota(cfg, { force: true });
+      koreanInsuranceChecks = {
+        remaining: q.remaining,
+        canSpend: q.canSpend,
+        exhausted: q.exhausted,
+        spentSinceRefill: q.spentSinceRefill,
+        fetchedAt: q.fetchedAt,
+        source: q.source,
+      };
+    }
+  } catch (err) {
+    logger.warn({ err }, "admin_stats_kr_check_quota_failed");
+  }
+
   return {
     totalUsers: Number(agg.total_users ?? 0),
     totalVinChecks: Number(agg.total_vin_checks ?? 0),
@@ -761,6 +788,7 @@ async function loadAdminStatsPayload() {
     ),
     ...buildSalesAttributionPeriods(salesBySourceRows),
     signupsByChannel: buildSignupsByChannelPeriods(signupsByChannelRows),
+    koreanInsuranceChecks,
   };
 }
 
