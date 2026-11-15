@@ -1474,7 +1474,12 @@ export default function VinPublic({ params }: Props) {
                   title={t("vin_public_mileage_section")}
                   trailing={
                     odometer != null && odoCol ? (
-                      <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-primary text-primary-foreground shadow-sm shrink-0">
+                      <div
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-white shadow-sm shrink-0",
+                          odoCol.bar,
+                        )}
+                      >
                         <Gauge className="h-3 w-3 shrink-0 opacity-90" />
                         <AnimatedMileageBadge
                           odometer={odometer}

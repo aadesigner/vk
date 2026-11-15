@@ -1118,8 +1118,13 @@ export default function VinResult({ params }: Props) {
               title={mileageHistory.length > 1 ? t("mileage_history") : t("report_mileage")}
               trailing={
                 odometer && odoCol ? (
-                  <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-primary text-primary-foreground shadow-sm">
-                    <div className="h-2 w-2 rounded-full shrink-0 bg-primary-foreground/90" />
+                  <div
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-white shadow-sm",
+                      odoCol.bar,
+                    )}
+                  >
+                    <div className="h-2 w-2 rounded-full shrink-0 bg-white/90" />
                     <AnimatedMileageBadge
                       odometer={odometer}
                       className="text-xs font-semibold tabular-nums"
