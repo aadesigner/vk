@@ -125,6 +125,7 @@ import {
   ensureExportRegistryEvent,
   sanitizeRegistryHistory,
   sanitizeRecallHistory,
+  formatMileageHistorySource,
 } from "@/lib/report-display";
 
 type Accident = {
@@ -146,6 +147,8 @@ type MileageEntry = {
   date?: string | null;
   odometer?: number | null;
   unit?: string | null;
+  /** Provider / record origin (e.g. First registration, Korean insurance). */
+  source?: string | null;
   condition?: string | null;
   damage?: string | null;
   primaryDamage?: string | null;
@@ -373,7 +376,13 @@ function MileageTimeline({
         const cond = translateLotStatus(t, cleanStr(entry.condition));
         const primaryDmg = translateDamageLabel(t, cleanStr(entry.primaryDamage) ?? cleanStr(entry.damage));
         const secondaryDmg = translateDamageLabel(t, cleanStr(entry.secondaryDamage));
-        const status = translateLotStatus(t, cleanStr(entry.lotStatus));
+        const sourceLabel = formatMileageHistorySource(entry.source, t);
+        const statusRaw = translateLotStatus(t, cleanStr(entry.lotStatus));
+        const status =
+          statusRaw
+          && (!sourceLabel || statusRaw.toLowerCase() !== sourceLabel.toLowerCase())
+            ? statusRaw
+            : null;
         const titleLabel = translateTitleStatus(t, cleanStr(entry.titleStatus));
         const servicesNote = cleanStr(entry.description);
         const locationLabel = entry.location
@@ -405,6 +414,9 @@ function MileageTimeline({
               </span>
               <span className="text-sm text-muted-foreground">{entry.unit ?? "km"}</span>
             </div>
+            {sourceLabel ? (
+              <p className="mt-1 text-xs text-muted-foreground">{sourceLabel}</p>
+            ) : null}
             <dl className="mt-2 space-y-1">
               {entry.auctionPrice != null && (
                 <div className="flex items-baseline justify-between gap-3">

@@ -16,7 +16,6 @@ import { VinReportSection, VinReportSectionHeader } from "@/components/vin-repor
 import { ReportReveal } from "@/components/report-reveal";
 import {
   localizeProviderDate,
-  translateKoreanProviderPhrase,
   translateKoreanProviderText,
   translateProviderDateInText,
 } from "@/lib/korean-provider-text";
@@ -63,9 +62,8 @@ function localizeServiceTitle(
   language: Language,
   title: string,
 ): string {
-  const fromPhrase = translateKoreanProviderPhrase(t, title)
-    ?? translateKoreanProviderText(t, title);
-  const base = fromPhrase && fromPhrase !== title ? fromPhrase : title;
+  const fromText = translateKoreanProviderText(t, title);
+  const base = fromText && fromText !== title ? fromText : title;
   return translateProviderDateInText(base, language) ?? base;
 }
 

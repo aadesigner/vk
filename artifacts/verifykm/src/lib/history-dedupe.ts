@@ -141,6 +141,7 @@ export function dedupeOwnerHistory<T extends OwnerHistoryLike>(
 export type MileageHistoryLike = {
   date?: string | null;
   odometer?: number | null;
+  source?: string | null;
   condition?: string | null;
   damage?: string | null;
   primaryDamage?: string | null;

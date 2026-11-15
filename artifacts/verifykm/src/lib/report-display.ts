@@ -6,6 +6,7 @@
 import { isRecallRegistryEvent } from "@/lib/registry-history";
 import { sanitizeReportIsoDate } from "@/lib/encar-date-repair";
 import { isKoreanSourcedAccidentType, normalizeAmountCurrency } from "@/lib/korean-currency";
+import { translateKoreanProviderText } from "@/lib/korean-provider-text";
 import {
   normalizeKrwAmountText,
   resolveRegistryDisplayMileage,
@@ -361,9 +362,25 @@ export function sanitizeMileageHistory<T extends MileageHistoryLike>(
         titleStatus: cleanDisplayText(entry.titleStatus),
         location: cleanDisplayText(entry.location),
         description: cleanDisplayText(entry.description),
+        source: cleanDisplayText(entry.source),
       })),
     vehicleYear,
   );
+}
+
+/** Localized label for mileage timeline source chips. */
+export function formatMileageHistorySource(
+  source: string | null | undefined,
+  t: (key: string) => string,
+): string | null {
+  const raw = cleanDisplayText(source);
+  if (!raw) return null;
+  if (/^(first|initial)\s+registration$/i.test(raw) || /^first_registration$/i.test(raw)) {
+    return t("registry_field_first_registration");
+  }
+  const translated = translateKoreanProviderText(t, raw);
+  if (translated && translated !== raw) return translated;
+  return raw;
 }
 
 export function isMeaningfulServiceHistoryEntry(entry: ServiceHistoryLike): boolean {

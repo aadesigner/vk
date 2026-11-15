@@ -243,6 +243,27 @@ describe("translateKoreanProviderPhrase", () => {
     expect(translateKoreanProviderText(trSq, "Insurance processing after damage"))
       .toBe("Sigurimi mbas dëmtimit të makinës sime");
   });
+
+  it("translates common VHR registry / inspection English titles", () => {
+    const dict: Record<string, string> = {
+      provider_vehicle_number_change: "Ndryshim i numrit të automjetit",
+      provider_change_owner: "Ndryshim pronari",
+      provider_termination_of_information: "Ndërprerje e ofrimit të informacionit",
+      provider_insurance_accident: "Aksident sigurimi",
+      accident_history: "Historia e aksidenteve",
+      provider_simple_repair_history: "Histori riparimesh të thjeshta",
+      registry_field_first_registration: "Regjistrimi i parë",
+    };
+    const trSq = (key: string) => dict[key] ?? key;
+    expect(translateKoreanProviderText(trSq, "Vehicle number change")).toBe(dict.provider_vehicle_number_change);
+    expect(translateKoreanProviderText(trSq, "Change of owner")).toBe(dict.provider_change_owner);
+    expect(translateKoreanProviderText(trSq, "Termination of information provision")).toBe(dict.provider_termination_of_information);
+    expect(translateKoreanProviderText(trSq, "Insurance accident")).toBe(dict.provider_insurance_accident);
+    expect(translateKoreanProviderText(trSq, "Accident history")).toBe(dict.accident_history);
+    expect(translateKoreanProviderText(trSq, "Simple repair history")).toBe(dict.provider_simple_repair_history);
+    expect(translateKoreanProviderText(trSq, "Initial registration")).toBe(dict.registry_field_first_registration);
+    expect(translateKoreanProviderText(trSq, "First registration")).toBe(dict.registry_field_first_registration);
+  });
 });
 
 describe("translateProviderMultiline", () => {

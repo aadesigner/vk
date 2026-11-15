@@ -2,7 +2,6 @@ import type { Language } from "@/i18n/context";
 import {
   localizeProviderDate,
   looksLikeProviderDate,
-  translateKoreanProviderPhrase,
   translateKoreanProviderText,
   translateProviderAmount,
   translateProviderDateInText,
@@ -112,9 +111,8 @@ function formatRegistryEventTitle(
   rawTitle: string,
   language?: Language,
 ): string {
-  const fromPhrase = translateKoreanProviderPhrase(t, rawTitle)
-    ?? translateKoreanProviderText(t, rawTitle);
-  const base = fromPhrase && fromPhrase !== rawTitle ? fromPhrase : rawTitle;
+  const fromText = translateKoreanProviderText(t, rawTitle);
+  const base = fromText && fromText !== rawTitle ? fromText : rawTitle;
 
   if (!language) return base;
 
@@ -165,9 +163,8 @@ export function translateRegistryFieldLabel(t: (key: string) => string, label: s
     const translated = t(key);
     if (translated !== key) return translated;
   }
-  const fromPhrase = translateKoreanProviderPhrase(t, label)
-    ?? translateKoreanProviderText(t, label);
-  if (fromPhrase && fromPhrase.toLowerCase().trim() !== norm) return fromPhrase;
+  const fromText = translateKoreanProviderText(t, label);
+  if (fromText && fromText.toLowerCase().trim() !== norm) return fromText;
   return label;
 }
 

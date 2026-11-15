@@ -6,7 +6,7 @@ import { ReportReveal } from "@/components/report-reveal";
 import { HistoryShowAllButton } from "@/components/history-show-all-button";
 import { sliceForHistoryPreview } from "@/lib/history-section-limit";
 import { cleanDisplayText } from "@/lib/report-display";
-import { localizeProviderDate } from "@/lib/korean-provider-text";
+import { localizeProviderDate, translateKoreanProviderText } from "@/lib/korean-provider-text";
 import type { Language } from "@/i18n/context";
 
 export type VehicleExtraEntry = {
@@ -27,7 +27,10 @@ type Props = {
   delay?: number;
 };
 
-function sanitizeExtras(extras: VehicleExtraEntry[]): Array<{
+function sanitizeExtras(
+  extras: VehicleExtraEntry[],
+  t: (key: string) => string,
+): Array<{
   label: string;
   value: string;
   observedAt: string | null;
@@ -35,9 +38,11 @@ function sanitizeExtras(extras: VehicleExtraEntry[]): Array<{
   const out: Array<{ label: string; value: string; observedAt: string | null }> = [];
   const seen = new Set<string>();
   for (const row of extras) {
-    const label = cleanDisplayText(row.label) ?? cleanDisplayText(row.key);
+    const rawLabel = cleanDisplayText(row.label) ?? cleanDisplayText(row.key);
     const value = cleanDisplayText(row.value);
-    if (!label || !value) continue;
+    if (!rawLabel || !value) continue;
+    const translated = translateKoreanProviderText(t, rawLabel);
+    const label = translated && translated !== rawLabel ? translated : rawLabel;
     const key = `${label.toLowerCase()}|${value.toLowerCase()}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -62,7 +67,7 @@ export function VehicleExtrasSection({
   delay = 0.1,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const rows = sanitizeExtras(extras);
+  const rows = sanitizeExtras(extras, t);
   if (!rows.length) return null;
 
   const visible = sliceForHistoryPreview(rows, expanded);
