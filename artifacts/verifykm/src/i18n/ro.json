@@ -1964,5 +1964,8 @@
   "provider_transfer_ownership": "Transfer de proprietate",
   "provider_seats": "Locuri",
   "provider_yes": "Da",
-  "provider_no": "Nu"
+  "provider_no": "Nu",
+  "provider_mileage_source_insurance": "Companie de asigurări auto",
+  "provider_mileage_source_used_car_mall": "Piață de mașini second-hand",
+  "provider_mileage_source_korean_insurance": "Asigurare coreeană"
 }

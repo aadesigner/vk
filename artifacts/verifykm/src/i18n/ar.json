@@ -1964,5 +1964,8 @@
   "provider_transfer_ownership": "نقل الملكية",
   "provider_seats": "مقاعد",
   "provider_yes": "نعم",
-  "provider_no": "لا"
+  "provider_no": "لا",
+  "provider_mileage_source_insurance": "شركة تأمين السيارات",
+  "provider_mileage_source_used_car_mall": "سوق السيارات المستعملة",
+  "provider_mileage_source_korean_insurance": "التأمين الكوري"
 }

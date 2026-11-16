@@ -1964,5 +1964,8 @@
   "provider_transfer_ownership": "所有权转让",
   "provider_seats": "座位数",
   "provider_yes": "是",
-  "provider_no": "否"
+  "provider_no": "否",
+  "provider_mileage_source_insurance": "车险公司",
+  "provider_mileage_source_used_car_mall": "二手车商城",
+  "provider_mileage_source_korean_insurance": "韩国保险"
 }

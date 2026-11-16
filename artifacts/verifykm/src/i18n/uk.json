@@ -1964,5 +1964,8 @@
   "provider_transfer_ownership": "Перехід права власності",
   "provider_seats": "Місця",
   "provider_yes": "Так",
-  "provider_no": "Ні"
+  "provider_no": "Ні",
+  "provider_mileage_source_insurance": "Автострахова компанія",
+  "provider_mileage_source_used_car_mall": "Майданчик уживаних авто",
+  "provider_mileage_source_korean_insurance": "Корейське страхування"
 }

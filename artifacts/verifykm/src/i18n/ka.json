@@ -1964,5 +1964,8 @@
   "provider_transfer_ownership": "საკუთრების გადაცემა",
   "provider_seats": "ადგილები",
   "provider_yes": "კი",
-  "provider_no": "არა"
+  "provider_no": "არა",
+  "provider_mileage_source_insurance": "ავტოდაზღვევის კომპანია",
+  "provider_mileage_source_used_car_mall": "მეორადი ავტომობილების ბაზარი",
+  "provider_mileage_source_korean_insurance": "კორეული დაზღვევა"
 }

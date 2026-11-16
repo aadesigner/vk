@@ -1964,5 +1964,8 @@
   "provider_transfer_ownership": "Transfer of ownership",
   "provider_seats": "Seats",
   "provider_yes": "Yes",
-  "provider_no": "No"
+  "provider_no": "No",
+  "provider_mileage_source_insurance": "Car insurance company",
+  "provider_mileage_source_used_car_mall": "Used car shopping mall",
+  "provider_mileage_source_korean_insurance": "Korean insurance"
 }

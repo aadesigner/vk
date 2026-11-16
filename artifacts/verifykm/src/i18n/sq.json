@@ -1965,5 +1965,8 @@
   "provider_transfer_ownership": "Transferim pronësie",
   "provider_seats": "Ndenjëse",
   "provider_yes": "Po",
-  "provider_no": "Jo"
+  "provider_no": "Jo",
+  "provider_mileage_source_insurance": "Kompani sigurimi makinash",
+  "provider_mileage_source_used_car_mall": "Treg makinash të përdorura",
+  "provider_mileage_source_korean_insurance": "Sigurimi korean"
 }

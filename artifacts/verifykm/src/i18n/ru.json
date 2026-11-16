@@ -1964,5 +1964,8 @@
   "provider_transfer_ownership": "Переход права собственности",
   "provider_seats": "Места",
   "provider_yes": "Да",
-  "provider_no": "Нет"
+  "provider_no": "Нет",
+  "provider_mileage_source_insurance": "Автостраховая компания",
+  "provider_mileage_source_used_car_mall": "Площадка подержанных авто",
+  "provider_mileage_source_korean_insurance": "Корейская страховка"
 }

@@ -1964,5 +1964,8 @@
   "provider_transfer_ownership": "Przeniesienie własności",
   "provider_seats": "Miejsca",
   "provider_yes": "Tak",
-  "provider_no": "Nie"
+  "provider_no": "Nie",
+  "provider_mileage_source_insurance": "Firma ubezpieczeniowa pojazdów",
+  "provider_mileage_source_used_car_mall": "Rynek samochodów używanych",
+  "provider_mileage_source_korean_insurance": "Koreańskie ubezpieczenie"
 }
