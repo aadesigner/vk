@@ -30,6 +30,9 @@ type Props = {
 function sanitizeExtras(
   extras: VehicleExtraEntry[],
   t: (key: string) => string,
+  language: Language,
+  vehicleYear?: number | null,
+  vehicleCountry?: string | null,
 ): Array<{
   label: string;
   value: string;
@@ -39,10 +42,15 @@ function sanitizeExtras(
   const seen = new Set<string>();
   for (const row of extras) {
     const rawLabel = cleanDisplayText(row.label) ?? cleanDisplayText(row.key);
-    const value = cleanDisplayText(row.value);
-    if (!rawLabel || !value) continue;
+    const rawValue = cleanDisplayText(row.value);
+    if (!rawLabel || !rawValue) continue;
     const translated = translateKoreanProviderText(t, rawLabel);
     const label = translated && translated !== rawLabel ? translated : rawLabel;
+    const translatedValue = translateKoreanProviderText(t, rawValue);
+    let value =
+      translatedValue && translatedValue !== rawValue ? translatedValue : rawValue;
+    const localizedDate = localizeProviderDate(rawValue, language, vehicleYear, vehicleCountry);
+    if (localizedDate) value = localizedDate;
     const key = `${label.toLowerCase()}|${value.toLowerCase()}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -67,7 +75,7 @@ export function VehicleExtrasSection({
   delay = 0.1,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const rows = sanitizeExtras(extras, t);
+  const rows = sanitizeExtras(extras, t, language, vehicleYear, vehicleCountry);
   if (!rows.length) return null;
 
   const visible = sliceForHistoryPreview(rows, expanded);
