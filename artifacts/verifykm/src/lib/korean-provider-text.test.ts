@@ -264,6 +264,72 @@ describe("translateKoreanProviderPhrase", () => {
     expect(translateKoreanProviderText(trSq, "Initial registration")).toBe(dict.registry_field_first_registration);
     expect(translateKoreanProviderText(trSq, "First registration")).toBe(dict.registry_field_first_registration);
   });
+
+  it("translates VHR usage / export container titles", () => {
+    const dict: Record<string, string> = {
+      provider_usage_rent: "Qira",
+      provider_usage_rental: "Me qira",
+      provider_usage_business: "Biznes",
+      provider_usage_government: "Qeveritare",
+      provider_usage_special: "Përdorim special",
+      provider_export_date: "Data e eksportit",
+      provider_export_fuel: "Karburanti i eksportit",
+      provider_export_color: "Ngjyra e eksportit",
+      provider_export_total_loss: "Humbje totale në eksport",
+      registry_type_export: "Deklarata e eksportit",
+      provider_mileage_source_insurance: "Kompani sigurimi makinash",
+      provider_mileage_source_used_car_mall: "Treg makinash të përdorura",
+      provider_total_loss: "Humbje totale",
+      provider_yes: "Po",
+      provider_no: "Jo",
+      provider_uninsured_period: "Periudhë pa sigurim",
+      report_history_notes: "Mbulimi i historikut",
+    };
+    const trSq = (key: string) => dict[key] ?? key;
+    expect(translateKoreanProviderText(trSq, "Rent")).toBe("Qira");
+    expect(translateKoreanProviderText(trSq, "Rental")).toBe("Me qira");
+    expect(translateKoreanProviderText(trSq, "Business")).toBe("Biznes");
+    expect(translateKoreanProviderText(trSq, "Government")).toBe("Qeveritare");
+    expect(translateKoreanProviderText(trSq, "Special Usage")).toBe("Përdorim special");
+    expect(translateKoreanProviderText(trSq, "Export date")).toBe("Data e eksportit");
+    expect(translateKoreanProviderText(trSq, "Export fuel")).toBe("Karburanti i eksportit");
+    expect(translateKoreanProviderText(trSq, "Export color")).toBe("Ngjyra e eksportit");
+    expect(translateKoreanProviderText(trSq, "Export total loss")).toBe("Humbje totale në eksport");
+    expect(translateKoreanProviderText(trSq, "Export declaration")).toBe("Deklarata e eksportit");
+    expect(translateKoreanProviderText(trSq, "Car insurance company")).toBe("Kompani sigurimi makinash");
+    expect(translateKoreanProviderText(trSq, "Used car shopping mall")).toBe("Treg makinash të përdorura");
+    expect(translateKoreanProviderText(trSq, "Total loss")).toBe("Humbje totale");
+    expect(translateKoreanProviderText(trSq, "Yes")).toBe("Po");
+    expect(translateKoreanProviderText(trSq, "No")).toBe("Jo");
+    expect(translateKoreanProviderText(trSq, "Uninsured period")).toBe("Periudhë pa sigurim");
+    expect(translateKoreanProviderText(trSq, "History coverage")).toBe("Mbulimi i historikut");
+  });
+
+  it("translates odometer, body panels and repair actions", () => {
+    const dict: Record<string, string> = {
+      provider_odometer: "Kilometrazhi",
+      damage_zone_front_fender_l: "Krahu i përparmë (i majtë)",
+      damage_zone_front_fender_r: "Krahu i përparmë (i djathtë)",
+      damage_zone_front_door_r: "Dera e përparme (e djathtë)",
+      damage_zone_hood: "Kapota",
+      damage_severity_replace: "I zëvendësuar",
+      damage_severity_paint: "I lyer",
+    };
+    const trSq = (key: string) => dict[key] ?? key;
+    expect(translateKoreanProviderText(trSq, "Odometer")).toBe("Kilometrazhi");
+    expect(translateKoreanProviderText(trSq, "Front fender left")).toBe("Krahu i përparmë (i majtë)");
+    expect(translateKoreanProviderText(trSq, "Front fender right")).toBe("Krahu i përparmë (i djathtë)");
+    expect(translateKoreanProviderText(trSq, "Front door right")).toBe("Dera e përparme (e djathtë)");
+    expect(translateKoreanProviderText(trSq, "Replaced")).toBe("I zëvendësuar");
+    expect(translateKoreanProviderText(trSq, "Painted")).toBe("I lyer");
+    expect(translateKoreanProviderText(trSq, "Hood; Front bumper")).toContain("Kapota");
+    expect(
+      translateKoreanProviderText(
+        (key) => ({ mileage_manipulated_badge: "I manipuluar" }[key] ?? key),
+        "Manipulated",
+      ),
+    ).toBe("I manipuluar");
+  });
 });
 
 describe("translateProviderMultiline", () => {

@@ -1367,6 +1367,19 @@ export default function VinPublic({ params }: Props) {
             </ReportReveal>
             )}
 
+            {/* Korea repair parts + damage map — directly under accidents */}
+            <VehicleExtrasSection
+              extras={vehicleExtras}
+              vehicleYear={data.year}
+              vehicleCountry={data.country}
+              t={t}
+              language={language}
+              variant="public"
+              delay={0.155}
+              onlyCategories={["korean_repairs"]}
+              krwPerUsd={krwPerUsd}
+            />
+
             {/* Safety Status — Salvage & Theft */}
             {showSafetySection && (
             <ReportReveal delay={0.18} y={12}>
@@ -1707,6 +1720,8 @@ export default function VinPublic({ params }: Props) {
               language={language}
               variant="public"
               delay={0.119}
+              excludeCategories={["korean_repairs"]}
+              krwPerUsd={krwPerUsd}
             />
 
             {showMarketDataSection && marketData && (

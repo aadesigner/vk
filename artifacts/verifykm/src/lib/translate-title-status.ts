@@ -1,4 +1,5 @@
 import { damageValueKey } from "./translate-damage-label";
+import { translateKoreanProviderText } from "./korean-provider-text";
 
 const TITLE_PHRASE_REPLACEMENTS: Array<{ pattern: RegExp; key: string }> = [
   { pattern: /\bsalvage\s+title\b/gi, key: "title_phrase_salvage_title" },
@@ -10,6 +11,7 @@ const TITLE_PHRASE_REPLACEMENTS: Array<{ pattern: RegExp; key: string }> = [
   { pattern: /\brebuilt\b/gi, key: "title_word_rebuilt" },
   { pattern: /\bjunk\b/gi, key: "title_word_junk" },
   { pattern: /\bclean\b/gi, key: "title_word_clean" },
+  { pattern: /\binspection\b/gi, key: "provider_inspection" },
 ];
 
 /** Translate Copart/IAAI title-status text when locale strings exist. */
@@ -22,6 +24,11 @@ export function translateTitleStatus(
   const fullKey = `title_val_${damageValueKey(value)}`;
   const fullTranslated = t(fullKey);
   if (fullTranslated !== fullKey) return fullTranslated;
+
+  const providerPhrase = translateKoreanProviderText(t, value);
+  if (providerPhrase && providerPhrase.trim().toLowerCase() !== value.trim().toLowerCase()) {
+    return providerPhrase;
+  }
 
   let result = value;
   for (const { pattern, key } of TITLE_PHRASE_REPLACEMENTS) {

@@ -1005,7 +1005,8 @@ describe("carstatVhrNormalize", () => {
     expect(out.year).toBe(2018);
     expect(out.odometer).toBe(93420);
     expect(out.mileageHistory?.length).toBe(1);
-    expect(out.accidents?.length).toBeGreaterThanOrEqual(1);
+    // Inspection panel / repair claims stay in extras — not accident history.
+    expect(out.accidents?.some((a) => /Front Bumper|Cosmetic|body repair/i.test(`${a.description ?? ""} ${a.primaryDamage ?? ""}`))).toBe(false);
     expect(out.serviceHistory?.some((s) => s.title === "Vehicle inspection")).toBe(true);
     expect(out.photos?.[0]).toContain("v-h-r.b-cdn.net");
     expect(out.vehicleExtras?.some((x) => x.label === "Front Bumper")).toBe(true);
@@ -1097,8 +1098,70 @@ describe("carstatVhrNormalize", () => {
     expect(out.model).toBe("G70");
     expect(out.make).toMatch(/Genesis|Hyundai|Kia/i);
     expect(out.accidents?.some((a) => /없음|Accident history/i.test(a.description ?? ""))).toBe(false);
-    expect(out.accidents?.some((a) => /Front door left|Simple repair/i.test(a.description ?? "") || a.primaryDamage === "Front door left" || a.primaryDamage === "Simple repair history")).toBe(true);
+    expect(out.accidents?.some((a) => /Front door left|Simple repair/i.test(a.description ?? "") || a.primaryDamage === "Front door left" || a.primaryDamage === "Simple repair history")).toBe(false);
+    expect(out.vehicleExtras?.some((x) => x.label === "Front door left")).toBe(true);
+    expect(out.vehicleExtras?.some((x) => /Simple repair/i.test(x.label ?? ""))).toBe(true);
     expect(out.vehicleExtras?.some((x) => x.label === "Accident history" && /none|clear|ok/i.test(x.value))).toBe(true);
+  });
+
+  it("does not stamp WMI Germany onto Korean inspection findings or put panels in accidents", () => {
+    const out = normalizeCarstatVhrJsonPayloads(
+      [
+        {
+          schema_version: 2,
+          source: {
+            id: 4,
+            sections: [{
+              type: "inspections",
+              items: [{
+                inspected_at: "2025-02-27T00:00:00Z",
+                vehicle_snapshot: { title: "BMW 320d", year: 2015, mileage_km: 120000 },
+                checked_items: [{
+                  result_key: "issue",
+                  part_label: "Front fender left",
+                  description: "Replaced",
+                  issue_type_keys: ["replaced", "accident_trace"],
+                  accident_relevance_key: "cosmetic",
+                }],
+                source_claims: [{
+                  type_key: "accident",
+                  source_label: "Accident history",
+                  description: "있음",
+                  result_key: "issue",
+                }],
+              }],
+            }],
+          },
+        },
+        {
+          schema_version: 2,
+          source: {
+            id: 68,
+            sections: [{
+              type: "korean_insurance",
+              items: [{
+                korea_section: "accidents_detail",
+                data: {
+                  items: [{
+                    date: "2025-02-27",
+                    center: [{ type: "1", paid: 850000, parts: 400000, labor: 300000, paint: 150000 }],
+                  }],
+                },
+              }],
+            }],
+          },
+        },
+      ],
+      { vin: "WDDHF0CB9EA796317" },
+    );
+
+    expect(out.country).toMatch(/^KR$|Korea/i);
+    expect(out.accidents?.some((a) => /Front fender/i.test(`${a.description ?? ""} ${a.primaryDamage ?? ""}`))).toBe(false);
+    expect(out.vehicleExtras?.some((x) => /Front fender left/i.test(x.label ?? ""))).toBe(true);
+    const moneyAccidents = (out.accidents ?? []).filter((a) => a.type === "insurance" || (a.lossAmount ?? 0) > 0);
+    expect(moneyAccidents.length).toBeGreaterThanOrEqual(1);
+    expect(moneyAccidents.every((a) => /^KR$/i.test(String(a.country ?? "")))).toBe(true);
+    expect(moneyAccidents.some((a) => /Germany|DE\b/i.test(String(a.country ?? "")))).toBe(false);
   });
 
   it("maps history events into registry timeline; usage checks stay in extras", () => {
@@ -1302,5 +1365,118 @@ describe("carstatVhrNormalize", () => {
 
     expect(out.country).toMatch(/^KR$|Korea/i);
     expect(out.accidents?.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("sets KR catalog country for NA WMI cars with real Korean insurance (export)", () => {
+    const out = normalizeCarstatVhrJsonPayloads(
+      [
+        {
+          schema_version: 2,
+          source: {
+            id: 68,
+            sections: [
+              {
+                type: "korean_insurance",
+                items: [
+                  {
+                    korea_section: "export_declaration",
+                    data: {
+                      status: "done",
+                      data: {
+                        export_date: "2026-02-01",
+                        model_name: "Passat",
+                        fuel_name: "Gasoline",
+                        mileage: 106526,
+                        is_total_loss: false,
+                      },
+                    },
+                  },
+                  {
+                    korea_section: "mileage",
+                    data: {
+                      list: [
+                        { date: "2025-04-18", km: "93000", source: "Car insurance company" },
+                      ],
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+      { vin: "1VWZZZA3ZFC082483" },
+    );
+
+    expect(out.country).toMatch(/^KR$|Korea/i);
+    expect(out.mileageHistory?.some((m) => m.source === "Export declaration" || m.source === "Car insurance company")).toBe(true);
+    expect(out.registryHistory?.some((e) => e.type === "export")).toBe(true);
+  });
+
+  it("drops Archive Alpha/Beta listing mileage when Korean insurance mileage exists", () => {
+    const out = normalizeCarstatVhrJsonPayloads(
+      [
+        {
+          schema_version: 2,
+          source: {
+            id: 2,
+            name: "Archive Alpha",
+            sections: [
+              {
+                type: "listings",
+                items: [{
+                  marketplace: "US auction",
+                  sale_date: "2024-01-10",
+                  odometer_km: 45000,
+                  final_bid: 12000,
+                  currency: "USD",
+                }],
+              },
+            ],
+          },
+        },
+        {
+          schema_version: 2,
+          source: {
+            id: 68,
+            name: "Korean Insurance History",
+            sections: [
+              {
+                type: "korean_insurance",
+                items: [
+                  {
+                    korea_section: "mileage",
+                    data: {
+                      list: [
+                        { date: "2025-04-18", km: "93000", source: "Car insurance company" },
+                        { date: "2024-04-15", km: "75383", source: "Car insurance company" },
+                      ],
+                    },
+                  },
+                  {
+                    korea_section: "export_declaration",
+                    data: {
+                      status: "done",
+                      data: {
+                        export_date: "2026-02-01",
+                        mileage: 106526,
+                        is_total_loss: false,
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+      { vin: "KNAF241BEMA915413" },
+    );
+
+    expect(out.mileageHistory?.some((m) => /us\s*auction/i.test(String(m.source ?? "")))).toBe(false);
+    expect(out.mileageHistory?.some((m) => m.odometer === 45000)).toBe(false);
+    expect(out.mileageHistory?.some((m) => m.odometer === 93000 && /insurance/i.test(String(m.source ?? "")))).toBe(true);
+    expect(out.mileageHistory?.some((m) => m.odometer === 106526 && m.source === "Export declaration")).toBe(true);
+    expect(out.odometer).toBe(106526);
   });
 });

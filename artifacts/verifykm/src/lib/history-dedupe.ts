@@ -398,3 +398,102 @@ export function dedupeRegistryHistory<T extends RegistryHistoryLike>(
   }
   return Array.from(byKey.values());
 }
+
+export type VehicleExtraLike = {
+  key?: string | null;
+  label?: string | null;
+  value?: string | null;
+  observedAt?: string | null;
+};
+
+function extraLabelKey(entry: VehicleExtraLike): string {
+  const raw = normalizeToken(entry.label) || normalizeToken(entry.key);
+  if (!raw) return "";
+  if (/^(hp|horsepower)$/.test(raw)) return "horsepower";
+  if (/^first\s*registration/.test(raw) || raw === "firstregistration") return "first_registration";
+  if (/^drive\s*type$/.test(raw) || raw === "drivetype") return "drive_type";
+  if (/^auction\s*end/.test(raw) || raw === "end_time" || raw === "endtime") return "auction_end";
+  return raw.replace(/\s+/g, "_");
+}
+
+function currencyTokenFromExtraValue(value: string | null | undefined): string {
+  const raw = String(value ?? "");
+  const m = raw.match(/\b(USD|EUR|GBP|KRW|CAD|AUD|JPY|CHF)\b/i);
+  return m?.[1]?.toUpperCase() ?? "";
+}
+
+export function vehicleExtraDedupeKey(entry: VehicleExtraLike): string {
+  const label = extraLabelKey(entry);
+  if (!label) return `raw:${normalizeToken(entry.value)}`;
+  // Money rows must not merge across currencies (USD + KRW → "20 · 200 USD · … KRW").
+  if (
+    /^(pre_accident_value|pre-accident value|actual cash value \(acv\)|actual_cash_value|estimated repair cost|average price|price without tax)$/i
+      .test(label)
+    || /pre.?accident|actual cash|estimated repair|average price|price without tax/i.test(label)
+  ) {
+    const ccy = currencyTokenFromExtraValue(entry.value);
+    if (ccy) return `label:${label}|${ccy}`;
+  }
+  return `label:${label}`;
+}
+
+/** Hide source/marketplace branding — reports never name Carstat, Finn, AutoScout, GetCarAPI. */
+export function isProviderBrandingExtra(entry: VehicleExtraLike): boolean {
+  const label = extraLabelKey(entry);
+  if (/^(marketplace|source|provider|provider_name|data_source|datasource)$/.test(label)) {
+    return true;
+  }
+  const value = normalizeToken(entry.value);
+  return /^(carstat|finn(\.no)?|autoscout(24)?(\s+(es|be))?|getcarapi|getcar api)$/.test(value);
+}
+
+function laterDateValue(
+  a: string | null | undefined,
+  b: string | null | undefined,
+  vehicleYear?: number | null,
+): string | null | undefined {
+  const left = (a ?? "").trim();
+  const right = (b ?? "").trim();
+  if (!left) return right || b;
+  if (!right) return left;
+  const leftKey = normalizedDateKey(left, vehicleYear);
+  const rightKey = normalizedDateKey(right, vehicleYear);
+  if (!leftKey) return right;
+  if (!rightKey) return left;
+  return leftKey >= rightKey ? left : right;
+}
+
+function mergeVehicleExtraEntries<T extends VehicleExtraLike>(
+  a: T,
+  b: T,
+  vehicleYear?: number | null,
+): T {
+  const aVal = String(a.value ?? "").trim();
+  const bVal = String(b.value ?? "").trim();
+  let value: string | null | undefined;
+  if (aVal && bVal && aVal !== bVal) {
+    value = aVal.length >= bVal.length ? aVal : bVal;
+  } else {
+    value = aVal || bVal || a.value || b.value;
+  }
+  return {
+    ...a,
+    ...b,
+    key: a.key || b.key,
+    label: a.label || b.label,
+    value,
+    observedAt: laterDateValue(a.observedAt, b.observedAt, vehicleYear),
+  };
+}
+
+export function dedupeVehicleExtras<T extends VehicleExtraLike>(
+  entries: T[],
+  vehicleYear?: number | null,
+): T[] {
+  const visible = entries.filter((entry) => !isProviderBrandingExtra(entry));
+  return dedupeByKey(
+    visible as Array<T & Record<string, unknown>>,
+    (entry) => vehicleExtraDedupeKey(entry),
+    (a, b) => mergeVehicleExtraEntries(a as T, b as T, vehicleYear) as T & Record<string, unknown>,
+  ) as T[];
+}

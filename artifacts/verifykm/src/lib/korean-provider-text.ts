@@ -2,6 +2,7 @@ import type { Language } from "@/i18n/context";
 import { formatCountryName } from "@/lib/format-country-name";
 import { formatKoreanWonFromText, isKoreanCountry } from "@/lib/korean-currency";
 import { sanitizeReportIsoDate } from "@/lib/encar-date-repair";
+import { translateBodyRepairExtrasText } from "@/lib/translate-damage-label";
 import { isRegistryRepairCostLabel, sanitizeKoreanRepairAmountText } from "@workspace/korean-registry";
 
 const LOCALE_BY_LANG: Record<Language, string> = {
@@ -446,6 +447,7 @@ const PHRASE_KEYS: Record<string, string> = {
   "trim options": "provider_trim_options",
   "none recorded": "provider_none_recorded",
   "korean inspection": "provider_korean_inspection",
+  inspection: "provider_inspection",
   "inspection summary": "provider_inspection_summary",
   "inspection accident status": "provider_inspection_accident_status",
   "korean market price": "provider_korean_market_price",
@@ -459,6 +461,18 @@ const PHRASE_KEYS: Record<string, string> = {
   seats: "provider_seats",
   yes: "provider_yes",
   no: "provider_no",
+  // Listing / repair extras
+  odometer: "provider_odometer",
+  "odometer reading": "provider_odometer",
+  "odometer status": "provider_odometer_status",
+  replaced: "damage_severity_replace",
+  replacement: "damage_severity_replace",
+  repaired: "damage_severity_repair",
+  painted: "damage_severity_paint",
+  overhauled: "damage_severity_repair",
+  "sheet metal": "damage_severity_sheet_metal",
+  manipulated: "mileage_manipulated_badge",
+  "manipulated mileage": "mileage_manipulated_badge",
 };
 
 const PHRASE_PATTERNS: Array<{ pattern: RegExp; key: string }> = [
@@ -535,6 +549,8 @@ const PHRASE_PATTERNS: Array<{ pattern: RegExp; key: string }> = [
   { pattern: /\bkorean inspection\b/gi, key: "provider_korean_inspection" },
   { pattern: /\binspection summary\b/gi, key: "provider_inspection_summary" },
   { pattern: /\binspection accident status\b/gi, key: "provider_inspection_accident_status" },
+  // Bare "inspection" last so longer phrases above win first.
+  { pattern: /\binspection\b/gi, key: "provider_inspection" },
   { pattern: /\bkorean market price\b/gi, key: "provider_korean_market_price" },
   { pattern: /\bmarket low\b/gi, key: "provider_market_low" },
   { pattern: /\bmarket high\b/gi, key: "provider_market_high" },
@@ -1004,6 +1020,11 @@ export function translateKoreanProviderText(
   if (!text) return null;
   const exact = translateKoreanProviderPhrase(t, text);
   if (exact && normalizePhrase(exact) !== normalizePhrase(text)) return exact;
+
+  const bodyOrRepair = translateBodyRepairExtrasText(t, text);
+  if (bodyOrRepair && normalizePhrase(bodyOrRepair) !== normalizePhrase(text)) {
+    return bodyOrRepair;
+  }
 
   let result = text;
   for (const { pattern, key } of PHRASE_PATTERNS) {

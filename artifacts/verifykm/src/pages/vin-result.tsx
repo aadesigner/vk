@@ -1390,6 +1390,21 @@ export default function VinResult({ params }: Props) {
         </ReportReveal>
         )}
 
+        {/* Korea repair parts + damage map — directly under accidents */}
+        {!isPendingManual && (
+          <VehicleExtrasSection
+            extras={vehicleExtras}
+            vehicleYear={data?.year}
+            vehicleCountry={data?.country}
+            t={t}
+            language={language}
+            variant="report"
+            delay={0.145}
+            onlyCategories={["korean_repairs"]}
+            krwPerUsd={krwPerUsd}
+          />
+        )}
+
         {/* Safety Status — Salvage & Theft combined */}
         {!isPendingManual && showSafetySection && (
         <ReportReveal y={16} inView>
@@ -1693,6 +1708,8 @@ export default function VinResult({ params }: Props) {
             language={language}
             variant="report"
             delay={0.098}
+            excludeCategories={["korean_repairs"]}
+            krwPerUsd={krwPerUsd}
           />
 
           {showMarketDataSection && marketData && !isPendingManual && (
