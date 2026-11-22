@@ -2027,5 +2027,7 @@
   "repair_parts_hint_other": "Other repair items from the Korean insurance record.",
   "provider_odometer": "Odometer",
   "provider_odometer_status": "Odometer status",
-  "provider_inspection": "Inspection"
+  "provider_inspection": "Inspection",
+  "report_no_accidents_header": "No accidents found",
+  "report_not_flooded_header": "No flood record found"
 }

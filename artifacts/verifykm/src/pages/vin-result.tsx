@@ -802,6 +802,7 @@ export default function VinResult({ params }: Props) {
     vehicleCountry: data?.country,
     krwPerUsd,
     hasKoreanInsuranceClaims: insuranceClaims.length > 0,
+    insuranceClaims,
   };
   const accidents = sortHistoryNewestFirst(
     sanitizeAccidents(repairDatedRecords(data?.accidents, data?.year), data?.year).map((acc) => ({

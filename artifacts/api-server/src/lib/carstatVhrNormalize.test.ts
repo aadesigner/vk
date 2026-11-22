@@ -1008,9 +1008,70 @@ describe("carstatVhrNormalize", () => {
     // Inspection panel / repair claims stay in extras — not accident history.
     expect(out.accidents?.some((a) => /Front Bumper|Cosmetic|body repair/i.test(`${a.description ?? ""} ${a.primaryDamage ?? ""}`))).toBe(false);
     expect(out.serviceHistory?.some((s) => s.title === "Vehicle inspection")).toBe(true);
+    expect(out.serviceHistory?.find((s) => s.title === "Vehicle inspection")?.mileage).toBe(93420);
     expect(out.photos?.[0]).toContain("v-h-r.b-cdn.net");
     expect(out.vehicleExtras?.some((x) => x.label === "Front Bumper")).toBe(true);
     expect(hasStructuredVhrReport({ ...out, dataSource: "carstat_vhr" })).toBe(true);
+  });
+
+  it("does not stamp KRW-scale listing prices onto Vehicle inspection mileage", () => {
+    const out = normalizeCarstatVhrJsonPayloads(
+      [
+        {
+          schema_version: 2,
+          source: {
+            id: 1,
+            sections: [{
+              type: "listings",
+              items: [{
+                sale_date: "2024-06-01",
+                marketplace: "encar.com",
+                currency: "KRW",
+                // Used-car ask mistaken as odometer (≈ ₩13.3M → chart "13300k").
+                odometer_km: 13_300_000,
+                final_price: 13_300_000,
+              }],
+            }],
+          },
+        },
+        {
+          schema_version: 2,
+          source: {
+            id: 4,
+            sections: [{
+              type: "inspections",
+              items: [{
+                inspected_at: "2024-05-10T00:00:00Z",
+                vehicle_snapshot: {
+                  title: "2019 Kia Sportage",
+                  make: "Kia",
+                  model: "Sportage",
+                  year: 2019,
+                  mileage_km: 56_000,
+                },
+                checked_items: [
+                  { result_key: "ok", part_label: "Engine" },
+                  {
+                    result_key: "issue",
+                    part_label: "Odometer",
+                    measurements: [{ id: "odometer_km", type_key: "odometer", value_number: 56_000, unit_key: "km" }],
+                  },
+                ],
+              }],
+            }],
+          },
+        },
+      ],
+      { vin: "KNAPH81ABK7123456" },
+    );
+
+    expect(out.year).toBe(2019);
+    expect(out.mileageHistory?.every((m) => (m.odometer ?? 0) < 1_000_000)).toBe(true);
+    expect(out.mileageHistory?.some((m) => m.odometer === 56_000)).toBe(true);
+    expect(out.mileageHistory?.some((m) => m.odometer === 13_300_000)).toBe(false);
+    const insp = out.serviceHistory?.find((s) => s.title === "Vehicle inspection");
+    expect(insp?.mileage).toBe(56_000);
+    expect(out.odometer).toBe(56_000);
   });
 
   it("maps inspection measurements and listing provenance extras", () => {
@@ -1278,6 +1339,7 @@ describe("carstatVhrNormalize", () => {
     expect(out.auctionHistory?.length).toBeGreaterThan(0);
     expect(out.insuranceClaims?.some((c) => c.lossAmount === 6217990)).toBe(true);
     expect(out.accidents?.some((a) => a.type === "insurance")).toBe(true);
+    expect(out.accidents?.find((a) => a.type === "insurance" && a.lossAmount === 6217990)?.severity).toBe("major");
     expect(out.registryHistory?.some((e) => e.type === "insurance" || e.type === "ownership")).toBe(true);
     expect(out.serviceHistory?.some((s) => /inspection/i.test(s.title ?? ""))).toBe(true);
     expect(out.vehicleExtras?.some((x) => x.label === "Trim options")).toBe(true);

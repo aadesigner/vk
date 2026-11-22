@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { localizeProviderDate, translateKoreanProviderText, translateProviderDateInText } from "@/lib/korean-provider-text";
 import { formatMilesInParens } from "@/lib/format-km-with-miles";
-import { ACCIDENT_SEVERITY_I18N_KEYS, formatAccidentDescription } from "@/lib/accident-display";
+import { ACCIDENT_SEVERITY_I18N_KEYS, formatAccidentNarrativeDescription } from "@/lib/accident-display";
 import { translateMappedValue } from "@/lib/vehicle-attr-options";
 import { translateDamageLabel } from "@/lib/translate-damage-label";
 import {
@@ -45,7 +45,7 @@ const TYPE_DOT: Record<TimelineEventType, string> = {
   accident: "bg-red-500",
   insurance: "bg-amber-500",
   mileage: "bg-primary",
-  service: "bg-[#00a5fd]",
+  service: "bg-emerald-500",
   auction: "bg-violet-500",
   owner: "bg-sky-500",
   registry: "bg-teal-500",
@@ -553,13 +553,17 @@ function interpolateKm(sortKey: number, series: MileagePoint[]): number {
   return last.km;
 }
 
-function buildMileageSeries(events: TimelineEvent[]): MileagePoint[] {
+/** Mileage line points: production @ 0 + `mileage` events only (not accident/service km). */
+export function buildMileageSeries(events: TimelineEvent[]): MileagePoint[] {
   const points: MileagePoint[] = [];
   for (const event of events) {
     if (event.type === "production") {
       points.push({ sortKey: event.sortKey, km: 0 });
       continue;
     }
+    // Line must match mileageHistory / rollback logic — accident/service/owner km
+    // on the same timeline used to draw false up→down→up zigzags.
+    if (event.type !== "mileage") continue;
     if (event.mileage != null && event.mileage > 0) {
       points.push({ sortKey: event.sortKey, km: event.mileage });
     }
@@ -569,7 +573,8 @@ function buildMileageSeries(events: TimelineEvent[]): MileagePoint[] {
   for (const p of points) {
     const prev = out[out.length - 1];
     if (prev && prev.sortKey === p.sortKey) {
-      prev.km = p.km;
+      // Same calendar day → keep the highest reading (noise scrapes).
+      if (p.km > prev.km) prev.km = p.km;
       continue;
     }
     out.push({ ...p });
@@ -850,7 +855,7 @@ function eventFacts(
       );
     }
     if (event.description) {
-      const desc = formatAccidentDescription(t, language, event.description);
+      const desc = formatAccidentNarrativeDescription(t, language, event.description);
       // Skip generic "Accident" / damage text already covered by Primary Damage.
       if (
         desc
@@ -894,7 +899,10 @@ function eventFacts(
   if (event.lotStatus) {
     const lot = translateLotStatus(t, event.lotStatus)
       ?? localizeTimelineText(t, language, event.lotStatus);
-    pushUniqueFact(facts, lot);
+    // Skip lot numbers and marketplace names already implied by the event.
+    if (lot && !/#\d{4,}\b/.test(lot)) {
+      pushUniqueFact(facts, lot);
+    }
   }
   if (event.lossAmount != null && event.lossAmount > 0) {
     pushUniqueFact(
@@ -1623,8 +1631,8 @@ export function ReportHistoryTimeline({
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-[#00a5fd]/10 bg-[#f7fbfe] px-4 py-3.5 sm:px-6">
-        <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#071018] sm:text-[12px]">
+      <div className="flex items-center justify-between gap-3 border-b border-border/40 px-3 py-2.5 sm:px-5 sm:py-3">
+        <h2 className="text-sm font-semibold tracking-tight text-foreground">
           {t("report_timeline_title")}
         </h2>
         <div className="flex items-center gap-1.5">

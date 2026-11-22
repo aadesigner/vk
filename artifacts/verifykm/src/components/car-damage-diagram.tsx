@@ -74,11 +74,7 @@ function markerFill(sev: DamageSeverity): string {
   return DAMAGE_SEVERITY_META[sev].hatch;
 }
 
-function setPanelHatch(
-  el: Element,
-  sev: DamageSeverity | null,
-  opts: { active: boolean; dimmed: boolean },
-) {
+function setPanelHatch(el: Element, sev: DamageSeverity | null) {
   const cls = el.getAttribute("class") ?? "";
   const rest = cls
     .replace(/\bst[2-6]\b/g, "")
@@ -87,14 +83,7 @@ function setPanelHatch(
     .replace(/\bkm-damage\b/g, "")
     .trim();
   const hatch = sev ? hatchClass(sev) : "st5";
-  const parts = [
-    hatch,
-    sev ? "km-damage" : "",
-    opts.active ? "km-active" : "",
-    opts.dimmed ? "km-dim" : "",
-    rest,
-  ].filter(Boolean);
-  el.setAttribute("class", parts.join(" "));
+  el.setAttribute("class", [hatch, sev ? "km-damage" : "", rest].filter(Boolean).join(" "));
   if (el instanceof SVGElement) {
     el.style.cursor = sev ? "pointer" : "";
     el.style.stroke = "";
@@ -102,6 +91,17 @@ function setPanelHatch(
     el.style.filter = "";
     el.style.opacity = "";
   }
+}
+
+function toggleFocusClass(el: Element, kind: "active" | "dim", on: boolean) {
+  const token = kind === "active" ? "km-active" : "km-dim";
+  const cls = el.getAttribute("class") ?? "";
+  const has = new RegExp(`\\b${token}\\b`).test(cls);
+  if (on === has) return;
+  el.setAttribute(
+    "class",
+    on ? `${cls} ${token}`.trim() : cls.replace(new RegExp(`\\s*\\b${token}\\b`, "g"), "").trim(),
+  );
 }
 
 function elementCenter(el: SVGGraphicsElement): { x: number; y: number } | null {
@@ -150,7 +150,7 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/damage-diagram/body-map.svg");
+        const res = await fetch("/damage-diagram/body-map.svg?v=hover-fast-1");
         if (!res.ok) return;
         let markup = await res.text();
         // Scope pattern ids so multiple instances don't clash (incl. dark-mode CSS selectors).
@@ -176,39 +176,24 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
     };
   }, [uid, t]);
 
-  // Apply hatch fills for ALL damaged panels on first paint; fade non-focused when hovering/pinned.
+  // Paint hatches + markers once; listeners only change React hover/pin state.
   useEffect(() => {
     if (!svgLoaded || !hostRef.current) return;
-    const root = hostRef.current;
-    const svg = root.querySelector("svg");
+    const svg = hostRef.current.querySelector("svg");
     if (!svg) return;
 
     for (const ids of Object.values(ZONE_PANELS)) {
       for (const id of ids) {
-        const el = svg.querySelector(`#${id}`);
-        if (el) setPanelHatch(el, null, { active: false, dimmed: fading });
+        const el = svg.querySelector(`#${CSS.escape(id)}`);
+        if (el) setPanelHatch(el, null);
       }
     }
-
     for (const hit of hits) {
-      const isFocus = focusZone === hit.zone;
       for (const id of ZONE_PANELS[hit.zone]) {
-        const el = svg.querySelector(`#${id}`);
-        if (el) {
-          setPanelHatch(el, hit.severity, {
-            active: isFocus,
-            dimmed: fading && !isFocus,
-          });
-        }
+        const el = svg.querySelector(`#${CSS.escape(id)}`);
+        if (el) setPanelHatch(el, hit.severity);
       }
     }
-
-    // Skeleton lines also dim slightly while focusing a damage.
-    svg.querySelectorAll(".st1").forEach((el) => {
-      const cls = el.getAttribute("class") ?? "";
-      const next = cls.replace(/\bkm-dim\b/g, "").trim();
-      el.setAttribute("class", fading ? `${next} km-dim` : next);
-    });
 
     let markers = svg.querySelector("#km-damage-markers") as SVGGElement | null;
     if (!markers) {
@@ -221,32 +206,33 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
 
     for (const hit of hits) {
       const primaryId = ZONE_PANELS[hit.zone][0];
-      const el = svg.querySelector(`#${primaryId}`);
+      const el = svg.querySelector(`#${CSS.escape(primaryId)}`);
       if (!(el instanceof SVGGraphicsElement)) continue;
       const pt = elementCenter(el);
       if (!pt) continue;
-      const selected = focusZone === hit.zone;
-      const dimmed = fading && !selected;
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      if (dimmed) g.setAttribute("opacity", "0.3");
-      if (selected) {
-        const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        ring.setAttribute("cx", String(pt.x));
-        ring.setAttribute("cy", String(pt.y));
-        ring.setAttribute("r", "18");
-        ring.setAttribute("fill", "none");
-        ring.setAttribute("stroke", markerFill(hit.severity));
-        ring.setAttribute("stroke-width", "3");
-        ring.setAttribute("opacity", "0.9");
-        g.appendChild(ring);
-      }
+      g.setAttribute("data-zone", hit.zone);
+      g.setAttribute("class", "km-marker");
+
+      const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      ring.setAttribute("class", "km-marker-ring");
+      ring.setAttribute("cx", String(pt.x));
+      ring.setAttribute("cy", String(pt.y));
+      ring.setAttribute("r", "18");
+      ring.setAttribute("fill", "none");
+      ring.setAttribute("stroke", markerFill(hit.severity));
+      ring.setAttribute("stroke-width", "3");
+      ring.setAttribute("opacity", "0.9");
+      g.appendChild(ring);
+
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("class", "km-marker-dot");
       circle.setAttribute("cx", String(pt.x));
       circle.setAttribute("cy", String(pt.y));
-      circle.setAttribute("r", selected ? "14" : "11");
+      circle.setAttribute("r", "11");
       circle.setAttribute("fill", markerFill(hit.severity));
       circle.setAttribute("stroke", "#fff");
-      circle.setAttribute("stroke-width", selected ? "2.2" : "1.5");
+      circle.setAttribute("stroke-width", "1.5");
       g.appendChild(circle);
 
       if (hit.severity === "paint") {
@@ -274,29 +260,24 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
       markers.appendChild(g);
     }
 
+    const damaged = byZone;
     const onClick = (e: Event) => {
       const zone = zoneFromTarget(e.target as Element | null);
-      if (zone && byZone.has(zone)) {
+      if (zone && damaged.has(zone)) {
         setPinned(zone);
         setHoverZone(zone);
         return;
       }
-      // Click empty car structure / outside a damage → clear focus
       setPinned(null);
       setHoverZone(null);
     };
     const onMove = (e: Event) => {
       const zone = zoneFromTarget(e.target as Element | null);
-      if (zone && byZone.has(zone)) {
-        setHoverZone(zone);
-        return;
-      }
-      // Pointer over undamaged structure while not pinned → clear hover fade
-      if (!pinned) setHoverZone(null);
-      else setHoverZone(null); // keep pinned; hover cleared so focus falls back to pinned
+      const next = zone && damaged.has(zone) ? zone : null;
+      setHoverZone((prev) => (prev === next ? prev : next));
     };
     const onLeave = () => {
-      setHoverZone(null);
+      setHoverZone((prev) => (prev == null ? prev : null));
     };
 
     svg.addEventListener("click", onClick);
@@ -307,7 +288,41 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
       svg.removeEventListener("pointermove", onMove);
       svg.removeEventListener("pointerleave", onLeave);
     };
-  }, [svgLoaded, hits, byZone, focusZone, fading, pinned]);
+  }, [svgLoaded, hits, byZone]);
+
+  // Cheap focus pass: toggle classes only (no getBBox / marker rebuild).
+  useEffect(() => {
+    if (!svgLoaded || !hostRef.current) return;
+    const svg = hostRef.current.querySelector("svg");
+    if (!svg) return;
+
+    for (const [zone, ids] of Object.entries(ZONE_PANELS) as [CarDamageZoneId, string[]][]) {
+      const hit = byZone.get(zone);
+      const isFocus = focusZone === zone;
+      for (const id of ids) {
+        const el = svg.querySelector(`#${CSS.escape(id)}`);
+        if (!el) continue;
+        toggleFocusClass(el, "active", Boolean(hit) && isFocus);
+        toggleFocusClass(el, "dim", fading && (!hit || !isFocus));
+      }
+    }
+
+    svg.querySelectorAll(".st1").forEach((el) => {
+      toggleFocusClass(el, "dim", fading);
+    });
+
+    svg.querySelectorAll("#km-damage-markers > [data-zone]").forEach((g) => {
+      const zone = g.getAttribute("data-zone") as CarDamageZoneId | null;
+      const selected = zone != null && focusZone === zone;
+      const dimmed = fading && !selected;
+      g.setAttribute(
+        "class",
+        ["km-marker", selected ? "km-marker-selected" : "", dimmed ? "km-marker-dim" : ""]
+          .filter(Boolean)
+          .join(" "),
+      );
+    });
+  }, [svgLoaded, byZone, focusZone, fading]);
 
   // Click outside the whole diagram card clears pin + hover
   useEffect(() => {
@@ -331,7 +346,7 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
     <div
       ref={rootRef}
       className={cn(
-        "rounded-xl border border-border/70 bg-slate-50 dark:bg-slate-950/50",
+        "rounded-xl border border-border/70 bg-zinc-50/80 dark:bg-transparent",
         compact ? "p-2.5 sm:p-3" : "p-3 sm:p-4",
         className,
       )}
@@ -350,14 +365,14 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
           <div
             ref={hostRef}
             className={cn(
-              "w-full rounded-lg bg-white dark:bg-slate-900/80 [&_svg]:w-full [&_svg]:h-auto",
+              "w-full rounded-lg bg-zinc-100/50 dark:bg-transparent [&_svg]:w-full [&_svg]:h-auto",
               compact && "max-h-[220px] overflow-hidden [&_svg]:max-h-[220px] [&_svg]:object-contain",
             )}
           />
           {!svgLoaded ? (
             <div
               className={cn(
-                "w-full animate-pulse rounded-md bg-slate-100 dark:bg-slate-800",
+                "w-full animate-pulse rounded-md bg-zinc-200/70 dark:bg-transparent dark:border dark:border-border/40",
                 compact ? "h-[180px]" : "aspect-[706/889]",
               )}
             />
@@ -368,8 +383,8 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
               const meta = DAMAGE_SEVERITY_META[sev];
               const angle = sev === "repair" || sev === "sheet_metal" ? 45 : -45;
               return (
-                <div key={sev} className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
-                  <svg width="34" height="14" className="border border-slate-300 dark:border-slate-600 overflow-hidden rounded-[2px]">
+                <div key={sev} className="flex items-center gap-1.5 text-[11px] text-zinc-600 dark:text-zinc-300">
+                  <svg width="34" height="14" className="border border-zinc-300 dark:border-zinc-600 overflow-hidden rounded-[2px]">
                     <defs>
                       <pattern
                         id={`${uid}-leg-${sev}`}
@@ -382,10 +397,10 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
                           width="9"
                           height="9"
                           className={cn(
-                            sev === "replace" && "fill-slate-600 dark:fill-slate-800",
-                            sev === "repair" && "fill-red-800 dark:fill-red-950",
-                            sev === "paint" && "fill-amber-800 dark:fill-amber-950",
-                            sev === "sheet_metal" && "fill-rose-800 dark:fill-rose-950",
+                            sev === "replace" && "fill-zinc-200 dark:fill-zinc-700/50",
+                            sev === "repair" && "fill-red-200 dark:fill-red-900/45",
+                            sev === "paint" && "fill-amber-200 dark:fill-amber-900/40",
+                            sev === "sheet_metal" && "fill-rose-200 dark:fill-rose-900/45",
                           )}
                         />
                         <path d="M0 4.5 H9" stroke={meta.hatch} strokeWidth="2.4" />
@@ -402,8 +417,8 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
 
         {!compact ? (
           <div className="w-full space-y-2.5">
-            <div className="rounded-lg border border-border/60 overflow-hidden">
-              <div className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border-b border-border/50 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="rounded-lg border border-border/60 overflow-hidden dark:bg-transparent">
+              <div className="px-3 py-1.5 bg-zinc-50/80 dark:bg-transparent border-b border-border/50 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("damage_diagram_repair_zones")}
               </div>
               <ul className="divide-y divide-border/40 max-h-[280px] sm:max-h-none overflow-y-auto">
@@ -424,12 +439,12 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
                         className={cn(
                           "w-full flex items-center gap-2.5 px-3 py-2 text-left border-l-[3px] transition-colors",
                           selected
-                            ? "bg-slate-100 dark:bg-slate-800 border-l-slate-700 dark:border-l-slate-300"
+                            ? "bg-zinc-100/80 dark:bg-muted/25 border-l-zinc-500 dark:border-l-zinc-300"
                             : "border-l-transparent hover:bg-muted/30",
                         )}
                         style={selected ? { boxShadow: `inset 0 0 0 1px ${meta.stroke}33` } : undefined}
                       >
-                        <svg width="28" height="12" className="shrink-0 border border-slate-300 dark:border-slate-600 overflow-hidden rounded-[2px]">
+                        <svg width="28" height="12" className="shrink-0 border border-zinc-300 dark:border-zinc-600 overflow-hidden rounded-[2px]">
                           <defs>
                             <pattern
                               id={`${uid}-row-${hit.zone}`}
@@ -442,10 +457,10 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
                                 width="9"
                                 height="9"
                                 className={cn(
-                                  hit.severity === "replace" && "fill-slate-600 dark:fill-slate-800",
-                                  hit.severity === "repair" && "fill-red-800 dark:fill-red-950",
-                                  hit.severity === "paint" && "fill-amber-800 dark:fill-amber-950",
-                                  hit.severity === "sheet_metal" && "fill-rose-800 dark:fill-rose-950",
+                                  hit.severity === "replace" && "fill-zinc-200 dark:fill-zinc-700/50",
+                                  hit.severity === "repair" && "fill-red-200 dark:fill-red-900/45",
+                                  hit.severity === "paint" && "fill-amber-200 dark:fill-amber-900/40",
+                                  hit.severity === "sheet_metal" && "fill-rose-200 dark:fill-rose-900/45",
                                 )}
                               />
                               <path d="M0 4.5 H9" stroke={meta.hatch} strokeWidth="2.4" />
@@ -469,7 +484,7 @@ export function CarDamageDiagram({ extras, t, className, compact = false }: Prop
               </ul>
             </div>
 
-            <div className="rounded-lg border border-border/60 px-3 py-2.5 min-h-[5rem] bg-slate-50/80 dark:bg-slate-900/50">
+            <div className="rounded-lg border border-border/60 px-3 py-2.5 min-h-[5rem] bg-zinc-50/60 dark:bg-transparent">
               {activeHit ? (
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold">

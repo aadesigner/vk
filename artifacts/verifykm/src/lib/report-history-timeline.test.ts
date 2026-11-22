@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { buildMileageSeries } from "@/components/report-history-timeline";
 import {
   collectReportTimelineEvents,
   hasManualMileageDetail,
@@ -139,5 +140,26 @@ describe("shouldShowReportTimeline", () => {
     const registry = events.find((e) => e.type === "registry")!;
     expect(registry.title).toBe("First registration");
     expect(registry.details?.[0]?.label).toMatch(/First registration/i);
+  });
+});
+
+describe("buildMileageSeries", () => {
+  it("ignores accident odometer dips so the line stays monotonic with mileageHistory", () => {
+    const events = collectReportTimelineEvents({
+      year: 2018,
+      mileageHistory: [
+        { odometer: 40_000, date: "2020-01-01" },
+        { odometer: 80_000, date: "2023-01-01" },
+        { odometer: 95_000, date: "2024-06-01" },
+      ],
+      accidents: [
+        { date: "2021-06-01", odometerAtLoss: 55_000, severity: "minor" },
+        // Stale/wrong loss odo between rising mileage readings — must not bend the chart.
+        { date: "2022-06-01", odometerAtLoss: 30_000, severity: "minor" },
+      ],
+    });
+    const series = buildMileageSeries(events);
+    const kms = series.filter((p) => p.km > 0).map((p) => p.km);
+    expect(kms).toEqual([40_000, 80_000, 95_000]);
   });
 });
