@@ -12,6 +12,7 @@ import {
   buildForcedKoreanBuyList,
   hasKoreanMarketVhrSignal,
   looksLikeKoreanMarketCountry,
+  mergeForcedKoreanIntoSelection,
   parseVhrSourceCheck,
   selectVhrSourcesToBuy,
   VHR_KOREAN_INSURANCE_ID,
@@ -129,6 +130,15 @@ describe("QA: force-68 Korean-market signals", () => {
     ]);
     // 5+4 without force is selectVhrSourcesToBuy; force path uses 68 as partner, not 5.
     expect(buildForcedKoreanBuyList(vin).map((s) => s.sourceId)).toEqual([68, 4]);
+  });
+
+  it("last-resort merge adds 68 when flaky check returned only Vehicle History", () => {
+    const vin = "KNAF241BEMA915413";
+    const merged = mergeForcedKoreanIntoSelection(vin, [
+      { sourceId: 5, sourceName: "Vehicle History", priceUsd: 1, language: "en" },
+    ]);
+    expect(merged.map((s) => s.sourceId)).toContain(68);
+    expect(merged.map((s) => s.sourceId)).toContain(5);
   });
 });
 

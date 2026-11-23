@@ -16,6 +16,8 @@
  *
  * KR check quota: peeks never ask source 68. Fulfill includes 68 only when
  * quota allows; otherwise force:true 68 for Korean-market VINs (± companions).
+ * Post-pay last resort: Korean-market VINs always get a 68 buy attempt (force
+ * when check missed/flaky); empty/failed → VIN_NO_DATA → pending_manual.
  */
 import { and, eq } from "drizzle-orm";
 import { db, providersTable } from "@workspace/db";
@@ -1115,11 +1117,24 @@ async function fetchVhrJsonPayload(jsonUrl: string): Promise<unknown | null> {
   }
 }
 
+function isVhrNoDataError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const code = "code" in err ? String((err as { code?: unknown }).code ?? "") : "";
+  if (code === "VIN_NO_DATA") return true;
+  const message = err instanceof Error ? err.message : String(err);
+  return /no vehicle history data found|vin not found|vhr report failed/i.test(message);
+}
+
 /**
  * Purchase selected VHR sources (parallel).
- * Partial success (at least one report) is delivered.
- * When KR check quota is low, force-buy source 68 for Korean-market VINs
- * (K* WMI, Korea country from decode/catalog, or free inspections signal).
+ * Partial success (at least one report with usable structured data) is delivered.
+ *
+ * Korean Insurance (68) last resort (post-pay only):
+ * - For Korean-market VINs, always ensure 68 is purchased — even when /checks is flaky
+ *   or returned other sources without 68 (provider KR-check troubles).
+ * - Buy with force:true when check did not confirm 68.
+ * - If 68 buy fails without force, retry once with force:true.
+ * - If nothing usable comes back → VIN_NO_DATA (fulfillment → pending_manual).
  */
 export async function fetchCarstatVhrReport(
   vin: string,
@@ -1177,12 +1192,9 @@ export async function fetchCarstatVhrReport(
     toBuy = mergeForcedKoreanIntoSelection(normalized, toBuy);
   }
 
-  // Archives/etc. selected without 68 under low quota — attach force-68 + inspections when Korean-market.
-  if (
-    !forceKorean
-    && !toBuy.some((s) => s.sourceId === VHR_KOREAN_INSURANCE_ID)
-    && !canIncludeKoreanInsuranceInCheck()
-  ) {
+  // Korean-market last resort: always attach 68 when check missed it / is flaky.
+  // (Previously only under low quota — broken KR checks could return 5/4 without 68.)
+  if (!toBuy.some((s) => s.sourceId === VHR_KOREAN_INSURANCE_ID)) {
     const gate = await getForceGate();
     if (gate.force) {
       forceKorean = true;
@@ -1192,6 +1204,7 @@ export async function fetchCarstatVhrReport(
         vin: normalized,
         reason: gate.reason,
         selected: toBuy.map((s) => s.sourceId),
+        canSpendKrCheck: canIncludeKoreanInsuranceInCheck(),
       });
     }
   }
@@ -1201,11 +1214,35 @@ export async function fetchCarstatVhrReport(
   const settled = await Promise.all(
     toBuy.map(async (selected) => {
       try {
-        const useForce =
+        let useForce =
           forceKorean && selected.sourceId === VHR_KOREAN_INSURANCE_ID;
-        const report = await purchaseOneVhrSource(cfg, normalized, selected, {
-          force: useForce,
-        });
+        let report: CarstatVhrReport;
+        try {
+          report = await purchaseOneVhrSource(cfg, normalized, selected, {
+            force: useForce,
+          });
+        } catch (firstErr) {
+          // Check said "no" / flaky → retry Korean Insurance once with force:true.
+          if (
+            selected.sourceId === VHR_KOREAN_INSURANCE_ID
+            && !useForce
+            && isVhrNoDataError(firstErr)
+            && (await getForceGate()).force
+          ) {
+            useForce = true;
+            forceKorean = true;
+            logger.info({
+              msg: "carstat_vhr_force_68_retry",
+              vin: normalized,
+              reason: (await getForceGate()).reason,
+            });
+            report = await purchaseOneVhrSource(cfg, normalized, selected, {
+              force: true,
+            });
+          } else {
+            throw firstErr;
+          }
+        }
         let jsonPayload: unknown = null;
         if (report.jsonUrl) {
           const payload = await fetchVhrJsonPayload(report.jsonUrl);
@@ -1236,7 +1273,7 @@ export async function fetchCarstatVhrReport(
           hasJson: !!report.jsonUrl,
           jsonLoaded: jsonPayload != null,
         });
-        return { ok: true as const, report, jsonPayload };
+        return { ok: true as const, selected, report, jsonPayload };
       } catch (err) {
         logger.warn({
           msg: "carstat_vhr_report_one_failed",
@@ -1244,7 +1281,7 @@ export async function fetchCarstatVhrReport(
           sourceId: selected.sourceId,
           err: err instanceof Error ? err.message : String(err),
         });
-        return { ok: false as const, err };
+        return { ok: false as const, selected, err };
       }
     }),
   );
@@ -1252,8 +1289,12 @@ export async function fetchCarstatVhrReport(
   const reports: CarstatVhrReport[] = [];
   const jsonPayloads: unknown[] = [];
   const errors: unknown[] = [];
+  let koreanBuyAttempted = false;
+  let koreanBuyOk = false;
   for (const row of settled) {
+    if (row.selected.sourceId === VHR_KOREAN_INSURANCE_ID) koreanBuyAttempted = true;
     if (row.ok) {
+      if (row.selected.sourceId === VHR_KOREAN_INSURANCE_ID) koreanBuyOk = true;
       reports.push(row.report);
       if (row.jsonPayload != null) jsonPayloads.push(row.jsonPayload);
     } else {
@@ -1273,7 +1314,7 @@ export async function fetchCarstatVhrReport(
     ? normalizeCarstatVhrJsonPayloads(jsonPayloads, { vin: normalized })
     : {};
 
-  return {
+  const result = {
     ...structured,
     dataSource: CARSTAT_VHR_DATA_SOURCE,
     vhrReports: reports,
@@ -1282,6 +1323,23 @@ export async function fetchCarstatVhrReport(
     vhrReports: CarstatVhrReport[];
     vhrReport: CarstatVhrReport;
   };
+
+  // Hollow buy (URLs but no usable report fields) → pending, not an empty "complete".
+  if (!hasStructuredVhrReport(result)) {
+    logger.info({
+      msg: "carstat_vhr_report_no_structured_data",
+      vin: normalized,
+      reportCount: reports.length,
+      koreanBuyAttempted,
+      koreanBuyOk,
+      forceKorean,
+    });
+    throw Object.assign(new Error("No vehicle history data found for this VIN in our database."), {
+      code: "VIN_NO_DATA",
+    });
+  }
+
+  return result;
 }
 
 export function isCarstatVhrPayload(data: unknown): data is NormalizedVinData & {
