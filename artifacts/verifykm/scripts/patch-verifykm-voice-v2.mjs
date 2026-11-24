@@ -19,7 +19,7 @@ Object.assign(en, {
   countries_subtitle: "Pick a market lane. Each guide explains what VerifyKM looks for on that origin.",
   stats_countries_badge: "Coverage lanes",
   cta_title: "Buy with a dossier. Not a vibe.",
-  cta_desc: "€19.99 unlocks one full VIN file — or save with multi-report packs.",
+  cta_desc: "€17.99 unlocks one full VIN file — or save with multi-report packs.",
   footer_tagline:
     "VerifyKM is a VIN investigation desk for importers and careful buyers. Evidence first. Guesswork never.",
   footer_data_source: "Auction · insurance · marketplace · registration signals",
@@ -40,7 +40,7 @@ Object.assign(en, {
   pricing_hero_title_1: "One payment.",
   pricing_hero_title_2: "One full evidence file.",
   pricing_hero_lead:
-    "€19.99 per dossier (was €29.99). Packs: €16.99 each ×3, or €12.99 each ×5.",
+    "€17.99 per dossier (was €29.99). Packs: €14.99 each ×3, or €11.99 each ×5.",
   pricing_subtitle: "Transparent dossier pricing — no subscription, no reseller portal.",
   free_decoder_title: "Free chassis decoder",
   free_decoder_title_highlight: "chassis decoder",
@@ -61,9 +61,9 @@ const patches = {
       "Open a VerifyKM VIN dossier. Surface odometer trails, auction hits, salvage brands and theft signals for cars from the USA, Korea, Canada, China, Japan and Dubai.",
   },
   pricing: {
-    title: "Dossier Pricing — €19.99 VIN File | VerifyKM",
+    title: "Dossier Pricing — €17.99 VIN File | VerifyKM",
     description:
-      "One payment unlocks a full VIN dossier at €19.99 (standard €29.99). Multi-report packs from €12.99 per file. Instant delivery. No subscription.",
+      "One payment unlocks a full VIN dossier at €17.99 (standard €29.99). Multi-report packs from €11.99 per file. Instant delivery. No subscription.",
   },
   how_it_works: {
     title: "VerifyKM Workflow — VIN Dossier in Three Steps",

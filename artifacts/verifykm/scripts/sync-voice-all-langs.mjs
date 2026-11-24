@@ -20,7 +20,7 @@ const voice = {
     countries_subtitle: "Wählen Sie eine Marktspur. Jeder Leitfaden erklärt, wonach VerifyKM in diesem Herkunftsland sucht.",
     stats_countries_badge: "Abdeckung",
     cta_title: "Mit Dossier kaufen. Nicht nach Bauchgefühl.",
-    cta_desc: "€19,99 schaltet eine vollständige VIN-Akte frei — oder sparen Sie mit Mehrfach-Paketen.",
+    cta_desc: "€17,99 schaltet eine vollständige VIN-Akte frei — oder sparen Sie mit Mehrfach-Paketen.",
     footer_tagline:
       "VerifyKM ist ein VIN-Ermittlungsdesk für Importeure und sorgfältige Käufer. Zuerst Beweise. Nie Rätselraten.",
     footer_data_source: "Auktion · Versicherung · Marktplatz · Zulassungssignale",
@@ -39,7 +39,7 @@ const voice = {
     pricing_hero_title_1: "Einmal zahlen.",
     pricing_hero_title_2: "Eine vollständige Beweisakte.",
     pricing_hero_lead:
-      "€19,99 pro Dossier (statt €29,99). Pakete: €16,99 je ×3 oder €12,99 je ×5.",
+      "€17,99 pro Dossier (statt €29,99). Pakete: €14,99 je ×3 oder €11,99 je ×5.",
     pricing_subtitle: "Transparente Dossier-Preise — kein Abo, kein Reseller-Portal.",
     pricing_hero_eyebrow: "Einführungspreis · War €29,99",
     free_decoder_title: "Kostenloser Chassis-Decoder",
@@ -63,7 +63,7 @@ const voice = {
     countries_subtitle: "Elija un mercado. Cada guía explica qué busca VerifyKM en ese origen.",
     stats_countries_badge: "Cobertura",
     cta_title: "Compre con un dossier. No con intuición.",
-    cta_desc: "19,99 € desbloquea un archivo VIN completo — o ahorre con packs multi-informe.",
+    cta_desc: "17,99 € desbloquea un archivo VIN completo — o ahorre con packs multi-informe.",
     footer_tagline:
       "VerifyKM es un escritorio de investigación VIN para importadores y compradores cuidadosos. Primero evidencia. Nunca conjeturas.",
     footer_data_source: "Subasta · seguro · marketplace · señales de registro",
@@ -82,7 +82,7 @@ const voice = {
     pricing_hero_title_1: "Un solo pago.",
     pricing_hero_title_2: "Un archivo de evidencia completo.",
     pricing_hero_lead:
-      "19,99 € por dossier (antes 29,99 €). Packs: 16,99 € cada uno ×3, o 12,99 € cada uno ×5.",
+      "17,99 € por dossier (antes 29,99 €). Packs: 14,99 € cada uno ×3, o 11,99 € cada uno ×5.",
     pricing_subtitle: "Precios claros de dossier — sin suscripción ni portal revendedor.",
     pricing_hero_eyebrow: "Precio de lanzamiento · Era 29,99 €",
     free_decoder_title: "Decodificador de chasis gratis",
@@ -105,7 +105,7 @@ const voice = {
     countries_subtitle: "Choisissez une piste marché. Chaque guide explique ce que VerifyKM cherche pour cette origine.",
     stats_countries_badge: "Couverture",
     cta_title: "Achetez avec un dossier. Pas au feeling.",
-    cta_desc: "19,99 € débloque un fichier VIN complet — ou économisez avec des packs multi-rapports.",
+    cta_desc: "17,99 € débloque un fichier VIN complet — ou économisez avec des packs multi-rapports.",
     footer_tagline:
       "VerifyKM est un bureau d'investigation VIN pour importateurs et acheteurs exigeants. Preuves d'abord. Jamais d'à-peu-près.",
     footer_data_source: "Enchères · assurance · marketplace · signaux d'immatriculation",
@@ -124,7 +124,7 @@ const voice = {
     pricing_hero_title_1: "Un paiement.",
     pricing_hero_title_2: "Un fichier de preuves complet.",
     pricing_hero_lead:
-      "19,99 € par dossier (au lieu de 29,99 €). Packs : 16,99 € chacun ×3, ou 12,99 € chacun ×5.",
+      "17,99 € par dossier (au lieu de 29,99 €). Packs : 14,99 € chacun ×3, ou 11,99 € chacun ×5.",
     pricing_subtitle: "Tarifs dossier transparents — pas d'abonnement, pas de portail revendeur.",
     pricing_hero_eyebrow: "Prix de lancement · Était 29,99 €",
     free_decoder_title: "Décodeur de châssis gratuit",
@@ -147,7 +147,7 @@ const voice = {
     countries_subtitle: "Zgjidhni një treg. Çdo udhëzues shpjegon çfarë kërkon VerifyKM për atë origjinë.",
     stats_countries_badge: "Mbulimi",
     cta_title: "Blini me dosje. Jo me ndjenjë.",
-    cta_desc: "€19.99 hap një skedar të plotë VIN — ose kurseni me paketa shumë-raporte.",
+    cta_desc: "€17.99 hap një skedar të plotë VIN — ose kurseni me paketa shumë-raporte.",
     footer_tagline:
       "VerifyKM është një tavolinë hetimi VIN për importues dhe blerës të kujdesshëm. Së pari prova. Kurrë hamendësime.",
     footer_data_source: "Ankand · sigurim · treg · sinjale regjistrimi",
@@ -166,7 +166,7 @@ const voice = {
     pricing_hero_title_1: "Një pagesë.",
     pricing_hero_title_2: "Një skedar i plotë prove.",
     pricing_hero_lead:
-      "€19.99 për dosje (ishte €29.99). Paketa: €16.99 secila ×3, ose €12.99 secila ×5.",
+      "€17.99 për dosje (ishte €29.99). Paketa: €14.99 secila ×3, ose €11.99 secila ×5.",
     pricing_subtitle: "Çmime transparente dosjeje — pa abonim, pa portal rishitësi.",
     pricing_hero_eyebrow: "Çmim nisjeje · Ishte €29.99",
     free_decoder_title: "Dekodues falas i shasisë",
@@ -189,7 +189,7 @@ const voice = {
     countries_subtitle: "Wybierz rynek. Każdy przewodnik wyjaśnia, czego szuka VerifyKM dla tego pochodzenia.",
     stats_countries_badge: "Zasięg",
     cta_title: "Kupuj z dossier. Nie na wyczucie.",
-    cta_desc: "19,99 € odblokowuje pełny plik VIN — lub oszczędzaj z pakietami wieloraportowymi.",
+    cta_desc: "17,99 € odblokowuje pełny plik VIN — lub oszczędzaj z pakietami wieloraportowymi.",
     footer_tagline:
       "VerifyKM to biurko dochodzeń VIN dla importerów i ostrożnych kupujących. Najpierw dowody. Nigdy domysły.",
     footer_data_source: "Aukcja · ubezpieczenie · marketplace · sygnały rejestracji",
@@ -208,7 +208,7 @@ const voice = {
     pricing_hero_title_1: "Jedna płatność.",
     pricing_hero_title_2: "Jedna pełna teczka dowodów.",
     pricing_hero_lead:
-      "19,99 € za dossier (było 29,99 €). Pakiety: 16,99 € szt. ×3 lub 12,99 € szt. ×5.",
+      "17,99 € za dossier (było 29,99 €). Pakiety: 14,99 € szt. ×3 lub 11,99 € szt. ×5.",
     pricing_subtitle: "Przejrzyste ceny dossier — bez subskrypcji i portalu resellerów.",
     pricing_hero_eyebrow: "Cena startowa · Było 29,99 €",
     free_decoder_title: "Darmowy dekoder nadwozia",
@@ -231,7 +231,7 @@ const voice = {
     countries_subtitle: "Alegeți o piață. Fiecare ghid explică ce caută VerifyKM pentru acea origine.",
     stats_countries_badge: "Acoperire",
     cta_title: "Cumpărați cu dosar. Nu după senzații.",
-    cta_desc: "19,99 € deblochează un fișier VIN complet — sau economisiți cu pachete multi-raport.",
+    cta_desc: "17,99 € deblochează un fișier VIN complet — sau economisiți cu pachete multi-raport.",
     footer_tagline:
       "VerifyKM este un birou de investigație VIN pentru importatori și cumpărători atenți. Mai întâi dovezi. Niciodată ghicituri.",
     footer_data_source: "Licitație · asigurare · marketplace · semnale de înregistrare",
@@ -250,7 +250,7 @@ const voice = {
     pricing_hero_title_1: "O singură plată.",
     pricing_hero_title_2: "Un fișier complet de dovezi.",
     pricing_hero_lead:
-      "19,99 € pe dosar (era 29,99 €). Pachete: 16,99 € fiecare ×3, sau 12,99 € fiecare ×5.",
+      "17,99 € pe dosar (era 29,99 €). Pachete: 14,99 € fiecare ×3, sau 11,99 € fiecare ×5.",
     pricing_subtitle: "Prețuri transparente pentru dosar — fără abonament, fără portal reseller.",
     pricing_hero_eyebrow: "Preț de lansare · Era 29,99 €",
     free_decoder_title: "Decodor gratuit de șasiu",
@@ -273,7 +273,7 @@ const voice = {
     countries_subtitle: "Изберете пазар. Всяко ръководство обяснява какво търси VerifyKM за този произход.",
     stats_countries_badge: "Покритие",
     cta_title: "Купувайте с досие. Не на усет.",
-    cta_desc: "€19,99 отключва пълен VIN файл — или спестете с пакети за няколко отчета.",
+    cta_desc: "€17,99 отключва пълен VIN файл — или спестете с пакети за няколко отчета.",
     footer_tagline:
       "VerifyKM е бюро за VIN разследване за вносители и внимателни купувачи. Първо доказателства. Никога догадки.",
     footer_data_source: "Търг · застраховка · пазар · сигнали за регистрация",
@@ -292,7 +292,7 @@ const voice = {
     pricing_hero_title_1: "Едно плащане.",
     pricing_hero_title_2: "Един пълен доказателствен файл.",
     pricing_hero_lead:
-      "€19,99 на досие (беше €29,99). Пакети: €16,99 всеки ×3, или €12,99 всеки ×5.",
+      "€17,99 на досие (беше €29,99). Пакети: €14,99 всеки ×3, или €11,99 всеки ×5.",
     pricing_subtitle: "Прозрачни цени за досие — без абонамент, без реселър портал.",
     pricing_hero_eyebrow: "Начална цена · Беше €29,99",
     free_decoder_title: "Безплатен декодер на шаси",
@@ -315,7 +315,7 @@ const voice = {
     countries_subtitle: "აირჩიეთ ბაზარი. თითოეული გზამკვლევი ხსნის, რას ეძებს VerifyKM ამ წარმოშობისთვის.",
     stats_countries_badge: "დაფარვა",
     cta_title: "იყიდეთ დოსიეთი. არა შეგრძნებით.",
-    cta_desc: "€19.99 ხსნის სრულ VIN ფაილს — ან დაზოგეთ მრავალრეპორტიანი პაკეტებით.",
+    cta_desc: "€17.99 ხსნის სრულ VIN ფაილს — ან დაზოგეთ მრავალრეპორტიანი პაკეტებით.",
     footer_tagline:
       "VerifyKM არის VIN გამოძიების მაგიდა იმპორტიორებისა და ფრთხილი მყიდველებისთვის. ჯერ მტკიცებულება. არასოდეს გამოცნობა.",
     footer_data_source: "აუქციონი · დაზღვევა · მარკეტპლეისი · რეგისტრაციის სიგნალები",
@@ -334,7 +334,7 @@ const voice = {
     pricing_hero_title_1: "ერთი გადახდა.",
     pricing_hero_title_2: "ერთი სრული მტკიცებულების ფაილი.",
     pricing_hero_lead:
-      "€19.99 დოსიეზე (იყო €29.99). პაკეტები: €16.99 თითო ×3, ან €12.99 თითო ×5.",
+      "€17.99 დოსიეზე (იყო €29.99). პაკეტები: €14.99 თითო ×3, ან €11.99 თითო ×5.",
     pricing_subtitle: "გამჭვირვალე დოსიეს ფასები — გამოწერის გარეშე, რესელერის პორტალის გარეშე.",
     pricing_hero_eyebrow: "გაშვების ფასი · იყო €29.99",
     free_decoder_title: "უფასო შასის დეკოდერი",
@@ -357,7 +357,7 @@ const voice = {
     countries_subtitle: "اختر سوقاً. يشرح كل دليل ما يبحث عنه VerifyKM لهذا المنشأ.",
     stats_countries_badge: "التغطية",
     cta_title: "اشترِ بملف. لا بالإحساس.",
-    cta_desc: "19.99€ تفتح ملف VIN كاملاً — أو وفّر مع باقات التقارير المتعددة.",
+    cta_desc: "17.99€ تفتح ملف VIN كاملاً — أو وفّر مع باقات التقارير المتعددة.",
     footer_tagline:
       "VerifyKM مكتب تحقيق VIN للمستوردين والمشترين الحذرين. الأدلة أولاً. لا تخمين أبداً.",
     footer_data_source: "مزاد · تأمين · سوق · إشارات تسجيل",
@@ -376,7 +376,7 @@ const voice = {
     pricing_hero_title_1: "دفعة واحدة.",
     pricing_hero_title_2: "ملف أدلة كامل.",
     pricing_hero_lead:
-      "19.99€ للملف (كان 29.99€). الباقات: 16.99€ لكل ×3، أو 12.99€ لكل ×5.",
+      "17.99€ للملف (كان 29.99€). الباقات: 14.99€ لكل ×3، أو 11.99€ لكل ×5.",
     pricing_subtitle: "أسعار ملفات شفافة — بلا اشتراك وبلا بوابة إعادة بيع.",
     pricing_hero_eyebrow: "سعر الإطلاق · كان 29.99€",
     free_decoder_title: "فكّ هيكل مجاني",
@@ -399,7 +399,7 @@ const voice = {
     countries_subtitle: "Оберіть ринок. Кожен гід пояснює, що шукає VerifyKM для цього походження.",
     stats_countries_badge: "Покриття",
     cta_title: "Купуйте з досьє. Не на відчуттях.",
-    cta_desc: "€19,99 відкриває повний VIN-файл — або заощаджуйте з пакетами з кількома звітами.",
+    cta_desc: "€17,99 відкриває повний VIN-файл — або заощаджуйте з пакетами з кількома звітами.",
     footer_tagline:
       "VerifyKM — стіл VIN-розслідувань для імпортерів і обережних покупців. Спочатку докази. Ніколи здогадки.",
     footer_data_source: "Аукціон · страхування · маркетплейс · сигнали реєстрації",
@@ -418,7 +418,7 @@ const voice = {
     pricing_hero_title_1: "Одна оплата.",
     pricing_hero_title_2: "Один повний файл доказів.",
     pricing_hero_lead:
-      "€19,99 за досьє (було €29,99). Пакети: €16,99 кожне ×3, або €12,99 кожне ×5.",
+      "€17,99 за досьє (було €29,99). Пакети: €14,99 кожне ×3, або €11,99 кожне ×5.",
     pricing_subtitle: "Прозорі ціни на досьє — без підписки й реселер-порталу.",
     pricing_hero_eyebrow: "Стартова ціна · Було €29,99",
     free_decoder_title: "Безкоштовний декодер шасі",
@@ -441,7 +441,7 @@ const voice = {
     countries_subtitle: "Выберите рынок. Каждый гид объясняет, что ищет VerifyKM для этого происхождения.",
     stats_countries_badge: "Покрытие",
     cta_title: "Покупайте с досье. Не на ощущениях.",
-    cta_desc: "€19,99 открывает полный VIN-файл — или экономьте с пакетами на несколько отчётов.",
+    cta_desc: "€17,99 открывает полный VIN-файл — или экономьте с пакетами на несколько отчётов.",
     footer_tagline:
       "VerifyKM — стол VIN-расследований для импортёров и осторожных покупателей. Сначала доказательства. Никогда догадки.",
     footer_data_source: "Аукцион · страховка · маркетплейс · сигналы регистрации",
@@ -460,7 +460,7 @@ const voice = {
     pricing_hero_title_1: "Одна оплата.",
     pricing_hero_title_2: "Один полный файл доказательств.",
     pricing_hero_lead:
-      "€19,99 за досье (было €29,99). Пакеты: €16,99 каждое ×3, или €12,99 каждое ×5.",
+      "€17,99 за досье (было €29,99). Пакеты: €14,99 каждое ×3, или €11,99 каждое ×5.",
     pricing_subtitle: "Прозрачные цены на досье — без подписки и реселлер-портала.",
     pricing_hero_eyebrow: "Стартовая цена · Было €29,99",
     free_decoder_title: "Бесплатный декодер шасси",
@@ -483,7 +483,7 @@ const voice = {
     countries_subtitle: "选择一个市场。每份指南说明 VerifyKM 对该来源查什么。",
     stats_countries_badge: "覆盖范围",
     cta_title: "用档案买车。别凭感觉。",
-    cta_desc: "€19.99 解锁完整 VIN 文件——或多份套餐更省。",
+    cta_desc: "€17.99 解锁完整 VIN 文件——或多份套餐更省。",
     footer_tagline:
       "VerifyKM 是面向进口商与谨慎买家的 VIN 调查台。证据优先。绝不猜测。",
     footer_data_source: "拍卖 · 保险 · 市场 · 登记信号",
@@ -502,7 +502,7 @@ const voice = {
     pricing_hero_title_1: "一次付款。",
     pricing_hero_title_2: "一份完整证据文件。",
     pricing_hero_lead:
-      "每份档案 €19.99（原价 €29.99）。套餐：每份 €16.99 ×3，或每份 €12.99 ×5。",
+      "每份档案 €17.99（原价 €29.99）。套餐：每份 €14.99 ×3，或每份 €11.99 ×5。",
     pricing_subtitle: "透明档案定价——无订阅，无经销商门户。",
     pricing_hero_eyebrow: "上线价 · 原价 €29.99",
     free_decoder_title: "免费车架号解码",
@@ -585,64 +585,64 @@ const seoPatches = {
   },
   pricing: {
     de: {
-      title: "Dossier-Preise — €19,99 VIN-Akte | VerifyKM",
+      title: "Dossier-Preise — €17,99 VIN-Akte | VerifyKM",
       description:
-        "Eine Zahlung schaltet ein volles VIN-Dossier für €19,99 frei (Standard €29,99). Mehrfach-Pakete ab €12,99 pro Akte. Sofortlieferung. Kein Abo.",
+        "Eine Zahlung schaltet ein volles VIN-Dossier für €17,99 frei (Standard €29,99). Mehrfach-Pakete ab €11,99 pro Akte. Sofortlieferung. Kein Abo.",
     },
     es: {
-      title: "Precios del dossier — archivo VIN 19,99 € | VerifyKM",
+      title: "Precios del dossier — archivo VIN 17,99 € | VerifyKM",
       description:
-        "Un pago desbloquea un dossier VIN completo por 19,99 € (estándar 29,99 €). Packs multi-informe desde 12,99 € por archivo. Entrega instantánea. Sin suscripción.",
+        "Un pago desbloquea un dossier VIN completo por 17,99 € (estándar 29,99 €). Packs multi-informe desde 11,99 € por archivo. Entrega instantánea. Sin suscripción.",
     },
     fr: {
-      title: "Tarifs dossier — fichier VIN 19,99 € | VerifyKM",
+      title: "Tarifs dossier — fichier VIN 17,99 € | VerifyKM",
       description:
-        "Un paiement débloque un dossier VIN complet à 19,99 € (standard 29,99 €). Packs multi-rapports dès 12,99 € par fichier. Livraison instantanée. Sans abonnement.",
+        "Un paiement débloque un dossier VIN complet à 17,99 € (standard 29,99 €). Packs multi-rapports dès 11,99 € par fichier. Livraison instantanée. Sans abonnement.",
     },
     sq: {
-      title: "Çmimet e dosjes — skedar VIN €19.99 | VerifyKM",
+      title: "Çmimet e dosjes — skedar VIN €17.99 | VerifyKM",
       description:
-        "Një pagesë hap dosje të plotë VIN për €19.99 (standarde €29.99). Paketa shumë-raporte nga €12.99 për skedar. Dorëzim i menjëhershëm. Pa abonim.",
+        "Një pagesë hap dosje të plotë VIN për €17.99 (standarde €29.99). Paketa shumë-raporte nga €11.99 për skedar. Dorëzim i menjëhershëm. Pa abonim.",
     },
     pl: {
-      title: "Cennik dossier — plik VIN 19,99 € | VerifyKM",
+      title: "Cennik dossier — plik VIN 17,99 € | VerifyKM",
       description:
-        "Jedna płatność odblokowuje pełne dossier VIN za 19,99 € (standard 29,99 €). Pakiety wieloraportowe od 12,99 € za plik. Natychmiastowa dostawa. Bez subskrypcji.",
+        "Jedna płatność odblokowuje pełne dossier VIN za 17,99 € (standard 29,99 €). Pakiety wieloraportowe od 11,99 € za plik. Natychmiastowa dostawa. Bez subskrypcji.",
     },
     ro: {
-      title: "Prețuri dosar — fișier VIN 19,99 € | VerifyKM",
+      title: "Prețuri dosar — fișier VIN 17,99 € | VerifyKM",
       description:
-        "O plată deblochează un dosar VIN complet la 19,99 € (standard 29,99 €). Pachete multi-raport de la 12,99 € per fișier. Livrare instantanee. Fără abonament.",
+        "O plată deblochează un dosar VIN complet la 17,99 € (standard 29,99 €). Pachete multi-raport de la 11,99 € per fișier. Livrare instantanee. Fără abonament.",
     },
     bg: {
-      title: "Цени на досието — VIN файл €19,99 | VerifyKM",
+      title: "Цени на досието — VIN файл €17,99 | VerifyKM",
       description:
-        "Едно плащане отключва пълно VIN досие за €19,99 (стандарт €29,99). Пакети от €12,99 на файл. Мигновена доставка. Без абонамент.",
+        "Едно плащане отключва пълно VIN досие за €17,99 (стандарт €29,99). Пакети от €11,99 на файл. Мигновена доставка. Без абонамент.",
     },
     ka: {
-      title: "დოსიეს ფასები — VIN ფაილი €19.99 | VerifyKM",
+      title: "დოსიეს ფასები — VIN ფაილი €17.99 | VerifyKM",
       description:
-        "ერთი გადახდა ხსნის სრულ VIN დოსიეს €19.99-ად (სტანდარტი €29.99). მრავალრეპორტიანი პაკეტები €12.99-დან ფაილზე. მყისიერი მიწოდება. გამოწერის გარეშე.",
+        "ერთი გადახდა ხსნის სრულ VIN დოსიეს €17.99-ად (სტანდარტი €29.99). მრავალრეპორტიანი პაკეტები €11.99-დან ფაილზე. მყისიერი მიწოდება. გამოწერის გარეშე.",
     },
     ar: {
-      title: "أسعار الملف — ملف VIN بـ 19.99€ | VerifyKM",
+      title: "أسعار الملف — ملف VIN بـ 17.99€ | VerifyKM",
       description:
-        "دفعة واحدة تفتح ملف VIN كاملاً بـ 19.99€ (القياسي 29.99€). باقات متعددة من 12.99€ للملف. تسليم فوري. بلا اشتراك.",
+        "دفعة واحدة تفتح ملف VIN كاملاً بـ 17.99€ (القياسي 29.99€). باقات متعددة من 11.99€ للملف. تسليم فوري. بلا اشتراك.",
     },
     uk: {
-      title: "Ціни на досьє — VIN-файл €19,99 | VerifyKM",
+      title: "Ціни на досьє — VIN-файл €17,99 | VerifyKM",
       description:
-        "Одна оплата відкриває повне VIN-досьє за €19,99 (стандарт €29,99). Пакети з кількома звітами від €12,99 за файл. Миттєва доставка. Без підписки.",
+        "Одна оплата відкриває повне VIN-досьє за €17,99 (стандарт €29,99). Пакети з кількома звітами від €11,99 за файл. Миттєва доставка. Без підписки.",
     },
     ru: {
-      title: "Цены на досье — VIN-файл €19,99 | VerifyKM",
+      title: "Цены на досье — VIN-файл €17,99 | VerifyKM",
       description:
-        "Одна оплата открывает полное VIN-досье за €19,99 (стандарт €29,99). Пакеты с несколькими отчётами от €12,99 за файл. Мгновенная доставка. Без подписки.",
+        "Одна оплата открывает полное VIN-досье за €17,99 (стандарт €29,99). Пакеты с несколькими отчётами от €11,99 за файл. Мгновенная доставка. Без подписки.",
     },
     zh: {
-      title: "档案价格 — €19.99 VIN 文件 | VerifyKM",
+      title: "档案价格 — €17.99 VIN 文件 | VerifyKM",
       description:
-        "一次付款以 €19.99 解锁完整 VIN 档案（标准价 €29.99）。多份套餐低至每份 €12.99。即时交付。无订阅。",
+        "一次付款以 €17.99 解锁完整 VIN 档案（标准价 €29.99）。多份套餐低至每份 €11.99。即时交付。无订阅。",
     },
   },
   how_it_works: {

@@ -19,7 +19,7 @@ import { getTestimonials } from "@/data/testimonials";
 import { TestimonialsSlider } from "@/components/testimonials-slider";
 import { HeroVinForm } from "@/components/hero-vin-form";
 import { AUTH_RETURN_PATH_KEY, redirectGuestForVinCheckout } from "@/lib/checkout-vin-flow";
-import { CREDIT_PACKS, rememberCreditPack, type CreditPackId } from "@/lib/creditPacks";
+import { CREDIT_PACKS, packSeparateTotal, rememberCreditPack, type CreditPackId } from "@/lib/creditPacks";
 import { cn } from "@/lib/utils";
 import { SiteFaqAccordion } from "@/components/site-faq-accordion";
 
@@ -318,10 +318,7 @@ export default function Pricing() {
                             <span className="mb-1 block text-[11px] font-semibold text-[#0088d4]">{t("pricing_best_value")}</span>
                           ) : null}
                           {(() => {
-                            const listUnit = discountEnabled
-                              ? (basePrice ?? DEFAULT_PRICING.basePrice)
-                              : displayPrice;
-                            const fullTotal = Math.round(listUnit * option.credits * 100) / 100;
+                            const fullTotal = packSeparateTotal(option, displayPrice);
                             const showFull = fullTotal > option.totalPrice + 0.009;
                             return (
                               <span className="flex items-baseline justify-end gap-1.5">

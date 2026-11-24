@@ -3,7 +3,7 @@ import { useLocation, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "@/i18n/context";
 import { useAuth } from "@/lib/auth-context";
-import { getCreditPack, isCreditPackId, readRememberedCreditPack } from "@/lib/creditPacks";
+import { getCreditPack, isCreditPackId, packSaveAmount, packSeparateTotal, readRememberedCreditPack } from "@/lib/creditPacks";
 import { DEFAULT_PRICING } from "@/lib/pricing-defaults";
 import { useDisplayPrice } from "@/hooks/use-display-price";
 import {
@@ -438,8 +438,8 @@ export default function CreditsCheckout({ params }: Props) {
     );
   }
 
-  const separateTotal = singleUnit * pack.credits;
-  const discountAmount = Math.max(0, separateTotal - pack.totalPrice);
+  const separateTotal = packSeparateTotal(pack, singleUnit);
+  const discountAmount = packSaveAmount(pack, singleUnit);
   const showComparePrice = discountAmount > 0.01;
   const unitLabel = `${currencySymbol}${pack.unitPrice.toFixed(2)}`;
   const [unitWhole, unitFraction] = pack.unitPrice.toFixed(2).split(".");

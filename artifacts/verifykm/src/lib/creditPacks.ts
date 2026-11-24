@@ -31,6 +31,15 @@ export function getCreditPack(packId: CreditPackId): CreditPack {
   return CREDIT_PACKS[packId];
 }
 
+/** What n singles would cost at the current one-report offer (for strikethrough / save %). */
+export function packSeparateTotal(pack: CreditPack, singleUnitPrice: number): number {
+  return Math.round(singleUnitPrice * pack.credits * 100) / 100;
+}
+
+export function packSaveAmount(pack: CreditPack, singleUnitPrice: number): number {
+  return Math.max(0, Math.round((packSeparateTotal(pack, singleUnitPrice) - pack.totalPrice) * 100) / 100);
+}
+
 const CREDIT_PACK_INTENT_KEY = "vk_credit_pack";
 
 /** Remember the pack the buyer picked, so a language change cannot drop ?pack=. */
