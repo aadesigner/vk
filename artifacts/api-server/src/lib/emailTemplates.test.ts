@@ -63,7 +63,7 @@ describe("buildVehicleLabel", () => {
 
 describe("formatEmailAmount", () => {
   it("formats euro and dollar amounts", () => {
-    expect(formatEmailAmount(19.99, "EUR")).toBe("€19.99");
+    expect(formatEmailAmount(17.99, "EUR")).toBe("€17.99");
     expect(formatEmailAmount(15.9, "USD")).toBe("$15.90");
   });
 
@@ -99,8 +99,8 @@ describe("varsFromReportReady", () => {
   });
 
   it("carries payment details into the receipt line", () => {
-    const vars = varsFromReportReady({ ...base, amount: 19.99, currency: "EUR", paymentRef: "5XG29384BK" });
-    expect(vars.amount).toBe("€19.99");
+    const vars = varsFromReportReady({ ...base, amount: 17.99, currency: "EUR", paymentRef: "5XG29384BK" });
+    expect(vars.amount).toBe("€17.99");
     expect(vars.paymentRef).toBe("5XG29384BK");
   });
 });
@@ -126,7 +126,7 @@ describe("combined report-ready template", () => {
     expect(html).toContain("View Full Report");
     expect(html).toContain("sign in with the same account you used to pay");
     expect(html).toContain("Amount paid");
-    expect(html).toContain("€19.99");
+    expect(html).toContain("€17.99");
   });
 
   it("leaves no unresolved placeholders", () => {

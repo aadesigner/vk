@@ -32,6 +32,8 @@ import { parseUserCountryCode } from "../lib/userCountry.js";
 import {
   ACQUISITION_COOKIE,
   resolveAcquisitionForSignup,
+  withoutExtendedAcquisitionFields,
+  isMissingColumnError,
   type AcquisitionUserFields,
 } from "../lib/acquisition.js";
 
@@ -46,6 +48,34 @@ function acquisitionFromRequest(req: import("express").Request, body?: unknown):
     ? req.cookies[ACQUISITION_COOKIE]
     : undefined;
   return resolveAcquisitionForSignup(body ?? req.body, cookieRaw);
+}
+
+/** Insert user; if new acquisition_* columns are missing, retry without them. */
+async function insertUserWithAcquisitionFallback<T extends Record<string, unknown>>(
+  values: T,
+  acquisition: AcquisitionUserFields | null,
+  returning: typeof authSessionUserSelect,
+): Promise<AuthSessionUser | undefined> {
+  try {
+    const [created] = await db.insert(usersTable).values(values as typeof values & Record<string, never>).returning(returning);
+    return created;
+  } catch (err) {
+    if (!isMissingColumnError(err) || !acquisition) throw err;
+    logger.warn({ err }, "user insert hit missing acquisition column; retrying without extended fields");
+    const {
+      acquisitionContent: _c,
+      acquisitionTerm: _t,
+      acquisitionClickIdType: _ct,
+      acquisitionLandingPath: _lp,
+      acquisitionDevice: _d,
+      ...rest
+    } = values as T & AcquisitionUserFields;
+    const [created] = await db.insert(usersTable).values({
+      ...rest,
+      ...withoutExtendedAcquisitionFields(acquisition),
+    } as typeof values & Record<string, never>).returning(returning);
+    return created;
+  }
 }
 const OAUTH_LANGS = new Set(["en", "es", "ar", "uk", "ru", "ro", "pl", "ka", "sq"]);
 const OAUTH_LANG_COOKIE = "km_oauth_lang";
@@ -363,7 +393,7 @@ router.post("/auth/register", registerLimiter, async (req, res) => {
   const signupIp = clientIpKey(req);
   const acquisition = acquisitionFromRequest(req, req.body);
 
-  const [user] = await db.insert(usersTable).values({
+  const user = await insertUserWithAcquisitionFallback({
     id,
     email: normalizedEmail,
     name: name?.trim() || undefined,
@@ -374,7 +404,7 @@ router.post("/auth/register", registerLimiter, async (req, res) => {
     lastLoginIp: signupIp !== "unknown" ? signupIp : undefined,
     signupIp: signupIp !== "unknown" ? signupIp : undefined,
     ...(acquisition ?? {}),
-  }).returning(authSessionUserSelect);
+  }, acquisition, authSessionUserSelect);
 
   if (!user) {
     res.status(500).json({ error: "Failed to create account" });
@@ -945,7 +975,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
     const id = crypto.randomUUID();
     const acquisition = acquisitionFromRequest(req);
     try {
-      const [created] = await db.insert(usersTable).values({
+      user = await insertUserWithAcquisitionFallback({
         id,
         email,
         name: name ?? undefined,
@@ -958,8 +988,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
         lastLoginIp: oauthIp !== "unknown" ? oauthIp : undefined,
         signupIp: oauthIp !== "unknown" ? oauthIp : undefined,
         ...(acquisition ?? {}),
-      }).returning(authSessionUserSelect);
-      user = created;
+      }, acquisition, authSessionUserSelect);
       oauthIsNewAccount = true;
       clearAcquisitionCookie(res);
       logger.info({ msg: "facebook_oauth_register", userId: id, email });
@@ -1177,7 +1206,7 @@ router.get("/auth/google/callback", async (req, res) => {
     const id = crypto.randomUUID();
     const acquisition = acquisitionFromRequest(req);
     try {
-      const [created] = await db.insert(usersTable).values({
+      user = await insertUserWithAcquisitionFallback({
         id,
         email,
         name: name ?? undefined,
@@ -1190,8 +1219,7 @@ router.get("/auth/google/callback", async (req, res) => {
         lastLoginIp: oauthIp !== "unknown" ? oauthIp : undefined,
         signupIp: oauthIp !== "unknown" ? oauthIp : undefined,
         ...(acquisition ?? {}),
-      }).returning(authSessionUserSelect);
-      user = created;
+      }, acquisition, authSessionUserSelect);
       oauthIsNewAccount = true;
       clearAcquisitionCookie(res);
       logger.info({ msg: "google_oauth_register", userId: id, email });

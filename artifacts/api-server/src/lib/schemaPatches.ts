@@ -71,7 +71,13 @@ const SYSTEM_SETTINGS_PATCHES = [
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_landing_path text`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_in_app text`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_captured_at timestamp`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_content text`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_term text`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_click_id_type text`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS acquisition_device text`,
   `CREATE INDEX IF NOT EXISTS users_acquisition_bucket_idx ON users (acquisition_bucket)`,
+  `CREATE INDEX IF NOT EXISTS users_acquisition_channel_idx ON users (acquisition_channel)`,
+  `CREATE INDEX IF NOT EXISTS users_acquisition_campaign_idx ON users (acquisition_campaign)`,
 ];
 
 const TABLE_PATCHES = [
@@ -167,14 +173,15 @@ const EMAIL_MERGE_PATCHES = [
 ];
 
 const PRICING_DATA_PATCHES = [
-  // Migrate catalog sale price → €19.99 (list stays €29.99). Does not touch payments rows.
-  `UPDATE pricing SET discount_price = 19.99 WHERE ABS(discount_price - 15.99) < 0.001`,
-  `UPDATE pricing SET discount_price = 19.99 WHERE ABS(discount_price - 15.9) < 0.001`,
-  `UPDATE pricing SET discount_price = 19.99 WHERE ABS(discount_price - 14.99) < 0.001`,
-  `UPDATE pricing SET discount_price = 19.99 WHERE ABS(discount_price - 14.9) < 0.001`,
-  `UPDATE pricing SET discount_price = 19.99 WHERE ABS(discount_price - 15) < 0.001`,
-  `UPDATE pricing SET discount_price = 19.99 WHERE ABS(discount_price - 9.9) < 0.001`,
-  `UPDATE pricing SET discount_price = 19.99 WHERE ABS(discount_price - 19.9) < 0.001`,
+  // Migrate catalog sale price → €17.99 (list stays €29.99). Does not touch payments rows.
+  `UPDATE pricing SET discount_price = 17.99 WHERE ABS(discount_price - 19.99) < 0.001`,
+  `UPDATE pricing SET discount_price = 17.99 WHERE ABS(discount_price - 19.9) < 0.001`,
+  `UPDATE pricing SET discount_price = 17.99 WHERE ABS(discount_price - 15.99) < 0.001`,
+  `UPDATE pricing SET discount_price = 17.99 WHERE ABS(discount_price - 15.9) < 0.001`,
+  `UPDATE pricing SET discount_price = 17.99 WHERE ABS(discount_price - 14.99) < 0.001`,
+  `UPDATE pricing SET discount_price = 17.99 WHERE ABS(discount_price - 14.9) < 0.001`,
+  `UPDATE pricing SET discount_price = 17.99 WHERE ABS(discount_price - 15) < 0.001`,
+  `UPDATE pricing SET discount_price = 17.99 WHERE ABS(discount_price - 9.9) < 0.001`,
   `UPDATE pricing SET base_price = 29.9 WHERE ABS(base_price - 29.90) < 0.001`,
   `UPDATE pricing SET base_price = 29.9 WHERE ABS(base_price - 29.99) < 0.001`,
   `UPDATE pricing SET base_price = 29.9 WHERE ABS(base_price - 30) < 0.001`,

@@ -3,7 +3,7 @@ import { pgTable, serial, text, real, boolean, integer, timestamp, jsonb } from 
 export const pricingTable = pgTable("pricing", {
   id: serial("id").primaryKey(),
   basePrice: real("base_price").notNull().default(29.99),
-  discountPrice: real("discount_price").notNull().default(19.99),
+  discountPrice: real("discount_price").notNull().default(17.99),
   currency: text("currency").notNull().default("EUR"),
   discountEnabled: boolean("discount_enabled").notNull().default(true),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

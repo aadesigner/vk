@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-/** Inline €19.99 with smaller, faded cents — same treatment as pricing pages. */
+/** Inline €17.99 with smaller, faded cents — same treatment as pricing pages. */
 export function PriceAmount({
   amount,
   currencySymbol,

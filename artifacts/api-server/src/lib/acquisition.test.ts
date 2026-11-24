@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   sanitizeAcquisitionPayload,
   parseAcquisitionCookieValue,
+  encodeAcquisitionCookieValue,
+  resolveAcquisitionForSignup,
   acquisitionToUserFields,
 } from "./acquisition.js";
 
@@ -15,18 +17,26 @@ describe("acquisition sanitize", () => {
       campaign: "vin_al",
       clickId: "abc",
       referrer: "l.facebook.com",
-      landingPath: "/sq",
-      inApp: "instagram",
       capturedAt: new Date().toISOString(),
     });
     expect(p?.bucket).toBe("paid_ads");
     expect(p?.channel).toBe("meta_ads");
-    expect(p?.landingPath).toBe("/sq");
-    expect(p?.inApp).toBe("instagram");
   });
 
   it("rejects unknown bucket", () => {
     expect(sanitizeAcquisitionPayload({ bucket: "hack", channel: "x" })).toBeNull();
+  });
+
+  it("accepts offline / QR van bucket", () => {
+    const p = sanitizeAcquisitionPayload({
+      bucket: "offline",
+      channel: "qr_van",
+      source: "van",
+      medium: "qr",
+      capturedAt: new Date().toISOString(),
+    });
+    expect(p?.bucket).toBe("offline");
+    expect(p?.channel).toBe("qr_van");
   });
 
   it("parses base64url cookie", () => {
@@ -44,5 +54,20 @@ describe("acquisition sanitize", () => {
     expect(p?.bucket).toBe("direct");
     const fields = acquisitionToUserFields(p);
     expect(fields?.acquisitionBucket).toBe("direct");
+  });
+
+  it("prefers server instagram cookie over a direct body payload", () => {
+    const cookie = encodeAcquisitionCookieValue({
+      bucket: "organic_social",
+      channel: "instagram_social",
+      referrer: "l.instagram.com",
+      capturedAt: new Date().toISOString(),
+    });
+    const fields = resolveAcquisitionForSignup(
+      { acquisition: { bucket: "direct", channel: "direct" } },
+      cookie,
+    );
+    expect(fields?.acquisitionChannel).toBe("instagram_social");
+    expect(fields?.acquisitionBucket).toBe("organic_social");
   });
 });

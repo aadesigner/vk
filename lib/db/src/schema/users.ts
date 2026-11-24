@@ -38,19 +38,27 @@ export const usersTable = pgTable("users", {
   creditBalance: integer("credit_balance").notNull().default(0),
   /**
    * First-touch acquisition (set once at signup).
-   * Bucket: paid_ads | organic_social | google | referral | direct | unknown
+   * Bucket: paid_ads | organic_social | google | offline | referral | direct | unknown
    */
   acquisitionBucket: text("acquisition_bucket"),
-  /** Fine channel e.g. meta_ads, instagram_social, google_organic, direct */
+  /** Fine channel e.g. meta_ads, instagram_social, google_organic, direct, qr_van */
   acquisitionChannel: text("acquisition_channel"),
   acquisitionSource: text("acquisition_source"),
   acquisitionMedium: text("acquisition_medium"),
   acquisitionCampaign: text("acquisition_campaign"),
+  /** utm_content — ad creative / placement */
+  acquisitionContent: text("acquisition_content"),
+  /** utm_term — keyword / audience label */
+  acquisitionTerm: text("acquisition_term"),
   acquisitionClickId: text("acquisition_click_id"),
+  /** gclid | fbclid | ttclid | msclkid | other */
+  acquisitionClickIdType: text("acquisition_click_id_type"),
   /** External referrer hostname only */
   acquisitionReferrer: text("acquisition_referrer"),
   /** First landing pathname, e.g. /sq or /en/pricing */
   acquisitionLandingPath: text("acquisition_landing_path"),
+  /** mobile | desktop | tablet | in_app */
+  acquisitionDevice: text("acquisition_device"),
   /** In-app browser brand when the referrer was stripped (instagram, tiktok, …) */
   acquisitionInApp: text("acquisition_in_app"),
   acquisitionCapturedAt: timestamp("acquisition_captured_at"),
@@ -60,6 +68,8 @@ export const usersTable = pgTable("users", {
   index("users_created_at_idx").on(table.createdAt),
   index("users_last_seen_at_idx").on(table.lastSeenAt),
   index("users_acquisition_bucket_idx").on(table.acquisitionBucket),
+  index("users_acquisition_channel_idx").on(table.acquisitionChannel),
+  index("users_acquisition_campaign_idx").on(table.acquisitionCampaign),
 ]);
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ createdAt: true, updatedAt: true });

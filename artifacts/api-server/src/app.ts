@@ -12,6 +12,7 @@ import { maintenanceMiddleware } from "./lib/maintenanceMiddleware.js";
 import { accessBlockMiddleware } from "./lib/accessBlockMiddleware.js";
 import { requestContextMiddleware } from "./lib/requestContextMiddleware.js";
 import { mountStaticSite } from "./lib/staticSite.js";
+import { htmlAcquisitionCookie } from "./lib/htmlAcquisitionCookie.js";
 
 const app: Express = express();
 
@@ -202,6 +203,7 @@ app.use(
   }),
 );
 app.use(cookieParser());
+app.use(htmlAcquisitionCookie);
 app.use((req, res, next) => {
   const isLargeCatalogBody =
     (req.path.startsWith("/api/admin/vin-catalog")

@@ -1134,7 +1134,7 @@
   "pricing": {
     "en": {
       "h1": "One payment. One full evidence file.",
-      "lead": "€19.99 per dossier (was €29.99). Packs: €16.99 each ×3, or €12.99 each ×5.",
+      "lead": "€17.99 per dossier (was €29.99). Packs: €14.99 each ×3, or €11.99 each ×5.",
       "bullets": [
         "Accident records",
         "Mileage (KM) verification",
@@ -1210,7 +1210,7 @@
     },
     "de": {
       "h1": "Einmal zahlen. Eine vollständige Beweisakte.",
-      "lead": "€19,99 pro Bericht (statt €29,99). Pakete: €16,99 je ×3 oder €12,99 je ×5.",
+      "lead": "€17,99 pro Bericht (statt €29,99). Pakete: €14,99 je ×3 oder €11,99 je ×5.",
       "bullets": [
         "Unfallnachweise",
         "Kilometerstandsprüfung (KM)",
@@ -1286,7 +1286,7 @@
     },
     "es": {
       "h1": "Un solo pago. Un archivo de evidencia completo.",
-      "lead": "19,99 € por informe (antes 29,99 €). Packs: 16,99 € cada uno ×3, o 12,99 € cada uno ×5.",
+      "lead": "17,99 € por informe (antes 29,99 €). Packs: 14,99 € cada uno ×3, o 11,99 € cada uno ×5.",
       "bullets": [
         "Registros de accidentes",
         "Verificación de kilometraje (KM)",
@@ -1362,7 +1362,7 @@
     },
     "fr": {
       "h1": "Un paiement. Un fichier de preuves complet.",
-      "lead": "19,99 € par rapport (au lieu de 29,99 €). Packs : 16,99 € chacun ×3, ou 12,99 € chacun ×5.",
+      "lead": "17,99 € par rapport (au lieu de 29,99 €). Packs : 14,99 € chacun ×3, ou 11,99 € chacun ×5.",
       "bullets": [
         "Dossiers d'accidents",
         "Vérification du kilométrage (KM)",
@@ -1438,7 +1438,7 @@
     },
     "sq": {
       "h1": "Një pagesë. Një raport i plotë.",
-      "lead": "€19.99 për raport (ishte €29.99). Paketa: €16.99 secila ×3, ose €12.99 secila ×5.",
+      "lead": "€17.99 për raport (ishte €29.99). Paketa: €14.99 secila ×3, ose €11.99 secila ×5.",
       "bullets": [
         "Regjistrat e aksidenteve",
         "Verifikimi i kilometrave (km)",
@@ -1514,7 +1514,7 @@
     },
     "pl": {
       "h1": "Jedna płatność. Jedna pełna teczka dowodów.",
-      "lead": "19,99 € za raport (było 29,99 €). Pakiety: 16,99 € szt. ×3 lub 12,99 € szt. ×5.",
+      "lead": "17,99 € za raport (było 29,99 €). Pakiety: 14,99 € szt. ×3 lub 11,99 € szt. ×5.",
       "bullets": [
         "Rejestry wypadków",
         "Weryfikacja przebiegu (km)",
@@ -1590,7 +1590,7 @@
     },
     "ro": {
       "h1": "O singură plată. Un fișier complet de dovezi.",
-      "lead": "19,99 € pe raport (era 29,99 €). Pachete: 16,99 € fiecare ×3, sau 12,99 € fiecare ×5.",
+      "lead": "17,99 € pe raport (era 29,99 €). Pachete: 14,99 € fiecare ×3, sau 11,99 € fiecare ×5.",
       "bullets": [
         "Înregistrări accidente",
         "Verificare kilometraj (KM)",
@@ -1666,7 +1666,7 @@
     },
     "bg": {
       "h1": "Едно плащане. Един пълен доказателствен файл.",
-      "lead": "€19,99 на отчет (беше €29,99). Пакети: €16,99 всеки ×3, или €12,99 всеки ×5.",
+      "lead": "€17,99 на отчет (беше €29,99). Пакети: €14,99 всеки ×3, или €11,99 всеки ×5.",
       "bullets": [
         "Записи за катастрофи",
         "Верификация на пробега (км)",
@@ -1742,7 +1742,7 @@
     },
     "ka": {
       "h1": "ერთი გადახდა. ერთი სრული მტკიცებულების ფაილი.",
-      "lead": "€19.99 ერთ ანგარიშზე (იყო €29.99). პაკეტები: €16.99 თითო ×3, ან €12.99 თითო ×5.",
+      "lead": "€17.99 ერთ ანგარიშზე (იყო €29.99). პაკეტები: €14.99 თითო ×3, ან €11.99 თითო ×5.",
       "bullets": [
         "ავარიის ჩანაწერები",
         "გარბენის (კმ) შემოწმება",
@@ -1818,7 +1818,7 @@
     },
     "ar": {
       "h1": "دفعة واحدة. ملف أدلة كامل.",
-      "lead": "19.99€ للتقرير (كان 29.99€). الباقات: 16.99€ لكل ×3، أو 12.99€ لكل ×5.",
+      "lead": "17.99€ للتقرير (كان 29.99€). الباقات: 14.99€ لكل ×3، أو 11.99€ لكل ×5.",
       "bullets": [
         "سجلات الحوادث",
         "التحقق من المسافة (كم)",
@@ -1894,7 +1894,7 @@
     },
     "uk": {
       "h1": "Одна оплата. Один повний файл доказів.",
-      "lead": "€19,99 за звіт (було €29,99). Пакети: €16,99 кожен ×3, або €12,99 кожен ×5.",
+      "lead": "€17,99 за звіт (було €29,99). Пакети: €14,99 кожен ×3, або €11,99 кожен ×5.",
       "bullets": [
         "Записи про ДТП",
         "Перевірка пробігу (км)",
@@ -1970,7 +1970,7 @@
     },
     "ru": {
       "h1": "Одна оплата. Один полный файл доказательств.",
-      "lead": "€19,99 за отчёт (было €29,99). Пакеты: €16,99 каждый ×3, или €12,99 каждый ×5.",
+      "lead": "€17,99 за отчёт (было €29,99). Пакеты: €14,99 каждый ×3, или €11,99 каждый ×5.",
       "bullets": [
         "Записи о ДТП",
         "Проверка пробега (км)",
@@ -2046,7 +2046,7 @@
     },
     "zh": {
       "h1": "一次付款。 一份完整证据文件。",
-      "lead": "每份报告 €19.99（原价 €29.99）。套餐：每份 €16.99 ×3，或每份 €12.99 ×5。",
+      "lead": "每份报告 €17.99（原价 €29.99）。套餐：每份 €14.99 ×3，或每份 €11.99 ×5。",
       "bullets": [
         "事故记录",
         "里程（公里）核实",

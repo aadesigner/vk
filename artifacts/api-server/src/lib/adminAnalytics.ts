@@ -29,6 +29,7 @@ export const ANALYTICS_BUCKET_ORDER = [
   "paid_ads",
   "organic_social",
   "google",
+  "offline",
   "referral",
   "direct",
   "unknown",
@@ -114,6 +115,11 @@ export type AdminAnalyticsPayload = {
   buckets: AnalyticsDimRow[];
   sources: AnalyticsDimRow[];
   mediums: AnalyticsDimRow[];
+  contents: AnalyticsDimRow[];
+  terms: AnalyticsDimRow[];
+  landings: AnalyticsDimRow[];
+  devices: AnalyticsDimRow[];
+  clickIdTypes: AnalyticsDimRow[];
   campaigns: AnalyticsCampaignRow[];
   referrers: AnalyticsReferrerRow[];
   daily: AnalyticsDailyRow[];
@@ -353,6 +359,11 @@ function emptyPayload(period: DashboardPeriodKey, from: string, toExclusive?: st
     buckets: [],
     sources: [],
     mediums: [],
+    contents: [],
+    terms: [],
+    landings: [],
+    devices: [],
+    clickIdTypes: [],
     campaigns: [],
     referrers: [],
     daily: [],
@@ -366,6 +377,11 @@ type SliceResult = {
   buckets: AnalyticsDimRow[];
   sources: AnalyticsDimRow[];
   mediums: AnalyticsDimRow[];
+  contents: AnalyticsDimRow[];
+  terms: AnalyticsDimRow[];
+  landings: AnalyticsDimRow[];
+  devices: AnalyticsDimRow[];
+  clickIdTypes: AnalyticsDimRow[];
   campaigns: AnalyticsCampaignRow[];
   referrers: AnalyticsReferrerRow[];
   clickIdSignups: number;
@@ -376,6 +392,11 @@ const EMPTY_SLICES: SliceResult = {
   buckets: [],
   sources: [],
   mediums: [],
+  contents: [],
+  terms: [],
+  landings: [],
+  devices: [],
+  clickIdTypes: [],
   campaigns: [],
   referrers: [],
   clickIdSignups: 0,
@@ -414,33 +435,93 @@ async function loadAcquisitionSlices(from: string, toExclusive: string | undefin
         WHERE ${sql.raw(lookupDate)}
         GROUP BY 1
       `),
-      db.execute(sql`
-        SELECT
-          COALESCE(NULLIF(TRIM(u.acquisition_bucket), ''), 'unknown') AS bucket,
-          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_source)), ''), 'unknown') AS source,
-          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_medium)), ''), 'unknown') AS medium,
-          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_referrer)), ''), '') AS referrer,
-          NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
-          COUNT(*)::int AS signups,
-          COALESCE(SUM(CASE WHEN NULLIF(TRIM(u.acquisition_click_id), '') IS NOT NULL THEN 1 ELSE 0 END), 0)::int AS with_click
-        FROM users u
-        WHERE u.is_admin = false AND ${sql.raw(userDate)}
-        GROUP BY 1, 2, 3, 4, 5
-      `),
-      db.execute(sql`
-        SELECT
-          COALESCE(NULLIF(TRIM(u.acquisition_bucket), ''), 'unknown') AS bucket,
-          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_source)), ''), 'unknown') AS source,
-          COALESCE(NULLIF(TRIM(LOWER(u.acquisition_medium)), ''), 'unknown') AS medium,
-          NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
-          COUNT(DISTINCT p.user_id)::int AS buyers,
-          COALESCE(SUM(p.amount), 0)::float AS revenue
-        FROM payments p
-        LEFT JOIN users u ON u.id = p.user_id
-        WHERE ${sql.raw(SQL_COLLECTED_REVENUE_ROW_FILTER)}
-          AND ${sql.raw(payDate)}
-        GROUP BY 1, 2, 3, 4
-      `),
+      // Prefer extended dims; fall back if new acquisition_* columns are not patched yet.
+      (async () => {
+        try {
+          return await db.execute(sql`
+            SELECT
+              COALESCE(NULLIF(TRIM(u.acquisition_bucket), ''), 'unknown') AS bucket,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_source)), ''), 'unknown') AS source,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_medium)), ''), 'unknown') AS medium,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_referrer)), ''), '') AS referrer,
+              NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
+              COALESCE(NULLIF(TRIM(u.acquisition_content), ''), '') AS content,
+              COALESCE(NULLIF(TRIM(u.acquisition_term), ''), '') AS term,
+              COALESCE(NULLIF(TRIM(u.acquisition_landing_path), ''), '') AS landing,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_device)), ''), 'unknown') AS device,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_click_id_type)), ''), '') AS click_id_type,
+              COUNT(*)::int AS signups,
+              COALESCE(SUM(CASE WHEN NULLIF(TRIM(u.acquisition_click_id), '') IS NOT NULL THEN 1 ELSE 0 END), 0)::int AS with_click
+            FROM users u
+            WHERE u.is_admin = false AND ${sql.raw(userDate)}
+            GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+          `);
+        } catch (err) {
+          logger.warn({ err }, "analytics dim signups extended query failed; using legacy columns");
+          return db.execute(sql`
+            SELECT
+              COALESCE(NULLIF(TRIM(u.acquisition_bucket), ''), 'unknown') AS bucket,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_source)), ''), 'unknown') AS source,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_medium)), ''), 'unknown') AS medium,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_referrer)), ''), '') AS referrer,
+              NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
+              '' AS content,
+              '' AS term,
+              '' AS landing,
+              'unknown' AS device,
+              '' AS click_id_type,
+              COUNT(*)::int AS signups,
+              COALESCE(SUM(CASE WHEN NULLIF(TRIM(u.acquisition_click_id), '') IS NOT NULL THEN 1 ELSE 0 END), 0)::int AS with_click
+            FROM users u
+            WHERE u.is_admin = false AND ${sql.raw(userDate)}
+            GROUP BY 1, 2, 3, 4, 5
+          `);
+        }
+      })(),
+      (async () => {
+        try {
+          return await db.execute(sql`
+            SELECT
+              COALESCE(NULLIF(TRIM(u.acquisition_bucket), ''), 'unknown') AS bucket,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_source)), ''), 'unknown') AS source,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_medium)), ''), 'unknown') AS medium,
+              NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
+              COALESCE(NULLIF(TRIM(u.acquisition_content), ''), '') AS content,
+              COALESCE(NULLIF(TRIM(u.acquisition_term), ''), '') AS term,
+              COALESCE(NULLIF(TRIM(u.acquisition_landing_path), ''), '') AS landing,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_device)), ''), 'unknown') AS device,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_click_id_type)), ''), '') AS click_id_type,
+              COUNT(DISTINCT p.user_id)::int AS buyers,
+              COALESCE(SUM(p.amount), 0)::float AS revenue
+            FROM payments p
+            LEFT JOIN users u ON u.id = p.user_id
+            WHERE ${sql.raw(SQL_COLLECTED_REVENUE_ROW_FILTER)}
+              AND ${sql.raw(payDate)}
+            GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
+          `);
+        } catch (err) {
+          logger.warn({ err }, "analytics dim payments extended query failed; using legacy columns");
+          return db.execute(sql`
+            SELECT
+              COALESCE(NULLIF(TRIM(u.acquisition_bucket), ''), 'unknown') AS bucket,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_source)), ''), 'unknown') AS source,
+              COALESCE(NULLIF(TRIM(LOWER(u.acquisition_medium)), ''), 'unknown') AS medium,
+              NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
+              '' AS content,
+              '' AS term,
+              '' AS landing,
+              'unknown' AS device,
+              '' AS click_id_type,
+              COUNT(DISTINCT p.user_id)::int AS buyers,
+              COALESCE(SUM(p.amount), 0)::float AS revenue
+            FROM payments p
+            LEFT JOIN users u ON u.id = p.user_id
+            WHERE ${sql.raw(SQL_COLLECTED_REVENUE_ROW_FILTER)}
+              AND ${sql.raw(payDate)}
+            GROUP BY 1, 2, 3, 4
+          `);
+        }
+      })(),
     ]);
 
     const map = new Map<string, ChannelScratch>();
@@ -484,6 +565,11 @@ async function loadAcquisitionSlices(from: string, toExclusive: string | undefin
       medium: unknown;
       referrer: unknown;
       campaign: unknown;
+      content: unknown;
+      term: unknown;
+      landing: unknown;
+      device: unknown;
+      click_id_type: unknown;
       signups: unknown;
       with_click: unknown;
     };
@@ -492,6 +578,11 @@ async function loadAcquisitionSlices(from: string, toExclusive: string | undefin
       source: unknown;
       medium: unknown;
       campaign: unknown;
+      content: unknown;
+      term: unknown;
+      landing: unknown;
+      device: unknown;
+      click_id_type: unknown;
       buyers: unknown;
       revenue: unknown;
     };
@@ -502,48 +593,68 @@ async function loadAcquisitionSlices(from: string, toExclusive: string | undefin
     const clickIdSignups = dimSignups.reduce((s, r) => s + Number(r.with_click ?? 0), 0);
     const totalSignups = dimSignups.reduce((s, r) => s + Number(r.signups ?? 0), 0);
 
-    const bucketSignups: NamedScratch[] = dimSignups.map((r) => ({
-      key: String(r.bucket ?? "unknown"),
-      signups: Number(r.signups ?? 0),
-      buyers: 0,
-      revenue: 0,
-    }));
-    const bucketPays: NamedScratch[] = dimPays.map((r) => ({
-      key: String(r.bucket ?? "unknown"),
-      signups: 0,
-      buyers: Number(r.buyers ?? 0),
-      revenue: Number(r.revenue ?? 0),
-    }));
-    const sourceSignups: NamedScratch[] = dimSignups.map((r) => ({
-      key: String(r.source ?? "unknown"),
-      signups: Number(r.signups ?? 0),
-      buyers: 0,
-      revenue: 0,
-    }));
-    const sourcePays: NamedScratch[] = dimPays.map((r) => ({
-      key: String(r.source ?? "unknown"),
-      signups: 0,
-      buyers: Number(r.buyers ?? 0),
-      revenue: Number(r.revenue ?? 0),
-    }));
-    const mediumSignups: NamedScratch[] = dimSignups.map((r) => ({
-      key: String(r.medium ?? "unknown"),
-      signups: Number(r.signups ?? 0),
-      buyers: 0,
-      revenue: 0,
-    }));
-    const mediumPays: NamedScratch[] = dimPays.map((r) => ({
-      key: String(r.medium ?? "unknown"),
-      signups: 0,
-      buyers: Number(r.buyers ?? 0),
-      revenue: Number(r.revenue ?? 0),
-    }));
+    const mapDim = (
+      signupKey: (r: DimSignup) => string,
+      payKey: (r: DimPay) => string,
+      opts?: { order?: readonly string[]; limit?: number },
+    ) => {
+      const signups: NamedScratch[] = dimSignups.map((r) => ({
+        key: signupKey(r),
+        signups: Number(r.signups ?? 0),
+        buyers: 0,
+        revenue: 0,
+      }));
+      const pays: NamedScratch[] = dimPays.map((r) => ({
+        key: payKey(r),
+        signups: 0,
+        buyers: Number(r.buyers ?? 0),
+        revenue: Number(r.revenue ?? 0),
+      }));
+      return finalizeNamedRows([...signups, ...pays], opts);
+    };
 
     return {
       channels,
-      buckets: finalizeNamedRows([...bucketSignups, ...bucketPays], { order: ANALYTICS_BUCKET_ORDER }),
-      sources: finalizeNamedRows([...sourceSignups, ...sourcePays], { limit: 10 }),
-      mediums: finalizeNamedRows([...mediumSignups, ...mediumPays], { limit: 8 }),
+      buckets: mapDim(
+        (r) => String(r.bucket ?? "unknown"),
+        (r) => String(r.bucket ?? "unknown"),
+        { order: ANALYTICS_BUCKET_ORDER },
+      ),
+      sources: mapDim(
+        (r) => String(r.source ?? "unknown"),
+        (r) => String(r.source ?? "unknown"),
+        { limit: 10 },
+      ),
+      mediums: mapDim(
+        (r) => String(r.medium ?? "unknown"),
+        (r) => String(r.medium ?? "unknown"),
+        { limit: 8 },
+      ),
+      contents: mapDim(
+        (r) => String(r.content ?? "").trim() || "untagged",
+        (r) => String(r.content ?? "").trim() || "untagged",
+        { limit: 10 },
+      ).filter((r) => r.key !== "untagged" || r.signups > 0),
+      terms: mapDim(
+        (r) => String(r.term ?? "").trim() || "untagged",
+        (r) => String(r.term ?? "").trim() || "untagged",
+        { limit: 8 },
+      ).filter((r) => r.key !== "untagged"),
+      landings: mapDim(
+        (r) => String(r.landing ?? "").trim() || "unknown",
+        (r) => String(r.landing ?? "").trim() || "unknown",
+        { limit: 10 },
+      ).filter((r) => r.key !== "unknown"),
+      devices: mapDim(
+        (r) => String(r.device ?? "unknown"),
+        (r) => String(r.device ?? "unknown"),
+        { order: ["in_app", "mobile", "tablet", "desktop", "unknown"] },
+      ),
+      clickIdTypes: mapDim(
+        (r) => String(r.click_id_type ?? "").trim() || "none",
+        (r) => String(r.click_id_type ?? "").trim() || "none",
+        { order: ["gclid", "fbclid", "ttclid", "msclkid", "other", "none"] },
+      ),
       campaigns: mergeCampaigns(
         dimSignups.map((r) => ({
           campaign: String(r.campaign ?? ""),
@@ -718,6 +829,11 @@ export async function loadAdminAnalyticsPayload(
       buckets: acquisition.buckets,
       sources: acquisition.sources,
       mediums: acquisition.mediums,
+      contents: acquisition.contents,
+      terms: acquisition.terms,
+      landings: acquisition.landings,
+      devices: acquisition.devices,
+      clickIdTypes: acquisition.clickIdTypes,
       campaigns: acquisition.campaigns,
       referrers: acquisition.referrers,
       daily,

@@ -1165,7 +1165,7 @@ export default function AdminOverview() {
         {/* Footer links */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {[
-            { href: "/adminx/analytics", icon: Activity, label: "Analytics" },
+            { href: "/adminx/analytics", icon: Activity, label: "Acquisition" },
             { href: "/adminx/transactions", icon: ReceiptText, label: "Transactions" },
             { href: "/adminx/security", icon: Server, label: "Security" },
           ].map(({ href, icon: Icon, label }) => (

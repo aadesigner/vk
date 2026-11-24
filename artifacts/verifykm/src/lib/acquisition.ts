@@ -1,210 +1,33 @@
 /**
  * First-touch marketing acquisition (client).
- * Captures UTM / click ids / referrer once into localStorage (90d) and a short cookie for OAuth.
+ * Server also stamps vk_acq on the first HTML request (Referer + URL).
  */
 
-export type AcquisitionBucket =
-  | "paid_ads"
-  | "organic_social"
-  | "google"
-  | "referral"
-  | "direct"
-  | "unknown";
+import {
+  classifyAcquisition as classifyAcquisitionCore,
+  isStrongerAcquisition,
+  pickStrongerAcquisition,
+  type AcquisitionBucket,
+  type AcquisitionPayload,
+} from "../../../api-server/src/lib/acquisitionClassify";
 
-export type AcquisitionPayload = {
-  bucket: AcquisitionBucket;
-  channel: string;
-  source?: string | null;
-  medium?: string | null;
-  campaign?: string | null;
-  clickId?: string | null;
-  referrer?: string | null;
-  landingPath?: string | null;
-  inApp?: string | null;
-  capturedAt: string;
-};
+export type { AcquisitionBucket, AcquisitionPayload };
+export { isStrongerAcquisition, pickStrongerAcquisition };
 
 const STORAGE_KEY = "verifykm_acquisition_v1";
 const COOKIE_NAME = "vk_acq";
 const TTL_MS = 90 * 24 * 60 * 60 * 1000;
 const COOKIE_MAX_AGE_SEC = 90 * 24 * 60 * 60;
 
-const PAID_MEDIUMS = new Set([
-  "cpc",
-  "ppc",
-  "paid",
-  "paidsocial",
-  "paid_social",
-  "paid-social",
-  "display",
-  "retargeting",
-  "remarketing",
-]);
-
-type SocialBrand =
-  | "instagram"
-  | "threads"
-  | "facebook"
-  | "messenger"
-  | "tiktok"
-  | "x"
-  | "linkedin"
-  | "youtube"
-  | "whatsapp"
-  | "telegram"
-  | "reddit"
-  | "pinterest"
-  | "snapchat";
-
-type TrafficBrand = SocialBrand | "google";
-
-const SOCIAL_ORGANIC_CHANNEL: Record<SocialBrand, string> = {
-  instagram: "instagram_social",
-  threads: "threads_social",
-  facebook: "facebook_social",
-  messenger: "messenger_social",
-  tiktok: "tiktok_social",
-  x: "x_social",
-  linkedin: "linkedin_social",
-  youtube: "youtube_social",
-  whatsapp: "whatsapp_social",
-  telegram: "telegram_social",
-  reddit: "reddit_social",
-  pinterest: "pinterest_social",
-  snapchat: "snapchat_social",
-};
-
 type Stored = { payload: AcquisitionPayload; expiresAt: number };
 
-function hostMatches(host: string, domain: string): boolean {
-  return host === domain || host.endsWith(`.${domain}`);
-}
-
-function hostOnly(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  try {
-    const u = new URL(raw.includes("://") ? raw : `https://${raw}`);
-    return u.hostname.replace(/^www\./i, "").toLowerCase().slice(0, 200) || null;
-  } catch {
-    return null;
-  }
-}
-
-function param(sp: URLSearchParams, key: string): string | null {
-  const v = sp.get(key)?.trim();
-  return v ? v.slice(0, 128) : null;
-}
-
-function isPaidMedium(medium: string | null): boolean {
-  if (!medium) return false;
-  return PAID_MEDIUMS.has(medium.toLowerCase());
-}
-
-function socialKind(host: string | null): SocialBrand | null {
-  if (!host) return null;
-  if (hostMatches(host, "instagram.com")) return "instagram";
-  if (hostMatches(host, "threads.net")) return "threads";
-  if (hostMatches(host, "facebook.com") || hostMatches(host, "fb.com") || host === "fb.me") return "facebook";
-  if (hostMatches(host, "messenger.com")) return "messenger";
-  if (hostMatches(host, "tiktok.com")) return "tiktok";
-  if (hostMatches(host, "twitter.com") || hostMatches(host, "x.com") || host === "t.co") return "x";
-  if (hostMatches(host, "linkedin.com") || host === "lnkd.in") return "linkedin";
-  if (hostMatches(host, "youtube.com") || host === "youtu.be" || hostMatches(host, "youtube-nocookie.com")) return "youtube";
-  if (hostMatches(host, "whatsapp.com") || host === "wa.me") return "whatsapp";
-  if (host === "t.me" || host === "telegram.me" || hostMatches(host, "telegram.org")) return "telegram";
-  if (hostMatches(host, "reddit.com") || host === "redd.it") return "reddit";
-  if (hostMatches(host, "pinterest.com") || host === "pin.it") return "pinterest";
-  if (hostMatches(host, "snapchat.com")) return "snapchat";
-  return null;
-}
-
-function isGoogleHost(host: string | null): boolean {
-  if (!host) return false;
-  return /(^|\.)google\./i.test(host) || host === "google.com" || host.endsWith(".googleusercontent.com");
-}
-
-function isSelfHost(referrerHost: string | null): boolean {
-  if (!referrerHost || typeof window === "undefined") return false;
-  const self = window.location.hostname.replace(/^www\./i, "").toLowerCase();
-  return referrerHost === self || referrerHost.endsWith(`.${self}`);
-}
-
-function sourceBrand(source: string | null): TrafficBrand | null {
-  if (!source) return null;
-  const s = source.toLowerCase();
-  if (/^(meta|facebook|fb)$/.test(s)) return "facebook";
-  if (/^(ig|instagram|insta)$/.test(s)) return "instagram";
-  if (/^threads$/.test(s)) return "threads";
-  if (/^(tiktok|tt)$/.test(s)) return "tiktok";
-  if (/^(google|adwords|adsense)$/.test(s)) return "google";
-  if (/^(twitter|x)$/.test(s)) return "x";
-  if (/^(linkedin|li)$/.test(s)) return "linkedin";
-  if (/^(youtube|yt)$/.test(s)) return "youtube";
-  if (/^(whatsapp|wa)$/.test(s)) return "whatsapp";
-  if (/^(telegram|tg)$/.test(s)) return "telegram";
-  if (/^reddit$/.test(s)) return "reddit";
-  if (/^(pinterest|pin)$/.test(s)) return "pinterest";
-  if (/^(snapchat|snap)$/.test(s)) return "snapchat";
-  if (/^(messenger|msg)$/.test(s)) return "messenger";
-  return null;
-}
-
-/** Instagram / TikTok / WhatsApp in-app browsers often strip document.referrer. */
-export function detectInAppBrowser(ua: string): SocialBrand | null {
-  if (!ua) return null;
-  if (/Instagram/i.test(ua)) return "instagram";
-  if (/WhatsApp/i.test(ua)) return "whatsapp";
-  if (/TikTok|BytedanceWebview|musical_ly|TTWebView/i.test(ua)) return "tiktok";
-  if (/Telegram/i.test(ua)) return "telegram";
-  if (/LinkedInApp/i.test(ua)) return "linkedin";
-  if (/Pinterest/i.test(ua)) return "pinterest";
-  if (/Snapchat/i.test(ua)) return "snapchat";
-  if (/Twitter|X\/Twitter/i.test(ua)) return "x";
-  if (/FBAN|FBAV|FB_IAB|FB4A|FBIOS|FB_FW/i.test(ua)) return "facebook";
-  return null;
-}
-
-function landingPathFromHref(href: string): string | null {
-  try {
-    const path = new URL(href).pathname.replace(/\/+$/, "") || "/";
-    return path.slice(0, 160);
-  } catch {
-    return null;
-  }
-}
-
-const BUCKET_RANK: Record<AcquisitionBucket, number> = {
-  paid_ads: 50,
-  google: 40,
-  organic_social: 30,
-  referral: 20,
-  unknown: 5,
-  direct: 0,
-};
-
-export function isWeakAcquisition(payload: AcquisitionPayload): boolean {
-  return payload.bucket === "direct"
-    || payload.bucket === "unknown"
-    || payload.channel === "meta_social";
-}
-
-function acquisitionScore(payload: AcquisitionPayload): number {
-  let score = BUCKET_RANK[payload.bucket] ?? 0;
-  if (payload.channel === "meta_social") score -= 10;
-  if (payload.campaign) score += 4;
-  if (payload.source) score += 3;
-  if (payload.referrer) score += 2;
-  if (payload.inApp) score += 2;
-  return score;
-}
-
-/** Upgrade Direct / unknown / generic Meta when a later hit has a real channel. */
-export function shouldUpgradeAcquisition(
-  existing: AcquisitionPayload,
-  next: AcquisitionPayload,
-): boolean {
-  if (!isWeakAcquisition(existing)) return false;
-  return acquisitionScore(next) > acquisitionScore(existing);
+export function classifyAcquisition(
+  href: string = typeof window !== "undefined" ? window.location.href : "",
+  referrerUrl: string = typeof document !== "undefined" ? document.referrer : "",
+  userAgent: string = typeof navigator !== "undefined" ? navigator.userAgent : "",
+): AcquisitionPayload {
+  const selfHost = typeof window !== "undefined" ? window.location.hostname : null;
+  return classifyAcquisitionCore(href, referrerUrl, userAgent, selfHost);
 }
 
 /** Add first-touch UTMs to share / profile links without overwriting existing tags. */
@@ -224,151 +47,6 @@ export function tagAcquisitionUrl(
   } catch {
     return raw;
   }
-}
-
-function paidChannelForBrand(brand: TrafficBrand | null, source: string | null): string {
-  if (brand === "facebook" || brand === "messenger") return "meta_ads";
-  if (brand === "instagram" || brand === "threads") return "instagram_ads";
-  if (brand === "tiktok") return "tiktok_ads";
-  if (brand === "google") return "google_ads";
-  if (brand === "x") return "x_ads";
-  if (brand === "linkedin") return "linkedin_ads";
-  if (brand === "youtube") return "youtube_ads";
-  if (brand === "whatsapp") return "whatsapp_ads";
-  if (brand === "telegram") return "telegram_ads";
-  if (brand === "reddit") return "reddit_ads";
-  if (brand === "pinterest") return "pinterest_ads";
-  if (brand === "snapchat") return "snapchat_ads";
-  if (source) return `${source.slice(0, 24)}_ads`;
-  return "paid_ads";
-}
-
-/** Classify current landing URL + document.referrer (+ in-app user agent). */
-export function classifyAcquisition(
-  href: string = typeof window !== "undefined" ? window.location.href : "",
-  referrerUrl: string = typeof document !== "undefined" ? document.referrer : "",
-  userAgent: string = typeof navigator !== "undefined" ? navigator.userAgent : "",
-): AcquisitionPayload {
-  let sp: URLSearchParams;
-  try {
-    sp = new URL(href).searchParams;
-  } catch {
-    sp = new URLSearchParams();
-  }
-
-  const source = param(sp, "utm_source");
-  const medium = param(sp, "utm_medium");
-  const campaign = param(sp, "utm_campaign");
-  const fbclid = param(sp, "fbclid");
-  const gclid = param(sp, "gclid") ?? param(sp, "gbraid") ?? param(sp, "wbraid");
-  const ttclid = param(sp, "ttclid");
-  const msclkid = param(sp, "msclkid");
-  const twclid = param(sp, "twclid");
-  const liFatId = param(sp, "li_fat_id");
-  const igShare = param(sp, "igshid") ?? param(sp, "igsh");
-  const referrer = hostOnly(referrerUrl);
-  const extReferrer = isSelfHost(referrer) ? null : referrer;
-  const brand = sourceBrand(source);
-  const social = socialKind(extReferrer);
-  const inApp = detectInAppBrowser(userAgent);
-  const landingPath = landingPathFromHref(href);
-  const capturedAt = new Date().toISOString();
-  const clickId = fbclid ?? gclid ?? ttclid ?? msclkid ?? twclid ?? liFatId;
-
-  const base = {
-    source,
-    medium,
-    campaign,
-    referrer: extReferrer,
-    landingPath,
-    inApp,
-    capturedAt,
-  };
-
-  // Ad-only click ids. fbclid is excluded — Instagram/Facebook add it to organic links too.
-  if (gclid) {
-    return { ...base, bucket: "paid_ads", channel: "google_ads", clickId: gclid };
-  }
-  if (ttclid) {
-    return { ...base, bucket: "paid_ads", channel: "tiktok_ads", clickId: ttclid };
-  }
-  if (msclkid) {
-    return { ...base, bucket: "paid_ads", channel: "bing_ads", clickId: msclkid };
-  }
-  if (twclid) {
-    return { ...base, bucket: "paid_ads", channel: "x_ads", clickId: twclid };
-  }
-  if (liFatId) {
-    return { ...base, bucket: "paid_ads", channel: "linkedin_ads", clickId: liFatId };
-  }
-
-  // Paid UTMs — required to count Meta / Instagram as ads
-  if (isPaidMedium(medium) || medium?.toLowerCase() === "paid_social") {
-    return {
-      ...base,
-      bucket: "paid_ads",
-      channel: paidChannelForBrand(brand, source),
-      clickId,
-    };
-  }
-
-  // Organic social referrer (Instagram in-app often still sends l.instagram.com)
-  if (social) {
-    return { ...base, bucket: "organic_social", channel: SOCIAL_ORGANIC_CHANNEL[social], clickId };
-  }
-
-  // Instagram share links (in-app browser often strips the referrer)
-  if (igShare) {
-    return { ...base, bucket: "organic_social", channel: "instagram_social", clickId };
-  }
-
-  // Unpaid social UTMs (utm_source=tiktok, facebook, x, … without a paid medium)
-  if (brand && brand !== "google") {
-    return { ...base, bucket: "organic_social", channel: SOCIAL_ORGANIC_CHANNEL[brand], clickId };
-  }
-
-  // In-app browser with no referrer (Instagram / TikTok / WhatsApp)
-  if (inApp) {
-    return { ...base, bucket: "organic_social", channel: SOCIAL_ORGANIC_CHANNEL[inApp], clickId };
-  }
-
-  // Bare fbclid = Meta organic click, not an ad
-  if (fbclid) {
-    return { ...base, bucket: "organic_social", channel: "meta_social", clickId: fbclid };
-  }
-
-  // Google organic (referrer or utm without paid)
-  if (isGoogleHost(extReferrer) || brand === "google") {
-    return { ...base, bucket: "google", channel: "google_organic", clickId: null };
-  }
-
-  // Other UTM source without paid → referral-ish tagged traffic
-  if (source) {
-    return {
-      ...base,
-      bucket: "referral",
-      channel: source.slice(0, 40).toLowerCase(),
-      clickId: null,
-    };
-  }
-
-  // External website
-  if (extReferrer) {
-    return {
-      ...base,
-      bucket: "referral",
-      channel: "referral",
-      clickId: null,
-    };
-  }
-
-  // Typed URL / bookmark / Chrome link / stripped referrer
-  return {
-    ...base,
-    bucket: "direct",
-    channel: "direct",
-    clickId: null,
-  };
 }
 
 function readStored(): Stored | null {
@@ -403,7 +81,30 @@ function toBase64Url(json: string): string {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-/** Write short-lived cookie so OAuth callback can read first-touch (SameSite=Lax). */
+function fromBase64Url(raw: string): string {
+  const b64 = raw.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = b64.length % 4 === 0 ? "" : "=".repeat(4 - (b64.length % 4));
+  const bin = atob(b64 + pad);
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function readCookiePayload(): AcquisitionPayload | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|; )vk_acq=([^;]*)/);
+  if (!match?.[1]) return null;
+  try {
+    const json = decodeURIComponent(match[1]).startsWith("{")
+      ? decodeURIComponent(match[1])
+      : fromBase64Url(decodeURIComponent(match[1]));
+    const parsed = JSON.parse(json) as AcquisitionPayload;
+    return parsed?.bucket ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/** First-party cookie — 90 days so signup / OAuth still have the landing. */
 export function syncAcquisitionCookie(payload?: AcquisitionPayload | null): void {
   if (typeof document === "undefined") return;
   const p = payload ?? getStoredAcquisition();
@@ -415,10 +116,13 @@ export function syncAcquisitionCookie(payload?: AcquisitionPayload | null): void
       source: p.source ?? undefined,
       medium: p.medium ?? undefined,
       campaign: p.campaign ?? undefined,
+      content: p.content ?? undefined,
+      term: p.term ?? undefined,
       clickId: p.clickId ?? undefined,
-      referrer: p.referrer ?? undefined,
+      clickIdType: p.clickIdType ?? undefined,
       landingPath: p.landingPath ?? undefined,
-      inApp: p.inApp ?? undefined,
+      device: p.device ?? undefined,
+      referrer: p.referrer ?? undefined,
       capturedAt: p.capturedAt,
     };
     const val = toBase64Url(JSON.stringify(compact));
@@ -429,19 +133,33 @@ export function syncAcquisitionCookie(payload?: AcquisitionPayload | null): void
   }
 }
 
-/** Capture first-touch; upgrade Direct / unknown if a later hit is stronger. */
+function acquisitionFingerprint(p: AcquisitionPayload): string {
+  return [
+    p.bucket,
+    p.channel,
+    p.source ?? "",
+    p.medium ?? "",
+    p.campaign ?? "",
+    p.clickId ?? "",
+    p.landingPath ?? "",
+  ].join("|");
+}
+
+/** Capture first real source. Safe to call on every navigation (no-op when unchanged). */
 export function captureAcquisitionOnce(): AcquisitionPayload {
-  const existing = readStored();
-  const payload = classifyAcquisition();
-  if (!existing || shouldUpgradeAcquisition(existing.payload, payload)) {
-    writeStored(payload);
-    syncAcquisitionCookie(payload);
-    return payload;
+  const incoming = classifyAcquisition();
+  const stored = readStored()?.payload ?? null;
+  const fromCookie = readCookiePayload();
+  const existing = pickStrongerAcquisition(stored, fromCookie);
+  const next = existing && !isStrongerAcquisition(existing, incoming) ? existing : incoming;
+  if (existing && acquisitionFingerprint(existing) === acquisitionFingerprint(next)) {
+    return existing;
   }
-  syncAcquisitionCookie(existing.payload);
-  return existing.payload;
+  writeStored(next);
+  syncAcquisitionCookie(next);
+  return next;
 }
 
 export function getStoredAcquisition(): AcquisitionPayload | null {
-  return readStored()?.payload ?? null;
+  return pickStrongerAcquisition(readStored()?.payload ?? null, readCookiePayload());
 }

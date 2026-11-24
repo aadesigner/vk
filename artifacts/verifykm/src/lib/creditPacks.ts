@@ -19,8 +19,8 @@ function pack(id: CreditPackId, credits: number, unitPrice: number): CreditPack 
 }
 
 export const CREDIT_PACKS: Record<CreditPackId, CreditPack> = {
-  pack3: pack("pack3", 3, 16.99),
-  pack5: pack("pack5", 5, 12.99),
+  pack3: pack("pack3", 3, 14.99),
+  pack5: pack("pack5", 5, 11.99),
 };
 
 export function isCreditPackId(value: unknown): value is CreditPackId {
