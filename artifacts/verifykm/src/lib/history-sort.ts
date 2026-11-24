@@ -3,6 +3,37 @@ const EN_MONTHS = [
   "july", "august", "september", "october", "november", "december",
 ];
 
+/** Period strings like "2025-12~2026-06" or "2023-01-01 ~ 2023-02-15". */
+const HISTORY_PERIOD_RE =
+  /^(\d{4}-\d{2}(?:-\d{2})?)\s*[~～\-–—to]+\s*(\d{4}-\d{2}(?:-\d{2})?)$/i;
+
+/**
+ * If text is a date or date-range period, return a display/sort value.
+ * Ranges keep the full period string (sort uses the end via historyDateSortKey).
+ */
+export function extractHistoryPeriodDate(
+  text: string | null | undefined,
+): string | null {
+  if (!text) return null;
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  if (HISTORY_PERIOD_RE.test(trimmed)) return trimmed.replace(/\s+/g, " ");
+  if (/^\d{4}-\d{2}(-\d{2})?$/.test(trimmed)) return trimmed;
+  return null;
+}
+
+function sortKeyFromYearMonthDay(raw: string): number {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const ts = Date.parse(`${raw}T12:00:00`);
+    return Number.isNaN(ts) ? Number.NEGATIVE_INFINITY : ts;
+  }
+  if (/^\d{4}-\d{2}$/.test(raw)) {
+    const ts = Date.parse(`${raw}-01T12:00:00`);
+    return Number.isNaN(ts) ? Number.NEGATIVE_INFINITY : ts;
+  }
+  return Number.NEGATIVE_INFINITY;
+}
+
 /** Numeric sort key for history rows; higher = more recent. Missing/invalid dates sort last. */
 export function historyDateSortKey(date: string | null | undefined): number {
   if (!date) return Number.NEGATIVE_INFINITY;
@@ -10,10 +41,14 @@ export function historyDateSortKey(date: string | null | undefined): number {
   const trimmed = date.trim();
   if (!trimmed) return Number.NEGATIVE_INFINITY;
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    const ts = Date.parse(`${trimmed}T12:00:00`);
-    return Number.isNaN(ts) ? Number.NEGATIVE_INFINITY : ts;
+  // Uninsured / coverage periods — sort by the end (most recent).
+  const period = trimmed.match(HISTORY_PERIOD_RE);
+  if (period?.[2]) {
+    return sortKeyFromYearMonthDay(period[2]);
   }
+
+  const ymd = sortKeyFromYearMonthDay(trimmed);
+  if (ymd !== Number.NEGATIVE_INFINITY) return ymd;
 
   if (/^\d{8}$/.test(trimmed)) {
     const y = trimmed.slice(0, 4);
