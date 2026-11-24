@@ -210,7 +210,10 @@ export function acquisitionToUserFields(payload: AcquisitionPayload | null): Acq
   return fields;
 }
 
-/** Drop newer optional columns so signup still works before schema patches land. */
+/**
+ * Drop newest optional columns so signup still works before schema patches land.
+ * Keep landing path — that column already exists on VerifyKM.
+ */
 export function withoutExtendedAcquisitionFields(
   fields: AcquisitionUserFields,
 ): AcquisitionUserFields {
@@ -218,7 +221,6 @@ export function withoutExtendedAcquisitionFields(
     acquisitionContent: _c,
     acquisitionTerm: _t,
     acquisitionClickIdType: _ct,
-    acquisitionLandingPath: _lp,
     acquisitionDevice: _d,
     ...rest
   } = fields;

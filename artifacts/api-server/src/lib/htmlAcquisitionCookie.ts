@@ -67,7 +67,8 @@ export function htmlAcquisitionCookie(req: Request, res: Response, next: NextFun
   );
 
   if (existing) {
-    if (!isStrongerAcquisition(existing, incoming)) {
+    // Cookie payload is sanitized; classify payload is richer — strength only needs bucket/channel/UTM.
+    if (!isStrongerAcquisition(existing as typeof incoming, incoming)) {
       next();
       return;
     }

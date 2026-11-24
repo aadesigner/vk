@@ -467,14 +467,14 @@ async function loadAcquisitionSlices(from: string, toExclusive: string | undefin
               NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
               '' AS content,
               '' AS term,
-              '' AS landing,
+              COALESCE(NULLIF(TRIM(u.acquisition_landing_path), ''), '') AS landing,
               'unknown' AS device,
               '' AS click_id_type,
               COUNT(*)::int AS signups,
               COALESCE(SUM(CASE WHEN NULLIF(TRIM(u.acquisition_click_id), '') IS NOT NULL THEN 1 ELSE 0 END), 0)::int AS with_click
             FROM users u
             WHERE u.is_admin = false AND ${sql.raw(userDate)}
-            GROUP BY 1, 2, 3, 4, 5
+            GROUP BY 1, 2, 3, 4, 5, 8
           `);
         }
       })(),
@@ -509,7 +509,7 @@ async function loadAcquisitionSlices(from: string, toExclusive: string | undefin
               NULLIF(TRIM(u.acquisition_campaign), '') AS campaign,
               '' AS content,
               '' AS term,
-              '' AS landing,
+              COALESCE(NULLIF(TRIM(u.acquisition_landing_path), ''), '') AS landing,
               'unknown' AS device,
               '' AS click_id_type,
               COUNT(DISTINCT p.user_id)::int AS buyers,
@@ -518,7 +518,7 @@ async function loadAcquisitionSlices(from: string, toExclusive: string | undefin
             LEFT JOIN users u ON u.id = p.user_id
             WHERE ${sql.raw(SQL_COLLECTED_REVENUE_ROW_FILTER)}
               AND ${sql.raw(payDate)}
-            GROUP BY 1, 2, 3, 4
+            GROUP BY 1, 2, 3, 4, 7
           `);
         }
       })(),
