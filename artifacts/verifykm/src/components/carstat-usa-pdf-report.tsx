@@ -344,6 +344,12 @@ export function CarstatUsaPdfReport({
           Report file is not available yet. Try refreshing in a moment.
         </p>
       )}
+
+      {proxyPath ? (
+        <p className="px-0.5 text-[11px] leading-snug text-muted-foreground/90 sm:text-xs">
+          {t("usa_report_units_disclaimer")}
+        </p>
+      ) : null}
     </div>
   );
 }

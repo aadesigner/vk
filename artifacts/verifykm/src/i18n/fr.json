@@ -2029,5 +2029,6 @@
   "provider_odometer_status": "État du kilométrage",
   "provider_inspection": "Contrôle",
   "report_no_accidents_header": "Aucun accident trouvé",
-  "report_not_flooded_header": "Aucun enregistrement d'inondation trouvé"
+  "report_not_flooded_header": "Aucun enregistrement d'inondation trouvé",
+  "usa_report_units_disclaimer": "Les véhicules américains et canadiens affichent le kilométrage en miles (pas en km). Les dates sont au format mois/jour/année (MM/JJ/AAAA)."
 }

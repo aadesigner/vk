@@ -2029,5 +2029,6 @@
   "provider_odometer_status": "გარბენის მდგომარეობა",
   "provider_inspection": "შემოწმება",
   "report_no_accidents_header": "ავარიები არ მოიძებნა",
-  "report_not_flooded_header": "წყალდიდობის ჩანაწერი არ მოიძებნა"
+  "report_not_flooded_header": "წყალდიდობის ჩანაწერი არ მოიძებნა",
+  "usa_report_units_disclaimer": "აშშ-სა და კანადის ავტომობილები აჩვენებს მილებს (არა კმ-ს). თარიღებია თვე/დღე/წელი (თთ/დდ/წწწწ)."
 }

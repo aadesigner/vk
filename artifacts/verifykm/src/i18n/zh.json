@@ -2029,5 +2029,6 @@
   "provider_odometer_status": "里程状态",
   "provider_inspection": "检验",
   "report_no_accidents_header": "未发现事故记录",
-  "report_not_flooded_header": "未发现水浸记录"
+  "report_not_flooded_header": "未发现水浸记录",
+  "usa_report_units_disclaimer": "美国和加拿大车辆里程以英里计（非公里）。日期格式为月/日/年（MM/DD/YYYY）。"
 }

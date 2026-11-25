@@ -2029,5 +2029,6 @@
   "provider_odometer_status": "Състояние на пробега",
   "provider_inspection": "Преглед",
   "report_no_accidents_header": "Няма намерени катастрофи",
-  "report_not_flooded_header": "Няма запис за наводнение"
+  "report_not_flooded_header": "Няма запис за наводнение",
+  "usa_report_units_disclaimer": "Американските и канадските автомобили показват мили (не км). Датите са месец/ден/година (ММ/ДД/ГГГГ)."
 }

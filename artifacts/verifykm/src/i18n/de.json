@@ -2029,5 +2029,6 @@
   "provider_odometer_status": "Zustand des Kilometerstands",
   "provider_inspection": "Prüfung",
   "report_no_accidents_header": "Keine Unfälle gefunden",
-  "report_not_flooded_header": "Kein Hochwassereintrag gefunden"
+  "report_not_flooded_header": "Kein Hochwassereintrag gefunden",
+  "usa_report_units_disclaimer": "US-amerikanische und kanadische Fahrzeuge zeigen Meilen statt Kilometer. Daten stehen im Format Monat/Tag/Jahr (MM/TT/JJJJ)."
 }

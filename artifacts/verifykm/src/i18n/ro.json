@@ -2029,5 +2029,6 @@
   "provider_odometer_status": "Starea kilometrajului",
   "provider_inspection": "Inspecție",
   "report_no_accidents_header": "Nu s-au găsit accidente",
-  "report_not_flooded_header": "Nu s-a găsit nicio înregistrare de inundație"
+  "report_not_flooded_header": "Nu s-a găsit nicio înregistrare de inundație",
+  "usa_report_units_disclaimer": "Vehiculele din SUA și Canada afișează mile (nu km). Datele sunt în format lună/zi/an (LL/ZZ/AAAA)."
 }

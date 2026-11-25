@@ -2029,5 +2029,6 @@
   "provider_odometer_status": "Стан пробігу",
   "provider_inspection": "Огляд",
   "report_no_accidents_header": "Аварій не знайдено",
-  "report_not_flooded_header": "Записів про затоплення не знайдено"
+  "report_not_flooded_header": "Записів про затоплення не знайдено",
+  "usa_report_units_disclaimer": "Американські та канадські авто показують милі (не км). Дати у форматі місяць/день/рік (ММ/ДД/РРРР)."
 }
