@@ -244,7 +244,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           </span>
         </header>
 
-        <main className="admin-main flex-1 min-w-0 overflow-y-auto overflow-x-clip pb-[4.5rem] md:pb-0">
+        <main className="admin-main flex-1 min-w-0 overflow-y-auto overflow-x-hidden pb-[4.5rem] md:pb-0">
           <div className="p-3 sm:p-4 lg:p-6 w-full min-w-0 max-w-[88rem] mx-auto md:pb-24">
             {children}
           </div>

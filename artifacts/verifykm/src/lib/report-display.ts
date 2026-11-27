@@ -384,13 +384,16 @@ export function sanitizeMileageHistory<T extends MileageHistoryLike>(
         // sale chips (₩ price, run_and_drives). Treat missing/listing/marketplace as
         // km+date only — sale price/condition belong on the auction timeline.
         const isNaAuction = /^na_auction$/i.test(rawSource ?? "");
-        const source = rawSource || (isNaAuction ? "na_auction" : "listing");
+        // Missing source on sale-lot rows → "Sale listing" (not the opaque internal "listing").
+        const source = rawSource
+          || (isNaAuction ? "na_auction" : "Sale listing");
+        const normalizedSource = /^listing$/i.test(source) ? "Sale listing" : source;
         const stripSaleMeta = !isNaAuction;
         return {
           ...entry,
           odometer: entry.odometer ?? (entry as { mileage?: number | null }).mileage,
           date: cleanDisplayText(entry.date),
-          source,
+          source: normalizedSource,
           condition: stripSaleMeta ? null : cleanDisplayText(entry.condition),
           damage: stripSaleMeta ? null : cleanDisplayText(entry.damage),
           primaryDamage: stripSaleMeta ? null : cleanDisplayText(entry.primaryDamage),
@@ -662,9 +665,23 @@ export function formatMileageHistorySource(
   if (/^(first|initial)\s+registration$/i.test(raw) || /^first_registration$/i.test(raw)) {
     return t("registry_field_first_registration");
   }
-  if (/^inspection$/i.test(raw)) {
+  if (/^inspection$/i.test(raw) || /^korean\s*inspection$/i.test(raw)) {
     const label = t("provider_inspection");
     if (label !== "provider_inspection") return label;
+  }
+  // Odometer from a sale/auction ad (Alpha/Beta archives) — not registry/export.
+  if (/^(listing|sale\s*listing|marketplace(\s*listing)?)$/i.test(raw)) {
+    const label = t("provider_mileage_source_sale_listing");
+    if (label !== "provider_mileage_source_sale_listing") return label;
+    return "Sale listing";
+  }
+  if (/^export(\s*declaration)?$/i.test(raw)) {
+    const label = t("registry_type_export");
+    if (label !== "registry_type_export") return label;
+  }
+  if (/^korean\s*ownership$/i.test(raw)) {
+    const label = t("provider_change_owner");
+    if (label !== "provider_change_owner") return label;
   }
   const translated = translateKoreanProviderText(t, raw);
   if (translated && translated !== raw) return translated;

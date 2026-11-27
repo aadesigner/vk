@@ -1,4 +1,5 @@
 import type { Language } from "@/i18n/context";
+import { extractHistoryPeriodDate } from "@/lib/history-sort";
 import {
   localizeProviderDate,
   looksLikeProviderDate,
@@ -29,9 +30,13 @@ const TYPE_KEYS: Record<string, string> = {
   owner_change: "registry_type_owner_change",
   no_insurance: "registry_type_no_insurance",
   insurance_event: "registry_type_insurance_event",
+  insurance: "provider_insurance_accident",
   recall: "registry_type_recall",
   export: "registry_type_export",
   other: "registry_type_other",
+  other_car_accident_list: "provider_other_vehicle_accident",
+  my_car_accident_list: "provider_own_vehicle_accident",
+  my_car_current_owner_accident_list: "provider_accident_current_owner",
 };
 
 const GENERIC_EVENT_TYPES = new Set(["other", "event", "unknown"]);
@@ -111,6 +116,7 @@ function formatRegistryEventTitle(
   rawTitle: string,
   language?: Language,
 ): string {
+  // Prefer full text translator (exact phrases + embedded patterns).
   const fromText = translateKoreanProviderText(t, rawTitle);
   const base = fromText && fromText !== rawTitle ? fromText : rawTitle;
 
@@ -184,6 +190,9 @@ export function localizeRegistryDate(
   vehicleYear?: number | null,
   vehicleCountry?: string | null,
 ): string | null {
+  // Keep uninsured-style ranges ("2025-12~2026-06") readable as-is.
+  const period = extractHistoryPeriodDate(date);
+  if (period && /[~～]/.test(period)) return period;
   return localizeProviderDate(date, language, vehicleYear, vehicleCountry);
 }
 

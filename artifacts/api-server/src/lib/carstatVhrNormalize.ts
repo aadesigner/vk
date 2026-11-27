@@ -587,6 +587,245 @@ function mapKoreanClaimType(raw: unknown): string {
   return "Insurance claim";
 }
 
+/** Human labels for VHR source-5 history event / check field keys. */
+const HISTORY_FIELD_LABELS: Record<string, string> = {
+  amount: "Claim count",
+  component: "Components",
+  insurance_amount: "Insurance payout",
+  insurance_money: "Insurance payout involved",
+  painting: "Paint work",
+  repair_estimate_amount: "Repair estimate amount",
+  reserve_amount: "Reserve amount",
+  repair_estimate: "Repair estimate",
+  wage: "Labor",
+  usage: "Usage",
+  owner_count: "Owners",
+  has_rent_use_record: "Rental use record",
+  accident_count: "Accident records",
+  flood_history: "Water / flood damage",
+  total_loss_history: "Total loss",
+  rental_use_history: "Rental",
+  business_use_history: "Business",
+  government_use_history: "Government",
+  special_usage_history: "Special usage",
+  special_use_history: "Special usage",
+};
+
+const HISTORY_EVENT_TITLES: Record<string, string> = {
+  owner_change: "Owner change",
+  transfer_of_ownership: "Transfer of ownership",
+  first_registration: "First registration",
+  registration_change: "Registration change",
+  number_change: "Plate / registration change",
+  inspection: "Inspection",
+  statutory_inspection: "Statutory inspection",
+  other_car_accident_list: "Other vehicle accident",
+  my_car_accident_list: "Own vehicle accident",
+  my_car_current_owner_accident_list: "Accident under current owner",
+  accident: "Accident",
+  insurance: "Insurance event",
+};
+
+const HISTORY_DETAIL_SKIP_KEYS = new Set([
+  "source_label",
+  "source_code",
+  "id",
+  "type_key",
+  "evidence_type_key",
+  "verification_key",
+  "date_precision_key",
+]);
+
+function humanizeHistoryFieldLabel(raw: string | null | undefined): string {
+  const key = (raw ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (!key) return "Detail";
+  if (HISTORY_FIELD_LABELS[key]) return HISTORY_FIELD_LABELS[key];
+  return titleCaseLabel(key) ?? "Detail";
+}
+
+function historyEventTitle(typeKey: string, sourceLabel: string | null): string {
+  const rawKey = (typeKey || "").trim().toLowerCase();
+  const cleanedLabel = sourceLabel?.trim() || null;
+  const labelIsRawKey = !!cleanedLabel && /^[a-z0-9_+]+$/i.test(cleanedLabel);
+
+  // Combined type keys (e.g. my_car_accident_list+my_car_current_owner_accident_list).
+  if (rawKey.includes("+")) {
+    const parts = rawKey.split("+").map((p) => p.trim()).filter(Boolean);
+    const titles = parts.map((p) => HISTORY_EVENT_TITLES[p] ?? titleCaseLabel(p) ?? p);
+    const unique = [...new Set(titles.filter(Boolean))];
+    if (unique.length) return unique.join(" + ");
+  }
+
+  // Prefer a real human source_label over our type-key map.
+  if (cleanedLabel && !labelIsRawKey) {
+    if (/_/.test(cleanedLabel)) return titleCaseLabel(cleanedLabel) ?? cleanedLabel;
+    return cleanedLabel;
+  }
+
+  if (labelIsRawKey && HISTORY_EVENT_TITLES[cleanedLabel!.toLowerCase()]) {
+    return HISTORY_EVENT_TITLES[cleanedLabel!.toLowerCase()];
+  }
+  if (rawKey && HISTORY_EVENT_TITLES[rawKey]) return HISTORY_EVENT_TITLES[rawKey];
+  if (cleanedLabel) return titleCaseLabel(cleanedLabel) ?? cleanedLabel;
+  return titleCaseLabel(rawKey) ?? "History event";
+}
+
+/** Format detail values — numbers/booleans must not fall through to field names. */
+function detailValueAsText(v: unknown): string | null {
+  if (v == null) return null;
+  if (typeof v === "boolean") return v ? "Yes" : "No";
+  if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  if (typeof v === "string") {
+    const t = v.trim();
+    if (!t) return null;
+    if (/^(true|yes)$/i.test(t)) return "Yes";
+    if (/^(false|no)$/i.test(t)) return "No";
+    return t;
+  }
+  return null;
+}
+
+/** Parse "607만원" / "98 만원" → KRW. */
+function parseManwonToKrw(text: string | null | undefined): number | null {
+  if (!text) return null;
+  const m = text.replace(/,/g, "").match(/([\d.]+)\s*만\s*원/i);
+  if (m) {
+    const n = Number(m[1]);
+    return Number.isFinite(n) && n > 0 ? Math.round(n * 10_000) : null;
+  }
+  // Already-translated "6.07 million won" style
+  const mil = text.replace(/,/g, "").match(/([\d.]+)\s*million\s+won/i);
+  if (mil) {
+    const n = Number(mil[1]);
+    return Number.isFinite(n) && n > 0 ? Math.round(n * 1_000_000) : null;
+  }
+  return parseMoneyish(text);
+}
+
+function pushHistoryDetailPair(
+  out: Array<{ label: string; value: string }>,
+  labelRaw: string | null | undefined,
+  valueRaw: unknown,
+): void {
+  const value = detailValueAsText(valueRaw);
+  if (!value) return;
+  const label = humanizeHistoryFieldLabel(labelRaw);
+  // Skip rows where the "value" is just the field key repeated.
+  const normLabel = label.toLowerCase().replace(/[\s_-]+/g, "");
+  const normValue = value.toLowerCase().replace(/[\s_-]+/g, "");
+  if (normLabel && normLabel === normValue) return;
+  if (/^[a-z][a-z0-9_]*$/i.test(value) && HISTORY_FIELD_LABELS[value.toLowerCase()]) return;
+  out.push({ label, value });
+}
+
+/**
+ * VHR history event details → structured label/value pairs.
+ * Never dumps missing-value field names into the subtitle.
+ */
+function extractHistoryEventDetails(details: unknown): Array<{ label: string; value: string }> {
+  if (!Array.isArray(details)) return [];
+  const out: Array<{ label: string; value: string }> = [];
+
+  for (const d of details) {
+    if (typeof d === "string" || typeof d === "number" || typeof d === "boolean") {
+      pushHistoryDetailPair(out, "Detail", d);
+      continue;
+    }
+    if (!d || typeof d !== "object" || Array.isArray(d)) continue;
+    const row = d as Record<string, unknown>;
+
+    // Nested bag: { value: { insurance_amount: "607만원", painting: true, ... } }
+    const nested =
+      (row.value && typeof row.value === "object" && !Array.isArray(row.value)
+        ? (row.value as Record<string, unknown>)
+        : null)
+      ?? (row.data && typeof row.data === "object" && !Array.isArray(row.data)
+        ? (row.data as Record<string, unknown>)
+        : null);
+
+    if (nested) {
+      for (const [k, v] of Object.entries(nested)) {
+        if (HISTORY_DETAIL_SKIP_KEYS.has(k)) continue;
+        pushHistoryDetailPair(out, k, v);
+      }
+      continue;
+    }
+
+    // Flat claim bag on the detail row itself (common for accident lists).
+    const looksLikeClaimBag =
+      "insurance_amount" in row
+      || "repair_estimate_amount" in row
+      || "insurance_money" in row
+      || ("amount" in row && ("painting" in row || "wage" in row || "component" in row));
+
+    if (looksLikeClaimBag) {
+      for (const [k, v] of Object.entries(row)) {
+        if (HISTORY_DETAIL_SKIP_KEYS.has(k)) continue;
+        if (k === "value_text" || k === "value" || k === "value_number" || k === "value_bool") continue;
+        pushHistoryDetailPair(out, k, v);
+      }
+      // Prefer explicit value_text when present (e.g. summary line).
+      if (str(row.value_text) && out.length === 0) {
+        pushHistoryDetailPair(out, str(row.source_label) ?? "Detail", row.value_text);
+      }
+      continue;
+    }
+
+    const label = str(row.source_label) ?? str(row.label) ?? str(row.key) ?? str(row.id);
+    const value =
+      detailValueAsText(row.value_text)
+      ?? detailValueAsText(row.value)
+      ?? detailValueAsText(row.value_number)
+      ?? detailValueAsText(row.value_bool);
+    // Never fall back to source_label as the displayed value (that produced the dumps).
+    if (!value) continue;
+    pushHistoryDetailPair(out, label, value);
+  }
+
+  return detailsFromPairs(out);
+}
+
+function formatHistoryDetailsSubtitle(
+  pairs: Array<{ label: string; value: string }>,
+): string | null {
+  if (!pairs.length) return null;
+  // Short values (usage, registration codes) → values only.
+  const valuesOnly = pairs.every(
+    (p) => p.value.length <= 40 && !/payout|estimate|labor|paint|amount|count/i.test(p.label),
+  );
+  if (valuesOnly) {
+    const vals = [...new Set(pairs.map((p) => p.value))];
+    return vals.join(" · ") || null;
+  }
+  return pairs.map((p) => `${p.label}: ${p.value}`).join(" · ");
+}
+
+function historyAccidentMoney(pairs: Array<{ label: string; value: string }>): {
+  krw: number | null;
+  paint: boolean;
+  labor: boolean;
+  claimCount: number | null;
+} {
+  let krw: number | null = null;
+  let paint = false;
+  let labor = false;
+  let claimCount: number | null = null;
+  for (const p of pairs) {
+    if (/insurance payout$/i.test(p.label) || /repair estimate/i.test(p.label) || /reserve amount/i.test(p.label)) {
+      const n = parseManwonToKrw(p.value);
+      if (n != null && (krw == null || n > krw)) krw = n;
+    }
+    if (/paint/i.test(p.label) && /yes|painted|true/i.test(p.value)) paint = true;
+    if (/^Painted$/i.test(p.value) || /^painting$/i.test(p.value)) paint = true;
+    if (/labor/i.test(p.label) && /yes|true|\d/i.test(p.value)) labor = true;
+    if (/claim count/i.test(p.label)) {
+      const n = Number(p.value);
+      if (Number.isFinite(n)) claimCount = n;
+    }
+  }
+  return { krw, paint, labor, claimCount };
+}
+
 function sectionsOf(body: Record<string, unknown>): Array<Record<string, unknown>> {
   const source =
     body.source && typeof body.source === "object" && !Array.isArray(body.source)
@@ -621,6 +860,8 @@ function isArchiveListingMileageSource(source: string | null | undefined): boole
     /^us\s*auction$/.test(s)
     || /^european\s*vehicle\s*auction$/.test(s)
     || /^listing$/.test(s)
+    || /^sale\s*listing$/.test(s)
+    || /^marketplace(\s*listing)?$/.test(s)
   );
 }
 
@@ -653,7 +894,7 @@ function mileageSourceRank(source: unknown): number {
   if (/encar/.test(s)) return 85;
   if (/manheim/.test(s)) return 80;
   if (/korean\s*inspection|inspection|registry|insurance|export/.test(s)) return 70;
-  if (/european\s*marketplace|korean\s*marketplace|us\s*auction|^listing$|^marketplace$/.test(s)) {
+  if (/european\s*marketplace|korean\s*marketplace|us\s*auction|^listing$|^sale\s*listing$|^marketplace$/.test(s)) {
     return 5;
   }
   return 40;
@@ -958,7 +1199,8 @@ export function normalizeCarstatVhrJsonPayloads(
             item.location_details && typeof item.location_details === "object" && !Array.isArray(item.location_details)
               ? (item.location_details as Record<string, unknown>)
               : {};
-          const marketplace = prettyMarketplace(marketplaceRaw) ?? "Listing";
+          // Customer-facing fallback — never show bare "Listing" on the mileage timeline.
+          const marketplace = prettyMarketplace(marketplaceRaw) ?? "Sale listing";
           const listingCountry =
             str(loc.country)
             ?? str(item.seller_country)
@@ -2397,16 +2639,20 @@ export function normalizeCarstatVhrJsonPayloads(
           for (const chk of checks) {
             if (!chk || typeof chk !== "object" || Array.isArray(chk)) continue;
             const c = chk as Record<string, unknown>;
-            const label = str(c.source_label) ?? titleCaseLabel(str(c.type_key)) ?? str(c.id);
+            const id = str(c.id) ?? str(c.type_key) ?? "";
+            const label =
+              HISTORY_FIELD_LABELS[id]
+              ?? str(c.source_label)
+              ?? titleCaseLabel(str(c.type_key))
+              ?? titleCaseLabel(id);
             if (!label) continue;
             const result = (str(c.result_key) ?? "").toLowerCase();
             const present = result === "present" || result === "yes" || result === "true";
             const absent = result === "not_present" || result === "absent" || result === "no" || result === "false";
-            const id = str(c.id) ?? str(c.type_key) ?? "";
             const isFlood = id === "flood_history" || /flood/i.test(id) || /flood/i.test(label);
             const isTotalLoss = id === "total_loss_history" || /total_loss/i.test(id) || /total\s*loss/i.test(label);
             const isTheft = /theft|stolen/i.test(id) || /theft|stolen/i.test(label);
-            const isTaxiUse = /rental_use|taxi/i.test(id) || /^(rental|taxi)\b/i.test(label);
+            const isTaxiUse = /rental_use|taxi|has_rent_use/i.test(id) || /^(rental|taxi)\b/i.test(label);
 
             // Drive report status cards from explicit present/absent — never invent timeline noise.
             if (isFlood) {
@@ -2431,7 +2677,13 @@ export function normalizeCarstatVhrJsonPayloads(
             if (!present) continue;
 
             const checkedAt = dateOnly(item.checked_at);
-            pushExtra(vehicleExtras, str(c.id) ?? label, label, "Yes", checkedAt);
+            // Prefer a numeric count from source_code when the check is a counter.
+            const countFromCode = num(c.source_code);
+            const extraValue =
+              id === "accident_count" && countFromCode != null && countFromCode > 0
+                ? String(countFromCode)
+                : "Yes";
+            pushExtra(vehicleExtras, id || label, label, extraValue, checkedAt);
             if (isTotalLoss) {
               accidents.push({
                 date: checkedAt,
@@ -2456,46 +2708,88 @@ export function normalizeCarstatVhrJsonPayloads(
             const e = ev as Record<string, unknown>;
             const evDate = dateOnly(e.occurred_at ?? e.date);
             const typeKey = str(e.type_key) ?? "";
-            const label = str(e.source_label) ?? titleCaseLabel(typeKey);
-            const detailBits = Array.isArray(e.details)
-              ? e.details
-                .map((d) => {
-                  if (!d || typeof d !== "object" || Array.isArray(d)) return null;
-                  const row = d as Record<string, unknown>;
-                  return str(row.value_text) ?? str(row.value) ?? str(row.source_label);
-                })
-                .filter(Boolean)
-              : [];
-            const subtitle = detailBits.join(" · ") || null;
-            if (typeKey.includes("owner") || /ownership|transfer/i.test(label ?? "")) {
+            const title = historyEventTitle(typeKey, str(e.source_label));
+            const structuredDetails = extractHistoryEventDetails(e.details);
+            const subtitle = formatHistoryDetailsSubtitle(structuredDetails);
+            const isOwnerEvent =
+              typeKey.includes("owner")
+              || /ownership|transfer/i.test(title)
+              || /ownership|transfer/i.test(typeKey);
+            const isAccidentEvent =
+              typeKey.includes("accident")
+              || /accident|collision|damage/i.test(title)
+              || /accident|collision|damage/i.test(typeKey);
+            const isInsuranceEvent =
+              typeKey.includes("insurance")
+              || /insurance|claim/i.test(title);
+
+            if (isOwnerEvent) {
               ownerHistory.push({
                 date: evDate,
-                condition: [label, subtitle].filter(Boolean).join(" · "),
+                condition: [title, subtitle].filter(Boolean).join(" · "),
               });
             }
-            if (label) {
+
+            if (title) {
+              const registryType =
+                isAccidentEvent ? "insurance"
+                : isOwnerEvent ? "owner_change"
+                : typeKey.includes("registration") || typeKey.includes("number_change")
+                  ? "registration_change"
+                  : typeKey.includes("inspection")
+                    ? "inspection"
+                    : typeKey.includes("first_registration")
+                      ? "first_registration"
+                      : typeKey || "event";
               registryHistory.push({
                 date: evDate,
-                type: typeKey || "event",
-                title: label,
+                type: registryType,
+                title,
                 subtitle,
-                details: detailBits.length
-                  ? detailBits.map((v) => ({ label: "Detail", value: String(v) }))
-                  : undefined,
+                details: structuredDetails.length ? structuredDetails : undefined,
+                amount: (() => {
+                  if (!isAccidentEvent) return null;
+                  const { krw } = historyAccidentMoney(structuredDetails);
+                  return krw != null ? `${krw.toLocaleString()} KRW` : null;
+                })(),
               });
             }
-            if (typeKey.includes("accident") || /accident|collision|damage/i.test(label ?? "")) {
+
+            if (isAccidentEvent) {
+              const money = historyAccidentMoney(structuredDetails);
+              const moneyDesc =
+                [
+                  money.krw != null ? `Paid ${money.krw.toLocaleString()} KRW` : null,
+                  money.paint ? "Paint work" : null,
+                  money.labor ? "Labor" : null,
+                  money.claimCount != null && money.claimCount > 0
+                    ? `${money.claimCount} claim${money.claimCount === 1 ? "" : "s"}`
+                    : null,
+                ].filter(Boolean).join(" · ") || null;
+              const fallbackDesc =
+                structuredDetails
+                  .filter((d) => !/claim count/i.test(d.label))
+                  .map((d) => `${d.label}: ${d.value}`)
+                  .join(" · ") || null;
               accidents.push({
                 date: evDate,
-                description: [label, subtitle].filter(Boolean).join(" — "),
-                type: typeKey || "history",
+                description: moneyDesc ?? fallbackDesc ?? title,
+                type: "insurance",
+                lossAmount: money.krw,
+                currency: money.krw != null ? "KRW" : null,
                 country: "KR",
+                severity: severityFromKoreanLoss(money.krw),
               });
-            }
-            if (typeKey.includes("insurance") || /insurance|claim/i.test(label ?? "")) {
               insuranceClaims.push({
                 date: evDate,
-                type: label ?? "Insurance",
+                type: title,
+                lossAmount: money.krw,
+                description: moneyDesc ?? fallbackDesc,
+              });
+            } else if (isInsuranceEvent) {
+              insuranceClaims.push({
+                date: evDate,
+                type: title,
                 description: subtitle,
               });
             }

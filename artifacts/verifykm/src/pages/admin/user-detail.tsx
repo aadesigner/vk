@@ -163,7 +163,7 @@ function VinPhoto({ photos }: { photos?: string[] }) {
 
 function Panel({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={cn("rounded-lg md:rounded-xl border border-border/50 bg-card shadow-sm min-w-0", className)}>
+    <div className={cn("rounded-lg md:rounded-xl border border-border/50 bg-card shadow-sm min-w-0 w-full max-w-full", className)}>
       {children}
     </div>
   );
@@ -693,8 +693,8 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
         </div>
       </Panel>
 
-      <div className="grid lg:grid-cols-2 gap-3 md:gap-4">
-        <div className="space-y-3 md:space-y-4">
+      <div className="grid lg:grid-cols-2 gap-3 md:gap-4 min-w-0">
+        <div className="space-y-3 md:space-y-4 min-w-0 w-full max-w-full">
           <Panel className="overflow-hidden">
             <SectionLabel icon={Mail} title="Edit details" />
             <div className="p-3.5 md:p-4 space-y-3">
@@ -827,11 +827,11 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
               title="Transaction history"
               hint="All payments for this user (VIN reports, packs, redemptions). Kept after pending credit/remove."
             />
-            <div className="p-2 md:p-3">
+            <div className="p-2 md:p-3 min-w-0 max-w-full">
               {(userTransactions?.items?.length ?? 0) === 0 ? (
                 <p className="text-xs md:text-sm text-muted-foreground text-center py-6">No transactions yet</p>
               ) : (
-                <div className="admin-table-scroll max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x rounded-lg border border-border/40">
+                <div className="admin-table-scroll w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x rounded-lg border border-border/40">
                   <table className="w-max min-w-full text-xs md:text-sm [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap">
                     <thead>
                       <tr className="border-b border-border/40 bg-muted/30 text-left text-muted-foreground">
@@ -904,7 +904,7 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
           </Panel>
         </div>
 
-        <div className="space-y-3 md:space-y-4">
+        <div className="space-y-3 md:space-y-4 min-w-0 w-full max-w-full">
           <Panel className="overflow-hidden lg:row-span-2">
             <div className="px-3.5 pt-3.5 pb-2.5 md:px-4 md:pt-4 md:pb-3 border-b border-border/40 flex items-center justify-between gap-3 min-w-0">
               <h2 className="text-sm md:text-base font-semibold flex items-center gap-2 min-w-0">
@@ -937,7 +937,7 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
                 </div>
               )}
             </div>
-            <div className="p-2 md:p-3">
+            <div className="p-2 md:p-3 min-w-0 max-w-full">
               {lookupsLoading ? (
                 <div className="space-y-2 px-1">
                   {[0, 1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[4.5rem] rounded-lg" />)}
@@ -950,7 +950,7 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
                   <p className="text-xs md:text-sm text-muted-foreground">No VIN lookups yet</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border/40 rounded-lg overflow-hidden border border-border/40 min-w-0">
+                <div className="divide-y divide-border/40 rounded-lg overflow-hidden border border-border/40 min-w-0 w-full max-w-full">
                   {lookups.map(lookup => {
                     const vd = lookup.data;
                     const vehicleName = vd?.make && vd?.model
@@ -960,10 +960,10 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
                     return (
                       <div
                         key={lookup.id}
-                        className="flex flex-wrap items-center gap-3 p-2.5 md:p-3 bg-card hover:bg-muted/30 transition-colors min-w-0"
+                        className="flex flex-wrap items-center gap-2.5 sm:gap-3 p-2.5 md:p-3 bg-card hover:bg-muted/30 transition-colors min-w-0 w-full max-w-full"
                       >
                         <VinPhoto photos={vd?.photos} />
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 basis-[min(100%,12rem)]">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <Link href={`/adminx/vin/${lookup.vin}`} className="min-w-0 truncate">
                               <span className="font-mono text-xs font-semibold hover:text-primary transition-colors">{lookup.vin}</span>
@@ -1022,11 +1022,11 @@ export default function AdminUserDetail({ params }: { params: { userId: string }
 
           <Panel className="overflow-hidden">
             <SectionLabel icon={DollarSign} title="Credit pack purchases" hint="Pack purchases for this user only." />
-            <div className="p-2 md:p-3">
+            <div className="p-2 md:p-3 min-w-0 max-w-full">
               {(creditPurchases?.items?.length ?? 0) === 0 ? (
                 <p className="text-xs md:text-sm text-muted-foreground text-center py-6">No credit pack purchases yet</p>
               ) : (
-                <div className="admin-table-scroll max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x rounded-lg border border-border/40">
+                <div className="admin-table-scroll w-full max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x rounded-lg border border-border/40">
                   <table className="w-max min-w-full text-xs md:text-sm [&_th]:whitespace-nowrap [&_td]:whitespace-nowrap">
                     <thead>
                       <tr className="border-b border-border/40 bg-muted/30 text-left text-muted-foreground">

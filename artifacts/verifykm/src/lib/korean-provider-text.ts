@@ -457,6 +457,27 @@ const PHRASE_KEYS: Record<string, string> = {
   "plate / registration change": "provider_plate_change",
   "plate/registration change": "provider_plate_change",
   "personal car": "provider_personal_car",
+  "personal use": "provider_personal_use",
+  "commercial use": "provider_commercial_use",
+  "government use": "provider_usage_government",
+  "passenger car": "provider_passenger_car",
+  "first owner": "provider_first_owner",
+  "other vehicle accident": "provider_other_vehicle_accident",
+  "own vehicle accident": "provider_own_vehicle_accident",
+  "accident under current owner": "provider_accident_current_owner",
+  "insurance payout": "provider_insurance_payout",
+  "insurance payout involved": "provider_insurance_payout_involved",
+  "claim count": "provider_claim_count",
+  "paint work": "provider_paint_work",
+  "repair estimate": "provider_repair_estimate",
+  "repair estimate amount": "provider_repair_estimate_amount",
+  "reserve amount": "provider_reserve_amount",
+  labor: "provider_labor",
+  components: "provider_components",
+  "rental use record": "provider_rental_use_record",
+  "accident records": "provider_accident_records",
+  "statutory inspection": "provider_statutory_inspection",
+  "electric silver": "provider_color_electric_silver",
   "transfer of ownership": "provider_transfer_ownership",
   seats: "provider_seats",
   yes: "provider_yes",
@@ -557,7 +578,47 @@ const PHRASE_PATTERNS: Array<{ pattern: RegExp; key: string }> = [
   { pattern: /\bownership change\b/gi, key: "provider_change_owner" },
   { pattern: /\bplate\s*\/\s*registration change\b/gi, key: "provider_plate_change" },
   { pattern: /\bpersonal car\b/gi, key: "provider_personal_car" },
+  { pattern: /\bpersonal use\b/gi, key: "provider_personal_use" },
+  { pattern: /\bcommercial use\b/gi, key: "provider_commercial_use" },
+  { pattern: /\bpassenger car\b/gi, key: "provider_passenger_car" },
+  { pattern: /\bfirst owner\b/gi, key: "provider_first_owner" },
+  { pattern: /\bother vehicle accident\b/gi, key: "provider_other_vehicle_accident" },
+  { pattern: /\bown vehicle accident\b/gi, key: "provider_own_vehicle_accident" },
+  { pattern: /\baccident under current owner\b/gi, key: "provider_accident_current_owner" },
+  { pattern: /\binsurance payout involved\b/gi, key: "provider_insurance_payout_involved" },
+  { pattern: /\binsurance payout\b/gi, key: "provider_insurance_payout" },
+  { pattern: /\bclaim count\b/gi, key: "provider_claim_count" },
+  { pattern: /\bpaint work\b/gi, key: "provider_paint_work" },
+  { pattern: /\brepair estimate amount\b/gi, key: "provider_repair_estimate_amount" },
+  { pattern: /\brepair estimate\b/gi, key: "provider_repair_estimate" },
+  { pattern: /\breserve amount\b/gi, key: "provider_reserve_amount" },
+  { pattern: /\brental use record\b/gi, key: "provider_rental_use_record" },
+  { pattern: /\baccident records\b/gi, key: "provider_accident_records" },
+  { pattern: /\bstatutory inspection\b/gi, key: "provider_statutory_inspection" },
+  { pattern: /\belectric silver\b/gi, key: "provider_color_electric_silver" },
   { pattern: /\btransfer of ownership\b/gi, key: "provider_transfer_ownership" },
+];
+
+/** Leftover Hangul on cached reports — translate at display time. */
+const HANGUL_DISPLAY_MAP: Array<[string, string]> = [
+  ["소유자 변경", "Owner change"],
+  ["소유자변경", "Owner change"],
+  ["최초 소유", "First owner"],
+  ["최초소유", "First owner"],
+  ["자가용", "Personal use"],
+  ["영업용", "Commercial use"],
+  ["관용", "Government use"],
+  ["승용", "Passenger car"],
+  ["일렉트릭 실버", "Electric Silver"],
+  ["일렉트릭실버", "Electric Silver"],
+  ["스티어링 라인 누유", "Steering line leak"],
+  ["흡기라인 누유", "Intake line leak"],
+  ["프론트케이스 누유", "Front case leak"],
+  ["오일팬 누유", "Oil pan leak"],
+  ["엔진 블록 누유", "Engine block leak"],
+  ["누유", "leak"],
+  ["앞 ", "Front "],
+  ["뒤 ", "Rear "],
 ];
 
 const DATE_FIELD_LABELS = new Set([
@@ -1027,6 +1088,12 @@ export function translateKoreanProviderText(
   }
 
   let result = text;
+  if (/[\uAC00-\uD7A3]/.test(result)) {
+    const sortedHangul = [...HANGUL_DISPLAY_MAP].sort((a, b) => b[0].length - a[0].length);
+    for (const [ko, en] of sortedHangul) {
+      if (result.includes(ko)) result = result.split(ko).join(en);
+    }
+  }
   for (const { pattern, key } of PHRASE_PATTERNS) {
     if (key === "provider_million_won_tpl") {
       result = result.replace(pattern, (_, num: string) => {

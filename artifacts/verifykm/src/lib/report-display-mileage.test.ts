@@ -103,6 +103,7 @@ describe("sanitizeMileageHistory listing price", () => {
       },
     ]);
     expect(out).toHaveLength(1);
+    expect(out[0]?.source).toBe("Sale listing");
     expect(out[0]?.auctionPrice).toBeNull();
     expect(out[0]?.condition).toBeNull();
     expect(out[0]?.odometer).toBe(156_676);
@@ -120,7 +121,7 @@ describe("sanitizeMileageHistory listing price", () => {
       },
     ]);
     expect(out).toHaveLength(1);
-    expect(out[0]?.source).toBe("listing");
+    expect(out[0]?.source).toBe("Sale listing");
     expect(out[0]?.auctionPrice).toBeNull();
     expect(out[0]?.condition).toBeNull();
     expect(out[0]?.lotStatus).toBeNull();

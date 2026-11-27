@@ -1280,6 +1280,99 @@ describe("carstatVhrNormalize", () => {
     expect(out.isTaxi).toBe(true);
   });
 
+  it("formats history accident-list details without dumping raw field names", () => {
+    const out = normalizeCarstatVhrJsonPayloads([
+      {
+        schema_version: 2,
+        source: {
+          id: 5,
+          sections: [{
+            type: "history",
+            items: [{
+              checked_at: "2024-05-12T00:00:00+00:00",
+              vehicle_snapshot: {
+                brand: "Kia",
+                model: "K5",
+                year: 2018,
+                color: "Electric Silver",
+                mileage_km: 90_000,
+              },
+              checks: [
+                { id: "has_rent_use_record", source_label: "has_rent_use_record", result_key: "present" },
+                { id: "accident_count", source_label: "accident_count", result_key: "present", source_code: "2" },
+              ],
+              events: [
+                {
+                  occurred_at: "2024-05-12T00:00:00+00:00",
+                  type_key: "other_car_accident_list",
+                  source_label: "other_car_accident_list",
+                  details: [{
+                    amount: 3,
+                    component: null,
+                    insurance_amount: "607만원",
+                    insurance_money: true,
+                    painting: true,
+                    repair_estimate_amount: null,
+                    reserve_amount: null,
+                    repair_estimate: null,
+                    wage: null,
+                  }],
+                },
+                {
+                  occurred_at: "2022-12-25T00:00:00+00:00",
+                  type_key: "my_car_accident_list+my_car_current_owner_accident_list",
+                  source_label: "my_car_accident_list+my_car_current_owner_accident_list",
+                  details: [{
+                    amount: 1,
+                    insurance_amount: "98만원",
+                    insurance_money: false,
+                    painting: false,
+                  }],
+                },
+                {
+                  occurred_at: "2020-09-07T00:00:00+00:00",
+                  type_key: "owner_change",
+                  source_label: "Owner change",
+                  details: [
+                    { value_text: "1", source_label: "seq" },
+                    { value_text: "Owner change", source_label: "type" },
+                  ],
+                },
+                {
+                  occurred_at: "2018-03-26T00:00:00+00:00",
+                  type_key: "registration_change",
+                  source_label: "Registration change",
+                  details: [
+                    { value_text: "Personal use", source_label: "usage" },
+                    { value_text: "Passenger car", source_label: "body" },
+                  ],
+                },
+              ],
+            }],
+          }],
+        },
+      },
+    ], { vin: "KNAG3418BJA000001" });
+
+    const other = out.registryHistory?.find((e) => e.title === "Other vehicle accident");
+    expect(other).toBeTruthy();
+    expect(other?.subtitle ?? "").not.toMatch(/insurance_amount|repair_estimate_amount|reserve_amount/);
+    expect(other?.subtitle ?? "").toMatch(/Insurance payout/i);
+    expect(other?.amount ?? "").toMatch(/6,?070,?000/);
+
+    const own = out.registryHistory?.find((e) => /Own vehicle accident/i.test(e.title ?? ""));
+    expect(own).toBeTruthy();
+    expect(own?.subtitle ?? "").not.toMatch(/\bamount\b|\bpainting\b|\bwage\b/);
+
+    const accidents = out.accidents ?? [];
+    expect(accidents.some((a) => (a.lossAmount ?? 0) >= 6_000_000)).toBe(true);
+    expect(accidents.some((a) => (a.lossAmount ?? 0) >= 900_000 && (a.lossAmount ?? 0) < 2_000_000)).toBe(true);
+    expect(accidents.every((a) => !/insurance_amount|repair_estimate_amount/i.test(a.description ?? ""))).toBe(true);
+
+    expect(out.vehicleExtras?.some((x) => x.label === "Rental use record" && x.value === "Yes")).toBe(true);
+    expect(out.vehicleExtras?.some((x) => x.label === "Accident records" && x.value === "2")).toBe(true);
+  });
+
   it("merges auction archives + Korean insurance into one coherent report", () => {
     const out = normalizeCarstatVhrJsonPayloads([
       {

@@ -723,12 +723,14 @@ html.admin-theme-active .admin-shell {
 /* Contain horizontal overflow without killing desktop max-w-[88rem] on the content column */
 html.admin-theme-active .admin-main {
   min-width: 0;
-  overflow-x: clip;
+  /* hidden (not clip) so nested .admin-table-scroll can pan on mobile */
+  overflow-x: hidden;
   overflow-wrap: break-word;
 }
 
 html.admin-theme-active .admin-main > div {
   min-width: 0;
+  max-width: 100%;
 }
 
 html.admin-theme-active .admin-main table {
@@ -736,11 +738,15 @@ html.admin-theme-active .admin-main table {
 }
 
 html.admin-theme-active .admin-main .admin-table-scroll {
+  display: block;
+  width: 100%;
   max-width: 100%;
   min-width: 0;
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pinch-zoom;
 }
 
 html.admin-theme-active .admin-main .admin-table-scroll table {
